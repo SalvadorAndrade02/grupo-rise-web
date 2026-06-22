@@ -14,6 +14,7 @@ const tabs: { label: string; value: FilterTab }[] = [
   { label: "Todos", value: "todos" },
   { label: "Autos", value: "auto" },
   { label: "Motos", value: "moto" },
+  { label: "Todo terreno", value: "todoterreno" },
 ];
 
 function formatCurrency(value: number) {
@@ -61,8 +62,8 @@ export function FeaturedVehicles() {
                     type="button"
                     onClick={() => setActiveTab(tab.value)}
                     className={`rounded-full px-5 py-2 text-sm font-bold transition ${isActive
-                        ? "bg-blue-700 text-white shadow-sm shadow-blue-900/20"
-                        : "border border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:text-blue-700"
+                      ? "bg-blue-700 text-white shadow-sm shadow-blue-900/20"
+                      : "border border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:text-blue-700"
                       }`}
                   >
                     {tab.label}
@@ -72,13 +73,13 @@ export function FeaturedVehicles() {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 text-sm font-bold text-blue-700 hover:text-blue-800"
+          <Link
+            href="/inventario"
+            className="inline-flex items-center gap-2 text-sm font-bold text-[var(--rise-blue)] hover:text-[var(--rise-navy)]"
           >
             Ver todo el inventario
             <ChevronRight size={18} />
-          </button>
+          </Link>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">

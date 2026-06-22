@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 
 export function Hero() {
-  function scrollToInventory() {
-    const section = document.getElementById("vehiculos-destacados");
-    section?.scrollIntoView({ behavior: "smooth" });
-  }
+  function goToInventory() {
+  window.location.href = "/inventario";
+}
 
   return (
     <section className="relative overflow-hidden bg-slate-950">
@@ -30,7 +29,7 @@ export function Hero() {
           </p>
 
           <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-            <Button type="button" onClick={scrollToInventory} className="px-6 py-4">
+            <Button type="button" onClick={goToInventory} className="px-6 py-4">
               Ver inventario
               <ChevronRight size={18} />
             </Button>
@@ -38,7 +37,7 @@ export function Hero() {
             <Button
               type="button"
               variant="secondary"
-              onClick={scrollToInventory}
+              onClick={goToInventory}
               className="border-white/20 bg-white/10 px-6 py-4 text-white hover:bg-white/20"
             >
               <CalendarDays size={18} />

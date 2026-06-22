@@ -1,4 +1,13 @@
-export type VehicleCategory = "auto" | "moto";
+export type VehicleCategory = "auto" | "moto" | "todoterreno";
+
+export type VehicleCondition = "Nuevo" | "Seminuevo";
+
+export type VehicleStatus =
+  | "Disponible"
+  | "Apartado"
+  | "Vendido"
+  | "En tránsito"
+  | "Próximamente";
 
 export type Vehicle = {
   id: number;
@@ -7,6 +16,7 @@ export type Vehicle = {
   name: string;
   brand: string;
   model: string;
+  version?: string;
   year: number;
   price: number;
   location: string;
@@ -16,7 +26,8 @@ export type Vehicle = {
   gallery: string[];
   description: string;
   features: string[];
-  status: "Disponible" | "Apartado" | "Vendido";
-  condition: "Nuevo" | "Seminuevo";
+  status: VehicleStatus;
+  condition: VehicleCondition;
+  color?: string;
   isFeatured?: boolean;
 };

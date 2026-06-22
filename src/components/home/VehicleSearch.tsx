@@ -5,9 +5,9 @@ import { Container } from "@/components/ui/Container";
 
 const fields = [
   {
-    label: "Categoría",
-    options: ["Auto / Moto", "Auto", "Moto"],
-  },
+  label: "Categoría",
+  options: ["Todos", "Auto", "Moto", "Todo terreno"],
+},
   {
     label: "Tipo",
     options: ["Nuevo / Seminuevo", "Nuevo", "Seminuevo"],
@@ -60,7 +60,7 @@ export function VehicleSearch() {
             className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-blue-700 px-5 text-sm font-black text-white shadow-lg shadow-blue-900/20 transition hover:bg-blue-800 lg:self-end"
           >
             <Search size={18} />
-            Buscar
+            Buscar vehículos
           </button>
         </div>
       </div>

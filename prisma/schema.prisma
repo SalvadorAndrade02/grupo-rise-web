@@ -1,0 +1,151 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum VehicleCategory {
+  AUTO
+  MOTO
+  TODOTERRENO
+}
+
+enum VehicleCondition {
+  NUEVO
+  SEMINUEVO
+}
+
+enum VehicleStatus {
+  DISPONIBLE
+  APARTADO
+  VENDIDO
+  EN_TRANSITO
+  PROXIMAMENTE
+  INACTIVO
+}
+
+enum LeadType {
+  COTIZACION
+  PRUEBA_MANEJO
+  FINANCIAMIENTO
+  SERVICIO
+  CONTACTO
+}
+
+enum LeadStatus {
+  NUEVO
+  CONTACTADO
+  EN_SEGUIMIENTO
+  CERRADO
+  PERDIDO
+}
+
+model Brand {
+  id        Int             @id @default(autoincrement())
+  name      String
+  category  VehicleCategory
+  active    Boolean         @default(true)
+  vehicles  Vehicle[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model Branch {
+  id        Int       @id @default(autoincrement())
+  name      String
+  city      String
+  state     String
+  address   String
+  phone     String?
+  whatsapp  String?
+  active    Boolean   @default(true)
+  vehicles  Vehicle[]
+  leads     Lead[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Vehicle {
+  id            Int              @id @default(autoincrement())
+  category      VehicleCategory
+  condition     VehicleCondition
+  status        VehicleStatus    @default(DISPONIBLE)
+
+  brandId       Int
+  brand         Brand            @relation(fields: [brandId], references: [id])
+
+  branchId      Int
+  branch        Branch           @relation(fields: [branchId], references: [id])
+
+  name          String
+  model         String
+  version       String?
+  year          Int
+  price         Int
+  type          String
+  color         String?
+  mileage       Int?
+  specs         String
+  description   String
+  features      String
+
+  mainImage     String?
+  images        VehicleImage[]
+
+  isFeatured    Boolean          @default(false)
+  active        Boolean          @default(true)
+
+  leads         Lead[]
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model VehicleImage {
+  id        Int      @id @default(autoincrement())
+  vehicleId Int
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Lead {
+  id          Int        @id @default(autoincrement())
+  type        LeadType
+  status      LeadStatus @default(NUEVO)
+
+  name        String
+  phone       String
+  email       String?
+  message     String?
+
+  vehicleId   Int?
+  vehicle     Vehicle?   @relation(fields: [vehicleId], references: [id])
+
+  branchId    Int?
+  branch      Branch?    @relation(fields: [branchId], references: [id])
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Banner {
+  id          Int      @id @default(autoincrement())
+  title       String
+  subtitle    String?
+  imageUrl    String?
+  buttonText  String?
+  buttonUrl   String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
