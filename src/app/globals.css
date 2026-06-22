@@ -24,3 +24,12 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+:root {
+  --rise-navy: #0b1f2a;
+  --rise-navy-soft: #123246;
+  --rise-blue: #174e73;
+  --rise-blue-soft: #eaf3f8;
+  --rise-border: #d8e3ea;
+  --rise-bg: #f6f9fb;
+}
