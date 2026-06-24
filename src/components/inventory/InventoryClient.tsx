@@ -66,6 +66,9 @@ type InventoryClientProps = {
   brands: PublicBrand[];
   branches: PublicBranch[];
   initialCategory?: CategoryFilter;
+  initialCondition?: ConditionFilter;
+  initialSearch?: string;
+  initialMaxPrice?: string;
 };
 
 
@@ -102,18 +105,21 @@ export function InventoryClient({
   brands,
   branches,
   initialCategory = "TODOS",
+  initialCondition = "TODOS",
+  initialSearch = "",
+  initialMaxPrice = "TODOS",
 }: InventoryClientProps) {
   const [category, setCategory] = useState<CategoryFilter>(initialCategory);
-  const [condition, setCondition] = useState<ConditionFilter>("TODOS");
+  const [condition, setCondition] = useState<ConditionFilter>(initialCondition);
   const [brandId, setBrandId] = useState("TODOS");
   const [branchId, setBranchId] = useState("TODOS");
-  const [maxPrice, setMaxPrice] = useState("TODOS");
-  const [search, setSearch] = useState("");
+  const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
+  const [search, setSearch] = useState(initialSearch);
   const [selectedVehicle, setSelectedVehicle] = useState<PublicVehicle | null>(
     null
-    
+
   );
-  
+
 
   const availableBrands = useMemo(() => {
     if (category === "TODOS") {

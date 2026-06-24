@@ -13,6 +13,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { VehicleDetailActions } from "@/components/vehicles/VehicleDetailActions";
 import { prisma } from "@/lib/prisma";
+import { VehicleMediaGallery } from "@/components/vehicles/VehicleMediaGallery";
 
 export const dynamic = "force-dynamic";
 
@@ -61,10 +62,15 @@ export default async function VehicleDetailPage({
   params,
 }: VehicleDetailPageProps) {
   const { id } = await params;
+  const vehicleId = Number(id);
+
+  if (Number.isNaN(vehicleId)) {
+    notFound();
+  }
 
   const vehicle = await prisma.vehicle.findFirst({
     where: {
-      id: Number(id),
+      id: vehicleId,
       active: true,
       branch: {
         active: true,
@@ -93,11 +99,6 @@ export default async function VehicleDetailPage({
   const specs = splitList(vehicle.specs);
   const features = splitList(vehicle.features);
 
-  const gallery = [
-    vehicle.mainImage,
-    ...vehicle.images.map((image) => image.url),
-  ].filter(Boolean) as string[];
-
   return (
     <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
       <Header />
@@ -118,32 +119,11 @@ export default async function VehicleDetailPage({
         <Container>
           <div className="grid gap-8 lg:grid-cols-[1fr_390px]">
             <div className="space-y-8">
-              <div className="overflow-hidden rounded-[2rem] border border-[var(--rise-border)] bg-white shadow-sm">
-                {gallery.length > 0 ? (
-                  <img
-                    src={gallery[0]}
-                    alt={vehicle.name}
-                    className="h-[320px] w-full object-cover md:h-[520px]"
-                  />
-                ) : (
-                  <div className="grid h-[320px] w-full place-items-center bg-[var(--rise-blue-soft)] text-sm font-black text-[var(--rise-blue)] md:h-[520px]">
-                    Sin imagen
-                  </div>
-                )}
-
-                {gallery.length > 1 && (
-                  <div className="grid grid-cols-3 gap-3 p-4">
-                    {gallery.slice(0, 3).map((image, index) => (
-                      <img
-                        key={`${image}-${index}`}
-                        src={image}
-                        alt={`${vehicle.name} imagen ${index + 1}`}
-                        className="h-28 w-full rounded-2xl object-cover"
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+              <VehicleMediaGallery
+                items={vehicle.images}
+                fallbackImage={vehicle.mainImage}
+                vehicleName={`${vehicle.brand.name} ${vehicle.name}`}
+              />
 
               <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm md:p-8">
                 <p className="text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">

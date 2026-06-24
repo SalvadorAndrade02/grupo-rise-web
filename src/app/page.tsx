@@ -9,6 +9,7 @@ import { InfoCards } from "@/components/home/InfoCards";
 import { FinalCTA } from "@/components/home/FinalCTA";
 import { HomeStats } from "@/components/home/HomeStats";
 import { prisma } from "@/lib/prisma";
+import { BranchesCarousel } from "@/components/home/BranchesCarousel";
 
 export const dynamic = "force-dynamic";
 
@@ -95,6 +96,7 @@ export default async function HomePage() {
       <QuickActions />
       <FeaturedVehicles vehicles={formattedVehicles} />
       <MotorcycleBanner />
+      <BranchesCarousel branches={branches} />
       <InfoCards />
       <FinalCTA />
       <Footer />

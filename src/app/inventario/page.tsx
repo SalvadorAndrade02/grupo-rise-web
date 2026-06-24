@@ -8,13 +8,25 @@ export const dynamic = "force-dynamic";
 type InventoryPageProps = {
   searchParams: Promise<{
     categoria?: string;
+    condicion?: string;
+    q?: string;
+    precioMax?: string;
   }>;
 };
 
 type InitialCategory = "TODOS" | "AUTO" | "MOTO" | "TODOTERRENO";
+type InitialCondition = "TODOS" | "NUEVO" | "SEMINUEVO";
 
 function getInitialCategory(value?: string): InitialCategory {
   if (value === "AUTO" || value === "MOTO" || value === "TODOTERRENO") {
+    return value;
+  }
+
+  return "TODOS";
+}
+
+function getInitialCondition(value?: string): InitialCondition {
+  if (value === "NUEVO" || value === "SEMINUEVO") {
     return value;
   }
 
@@ -25,7 +37,11 @@ export default async function InventoryPage({
   searchParams,
 }: InventoryPageProps) {
   const params = await searchParams;
+
   const initialCategory = getInitialCategory(params.categoria);
+  const initialCondition = getInitialCondition(params.condicion);
+  const initialSearch = params.q ?? "";
+  const initialMaxPrice = params.precioMax ?? "TODOS";
   const [vehicles, brands, branches] = await Promise.all([
     prisma.vehicle.findMany({
       where: {
@@ -111,11 +127,14 @@ export default async function InventoryPage({
       <Header />
 
       <InventoryClient
-        key={initialCategory}
+        key={`${initialCategory}-${initialCondition}-${initialSearch}-${initialMaxPrice}`}
         vehicles={formattedVehicles}
         brands={formattedBrands}
         branches={formattedBranches}
         initialCategory={initialCategory}
+        initialCondition={initialCondition}
+        initialSearch={initialSearch}
+        initialMaxPrice={initialMaxPrice}
       />
       <Footer />
     </main>

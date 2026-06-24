@@ -34,8 +34,9 @@ enum VehicleStatus {
 enum LeadType {
   COTIZACION
   PRUEBA_MANEJO
-  FINANCIAMIENTO
+  CITA
   SERVICIO
+  FINANCIAMIENTO
   CONTACTO
 }
 
@@ -45,6 +46,11 @@ enum LeadStatus {
   EN_SEGUIMIENTO
   CERRADO
   PERDIDO
+}
+
+enum VehicleMediaType {
+  IMAGE
+  VIDEO
 }
 
 model Brand {
@@ -58,118 +64,124 @@ model Brand {
 }
 
 model Branch {
-  id            Int       @id @default(autoincrement())
-  name          String
-  city          String
-  state         String
-  address       String
-  phone         String?
-  whatsapp      String?
+  id       Int     @id @default(autoincrement())
+  name     String
+  city     String
+  state    String
+  address  String
+  phone    String?
+  whatsapp String?
 
   email         String?
   schedule      String?
   googleMapsUrl String?
   services      String?
-  sortOrder     Int       @default(0)
+  sortOrder     Int     @default(0)
 
-  active        Boolean   @default(true)
+  active Boolean @default(true)
 
-  vehicles      Vehicle[]
+  vehicles              Vehicle[]
   vehicleAvailabilities VehicleBranch[]
-  leads         Lead[]
+  leads                 Lead[]
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Vehicle {
-  id            Int              @id @default(autoincrement())
-  category      VehicleCategory
-  condition     VehicleCondition
-  status        VehicleStatus    @default(DISPONIBLE)
+  id        Int              @id @default(autoincrement())
+  category  VehicleCategory
+  condition VehicleCondition
+  status    VehicleStatus    @default(DISPONIBLE)
 
-  brandId       Int
-  brand         Brand            @relation(fields: [brandId], references: [id])
+  brandId Int
+  brand   Brand @relation(fields: [brandId], references: [id])
 
-  branchId      Int
-  branch        Branch           @relation(fields: [branchId], references: [id])
+  branchId Int
+  branch   Branch @relation(fields: [branchId], references: [id])
 
-  name          String
-  model         String
-  version       String?
-  year          Int
-  price         Int
-  type          String
-  color         String?
-  mileage       Int?
-  specs         String
-  description   String
-  features      String
+  name        String
+  model       String
+  version     String?
+  year        Int
+  price       Int
+  type        String
+  color       String?
+  mileage     Int?
+  specs       String
+  description String
+  features    String
 
-  mainImage     String?
-  images        VehicleImage[]
+  mainImage String?
+  images    VehicleImage[]
 
-  isFeatured    Boolean          @default(false)
-  active        Boolean          @default(true)
+  isFeatured Boolean @default(false)
+  active     Boolean @default(true)
 
-  leads         Lead[]
+  leads Lead[]
 
   branchAvailabilities VehicleBranch[]
 
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model VehicleImage {
-  id        Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   vehicleId Int
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  url       String
-  alt       String?
-  order     Int      @default(0)
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  url   String
+  alt   String?
+  type  VehicleMediaType @default(IMAGE)
+  order Int              @default(0)
+
   createdAt DateTime @default(now())
 }
 
 model Lead {
-  id          Int        @id @default(autoincrement())
-  type        LeadType
-  status      LeadStatus @default(NUEVO)
+  id     Int        @id @default(autoincrement())
+  type   LeadType
+  status LeadStatus @default(NUEVO)
 
-  name        String
-  phone       String
-  email       String?
-  message     String?
+  name    String
+  phone   String
+  email   String?
+  message String?
 
-  vehicleId   Int?
-  vehicle     Vehicle?   @relation(fields: [vehicleId], references: [id])
+  preferredDate DateTime?
+  preferredTime String?
 
-  branchId    Int?
-  branch      Branch?    @relation(fields: [branchId], references: [id])
+  vehicleId Int?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  branchId Int?
+  branch   Branch? @relation(fields: [branchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Banner {
-  id          Int      @id @default(autoincrement())
-  title       String
-  subtitle    String?
-  imageUrl    String?
-  buttonText  String?
-  buttonUrl   String?
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  title      String
+  subtitle   String?
+  imageUrl   String?
+  buttonText String?
+  buttonUrl  String?
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model VehicleBranch {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   vehicleId Int
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 
-  branchId  Int
-  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  branchId Int
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 

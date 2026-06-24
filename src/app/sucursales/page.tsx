@@ -26,6 +26,44 @@ function splitServices(value?: string | null) {
     .filter(Boolean);
 }
 
+function getBranchLocationText(branch: {
+  address: string;
+  city: string;
+  state: string;
+}) {
+  return `${branch.address}, ${branch.city}, ${branch.state}`;
+}
+
+function getMapEmbedUrl(branch: {
+  address: string;
+  city: string;
+  state: string;
+  googleMapsUrl?: string | null;
+}) {
+  const location = branch.googleMapsUrl?.trim() || getBranchLocationText(branch);
+
+  if (location.includes("/embed")) {
+    return location;
+  }
+
+  return `https://www.google.com/maps?q=${encodeURIComponent(location)}&output=embed`;
+}
+
+function getMapExternalUrl(branch: {
+  address: string;
+  city: string;
+  state: string;
+  googleMapsUrl?: string | null;
+}) {
+  if (branch.googleMapsUrl?.trim()) {
+    return branch.googleMapsUrl;
+  }
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    getBranchLocationText(branch)
+  )}`;
+}
+
 export default async function BranchesPage() {
   const branches = await prisma.branch.findMany({
     where: {
@@ -140,6 +178,8 @@ export default async function BranchesPage() {
               {branches.map((branch) => {
                 const services = splitServices(branch.services);
                 const whatsapp = cleanPhone(branch.whatsapp);
+                const mapEmbedUrl = getMapEmbedUrl(branch);
+                const mapExternalUrl = getMapExternalUrl(branch);
 
                 return (
                   <article
@@ -223,7 +263,18 @@ export default async function BranchesPage() {
                           </span>
                         ))}
                       </div>
+
                     )}
+
+                    <div className="mt-6 overflow-hidden rounded-2xl border border-[var(--rise-border)] bg-slate-100">
+                      <iframe
+                        src={mapEmbedUrl}
+                        title={`Mapa de ${branch.name}`}
+                        className="h-56 w-full"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    </div>
 
                     <div className="mt-6 rounded-2xl bg-slate-50 p-4">
                       <p className="text-sm font-black text-[var(--rise-navy)]">
@@ -237,13 +288,13 @@ export default async function BranchesPage() {
                     <div className="mt-auto grid gap-3 pt-6">
                       {branch.googleMapsUrl && (
                         <a
-                          href={branch.googleMapsUrl}
+                          href={mapExternalUrl}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--rise-border)] px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-[var(--rise-blue-soft)]"
                         >
                           <MapPin size={18} />
-                          Ver ubicación
+                          Ver en Google Maps
                         </a>
                       )}
 

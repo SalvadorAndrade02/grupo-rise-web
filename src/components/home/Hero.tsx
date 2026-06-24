@@ -3,11 +3,12 @@
 import { CalendarDays, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
+import Link from "next/link";
 
 export function Hero() {
   function goToInventory() {
-  window.location.href = "/inventario";
-}
+    window.location.href = "/inventario";
+  }
 
   return (
     <section className="relative overflow-hidden bg-slate-950">
@@ -29,20 +30,19 @@ export function Hero() {
           </p>
 
           <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-            <Button type="button" onClick={goToInventory} className="px-6 py-4">
-              Ver inventario
-              <ChevronRight size={18} />
-            </Button>
-
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={goToInventory}
-              className="border-white/20 bg-white/10 px-6 py-4 text-white hover:bg-white/20"
+            <Link
+              href="/inventario"
+              className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-100"
             >
-              <CalendarDays size={18} />
-              Agendar prueba
-            </Button>
+              Ver inventario
+            </Link>
+
+            <Link
+              href="/agendar-cita"
+              className="inline-flex items-center justify-center rounded-xl border border-white/30 px-6 py-3 text-sm font-black text-white transition hover:bg-white/10"
+            >
+              Agendar cita
+            </Link>
           </div>
         </div>
 

@@ -1,74 +1,75 @@
-import { ChevronRight, Gauge, ShieldCheck, WalletCards } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, Bike, ShieldCheck } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-
-const benefits = [
-  {
-    title: "Modelos 2024",
-    icon: Gauge,
-  },
-  {
-    title: "Financiamiento a tu medida",
-    icon: WalletCards,
-  },
-  {
-    title: "Servicio especializado",
-    icon: ShieldCheck,
-  },
-];
 
 export function MotorcycleBanner() {
   return (
-    <section className="py-16">
+    <section className="py-12">
       <Container>
-        <div className="overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-blue-50 via-white to-slate-100 shadow-sm">
-          <div className="grid items-center gap-10 p-8 md:p-12 lg:grid-cols-[0.9fr_1.1fr]">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.25em] text-blue-700">
-                Para cada camino
-              </p>
-
-              <h2 className="mt-4 text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
+        <div className="overflow-hidden rounded-[2rem] bg-[var(--rise-navy)] text-white shadow-xl shadow-slate-900/10">
+          <div className="grid items-center lg:grid-cols-2">
+            <div className="p-8 md:p-12">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white/80">
+                <Bike size={16} />
                 Motos listas para rodar
+              </span>
+
+              <h2 className="mt-6 text-3xl font-black tracking-tight md:text-5xl">
+                Encuentra motos nuevas y seminuevas disponibles
               </h2>
 
-              <p className="mt-5 max-w-xl text-base leading-7 text-slate-600">
-                Descubre nuestra selección de motos nuevas con diseño,
-                seguridad y tecnología para cada estilo de vida.
+              <p className="mt-5 max-w-xl text-sm leading-7 text-white/70 md:text-base">
+                Consulta modelos disponibles de nuestras marcas, revisa sus
+                detalles y solicita una cotización directamente desde el
+                inventario.
               </p>
 
-              <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                {benefits.map((benefit) => {
-                  const Icon = benefit.icon;
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="/inventario?categoria=MOTO"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-100"
+                >
+                  Ver motos
+                  <ArrowRight size={18} />
+                </Link>
 
-                  return (
-                    <div
-                      key={benefit.title}
-                      className="rounded-2xl border border-slate-200 bg-white p-4"
-                    >
-                      <Icon className="text-blue-700" size={24} />
-                      <p className="mt-3 text-sm font-black text-slate-900">
-                        {benefit.title}
-                      </p>
-                    </div>
-                  );
-                })}
+                <Link
+                  href="/inventario?categoria=MOTO&condicion=NUEVO"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 px-6 py-3 text-sm font-black text-white transition hover:bg-white/10"
+                >
+                  Motos nuevas
+                </Link>
+
+                <Link
+                  href="/inventario?categoria=MOTO&condicion=SEMINUEVO"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 px-6 py-3 text-sm font-black text-white transition hover:bg-white/10"
+                >
+                  Seminuevas
+                </Link>
               </div>
 
-              <Button className="mt-8">
-                Ver motos
-                <ChevronRight size={18} />
-              </Button>
+              <div className="mt-8 flex flex-wrap gap-4 text-sm text-white/70">
+                <div className="inline-flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-[var(--rise-blue)]" />
+                  Inventario actualizado
+                </div>
+
+                <div className="inline-flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-[var(--rise-blue)]" />
+                  Cotización directa
+                </div>
+              </div>
             </div>
 
-            <div className="relative">
-              <div className="absolute -inset-6 rounded-full bg-blue-500/10 blur-3xl" />
-
+            <div className="relative min-h-[320px] lg:min-h-[460px]">
               <img
-                src="https://images.unsplash.com/photo-1558981359-219d6364c9c8?q=80&w=1400&auto=format&fit=crop"
-                alt="Motos Grupo Rise"
-                className="relative h-[420px] w-full rounded-[2rem] object-cover shadow-2xl shadow-slate-900/15"
+                src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=1600&auto=format&fit=crop"
+                alt="Motocicleta"
+                className="h-full w-full object-cover"
               />
+
+              <div className="absolute inset-0 bg-gradient-to-r from-[var(--rise-navy)] via-[var(--rise-navy)]/40 to-transparent lg:bg-gradient-to-l" />
             </div>
           </div>
         </div>

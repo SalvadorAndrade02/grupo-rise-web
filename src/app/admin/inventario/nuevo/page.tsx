@@ -17,6 +17,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { prisma } from "@/lib/prisma";
+import { saveVehicleMediaFiles } from "@/lib/uploads";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,25 @@ async function createVehicle(formData: FormData) {
     throw new Error("Faltan campos obligatorios para crear el vehículo.");
   }
 
+  const mediaFiles = formData
+    .getAll("mediaFiles")
+    .filter((value): value is File => value instanceof File && value.size > 0);
+
+  let savedMedia: Awaited<ReturnType<typeof saveVehicleMediaFiles>> = [];
+
+  try {
+    savedMedia = await saveVehicleMediaFiles(mediaFiles);
+  } catch (error) {
+    console.error(error);
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "No se pudieron guardar los archivos del vehículo."
+    );
+  }
+
+  const firstImage = savedMedia.find((item) => item.type === "IMAGE");
+
   await prisma.vehicle.create({
     data: {
       category,
@@ -80,9 +100,21 @@ async function createVehicle(formData: FormData) {
       specs,
       features,
       description,
-      mainImage: mainImage || null,
+      mainImage: firstImage?.url ?? mainImage,
       isFeatured,
       active: true,
+
+      images:
+        savedMedia.length > 0
+          ? {
+            create: savedMedia.map((item, index) => ({
+              url: item.url,
+              type: item.type,
+              alt: name,
+              order: index,
+            })),
+          }
+          : undefined,
 
       branchAvailabilities: {
         create: uniqueBranchIds.map((id) => ({
@@ -462,7 +494,7 @@ export default async function NewVehiclePage() {
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm md:p-8">
+              {/* <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm md:p-8">
                 <div className="mb-6 flex items-center gap-3">
                   <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
                     <ImageIcon size={22} />
@@ -486,7 +518,7 @@ export default async function NewVehiclePage() {
                     className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
                   />
                 </label>
-              </div>
+              </div> */}
             </div>
 
             <aside className="lg:sticky lg:top-28 lg:self-start">
@@ -507,6 +539,24 @@ export default async function NewVehiclePage() {
                   <span className="text-sm font-bold text-slate-700">
                     Mostrar como destacado
                   </span>
+                </label>
+
+                <label className="block md:col-span-2">
+                  <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                    Galería del vehículo
+                  </span>
+
+                  <input
+                    name="mediaFiles"
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--rise-navy)] file:px-4 file:py-2 file:text-sm file:font-black file:text-white hover:file:bg-[var(--rise-blue)] focus:border-[var(--rise-blue)] focus:bg-white"
+                  />
+
+                  <p className="mt-2 text-xs font-semibold text-slate-500">
+                    Puedes subir hasta 10 archivos. Formatos permitidos: JPG, PNG, WEBP, AVIF, MP4, WEBM y MOV.
+                  </p>
                 </label>
 
                 <button
