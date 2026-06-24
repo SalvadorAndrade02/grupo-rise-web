@@ -66,6 +66,9 @@ export default async function VehicleDetailPage({
     where: {
       id: Number(id),
       active: true,
+      branch: {
+        active: true,
+      },
     },
     include: {
       brand: true,
@@ -73,6 +76,11 @@ export default async function VehicleDetailPage({
       images: {
         orderBy: {
           order: "asc",
+        },
+      },
+      branchAvailabilities: {
+        include: {
+          branch: true,
         },
       },
     },
@@ -257,6 +265,46 @@ export default async function VehicleDetailPage({
                       <span className="text-sm font-bold text-slate-700">
                         {vehicle.mileage.toLocaleString("es-MX")} km
                       </span>
+                    </div>
+                  )}
+
+                  {vehicle.branchAvailabilities.length > 0 && (
+                    <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+                      <p className="text-sm font-black text-[var(--rise-navy)]">
+                        Disponible en sucursales
+                      </p>
+
+                      <div className="mt-3 space-y-3">
+                        {vehicle.branchAvailabilities.map((item) => (
+                          <div
+                            key={item.id}
+                            className="rounded-xl border border-[var(--rise-border)] bg-white p-3"
+                          >
+                            <p className="text-sm font-black text-[var(--rise-navy)]">
+                              {item.branch.name}
+                            </p>
+
+                            <p className="mt-1 text-xs text-slate-500">
+                              {item.branch.city}, {item.branch.state}
+                            </p>
+
+                            <p className="mt-1 text-xs leading-5 text-slate-500">
+                              {item.branch.address}
+                            </p>
+
+                            {item.branch.whatsapp && (
+                              <a
+                                href={`https://wa.me/52${item.branch.whatsapp.replace(/\D/g, "")}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mt-3 inline-flex text-xs font-black text-[var(--rise-blue)] hover:text-[var(--rise-navy)]"
+                              >
+                                Contactar sucursal
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

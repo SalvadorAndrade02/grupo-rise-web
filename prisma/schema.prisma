@@ -58,18 +58,28 @@ model Brand {
 }
 
 model Branch {
-  id        Int       @id @default(autoincrement())
-  name      String
-  city      String
-  state     String
-  address   String
-  phone     String?
-  whatsapp  String?
-  active    Boolean   @default(true)
-  vehicles  Vehicle[]
-  leads     Lead[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            Int       @id @default(autoincrement())
+  name          String
+  city          String
+  state         String
+  address       String
+  phone         String?
+  whatsapp      String?
+
+  email         String?
+  schedule      String?
+  googleMapsUrl String?
+  services      String?
+  sortOrder     Int       @default(0)
+
+  active        Boolean   @default(true)
+
+  vehicles      Vehicle[]
+  vehicleAvailabilities VehicleBranch[]
+  leads         Lead[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Vehicle {
@@ -103,6 +113,8 @@ model Vehicle {
   active        Boolean          @default(true)
 
   leads         Lead[]
+
+  branchAvailabilities VehicleBranch[]
 
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
@@ -148,4 +160,18 @@ model Banner {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model VehicleBranch {
+  id        Int      @id @default(autoincrement())
+
+  vehicleId Int
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  branchId  Int
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([vehicleId, branchId])
 }

@@ -58,6 +58,11 @@ export default async function AdminInventoryPage() {
         include: {
             brand: true,
             branch: true,
+            branchAvailabilities: {
+                include: {
+                    branch: true,
+                },
+            },
         },
         orderBy: {
             createdAt: "desc",
@@ -204,9 +209,36 @@ export default async function AdminInventoryPage() {
                                             </td>
 
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 text-slate-600">
-                                                    <MapPin size={15} className="text-[var(--rise-blue)]" />
-                                                    {vehicle.branch.city}
+                                                <div>
+                                                    <div className="flex items-center gap-2 text-slate-600">
+                                                        <MapPin size={15} className="text-[var(--rise-blue)]" />
+                                                        <span>{vehicle.branch.city}</span>
+                                                    </div>
+
+                                                    {vehicle.branchAvailabilities.length > 0 && (
+                                                        <div className="mt-2 space-y-1">
+                                                            <p className="text-xs font-black text-slate-400">
+                                                                Disponible en {vehicle.branchAvailabilities.length} sucursal(es)
+                                                            </p>
+
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {vehicle.branchAvailabilities.slice(0, 3).map((item) => (
+                                                                    <span
+                                                                        key={item.id}
+                                                                        className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-600"
+                                                                    >
+                                                                        {item.branch.city}
+                                                                    </span>
+                                                                ))}
+
+                                                                {vehicle.branchAvailabilities.length > 3 && (
+                                                                    <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-600">
+                                                                        +{vehicle.branchAvailabilities.length - 3}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </td>
 

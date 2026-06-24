@@ -28,7 +28,6 @@ async function createVehicle(formData: FormData) {
   const status = formData.get("status") as VehicleStatus;
 
   const brandId = Number(formData.get("brandId"));
-  const branchId = Number(formData.get("branchId"));
 
   const name = String(formData.get("name") ?? "");
   const model = String(formData.get("model") ?? "");
@@ -38,6 +37,16 @@ async function createVehicle(formData: FormData) {
   const type = String(formData.get("type") ?? "");
   const color = String(formData.get("color") ?? "");
   const mileageValue = formData.get("mileage");
+  const branchId = Number(formData.get("branchId"));
+
+  const availabilityBranchIds = formData
+    .getAll("branchIds")
+    .map((value) => Number(value))
+    .filter(Boolean);
+
+  const uniqueBranchIds = Array.from(new Set([branchId, ...availabilityBranchIds]));
+
+
   const mileage =
     mileageValue && String(mileageValue).trim() !== ""
       ? Number(mileageValue)
@@ -74,6 +83,12 @@ async function createVehicle(formData: FormData) {
       mainImage: mainImage || null,
       isFeatured,
       active: true,
+
+      branchAvailabilities: {
+        create: uniqueBranchIds.map((id) => ({
+          branchId: id,
+        })),
+      },
     },
   });
 
@@ -337,6 +352,41 @@ export default async function NewVehiclePage() {
                     </select>
                   </label>
 
+                  <div className="md:col-span-2">
+                    <span className="mb-2 block text-sm font-bold text-slate-700">
+                      Disponible también en
+                    </span>
+
+                    <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2">
+                      {branches.map((branch) => (
+                        <label
+                          key={branch.id}
+                          className="flex items-start gap-3 rounded-xl bg-white p-3"
+                        >
+                          <input
+                            type="checkbox"
+                            name="branchIds"
+                            value={branch.id}
+                            className="mt-1 h-4 w-4 rounded border-slate-300"
+                          />
+
+                          <span>
+                            <span className="block text-sm font-bold text-[var(--rise-navy)]">
+                              {branch.name}
+                            </span>
+                            <span className="block text-xs text-slate-500">
+                              {branch.city}, {branch.state}
+                            </span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+
+                    <p className="mt-2 text-xs text-slate-500">
+                      La sucursal principal se agregará automáticamente a la disponibilidad.
+                    </p>
+                  </div>
+
                   <label className="block">
                     <span className="mb-2 block text-sm font-bold text-slate-700">
                       Condición
@@ -421,7 +471,7 @@ export default async function NewVehiclePage() {
                   <div>
                     <h2 className="text-2xl font-black">Imagen</h2>
                     <p className="text-sm text-slate-500">
-                      Por ahora usaremos URL de imagen; después podemos agregar carga de archivos.
+                      Por ahora usaremos URL de imagen.
                     </p>
                   </div>
                 </div>
@@ -479,7 +529,7 @@ export default async function NewVehiclePage() {
                     <MapPin size={20} className="shrink-0 text-[var(--rise-blue)]" />
                     <p className="text-xs leading-5 text-slate-600">
                       Las sucursales son ficticias por ahora. Después se
-                      reemplazarán con la información real de Grupo Rise.
+                      reemplazarán con la información real.
                     </p>
                   </div>
                 </div>

@@ -51,7 +51,7 @@ export function Hero() {
 
           <div className="relative rounded-[2.5rem] border border-white/10 bg-white/10 p-4 shadow-2xl shadow-blue-950/40 backdrop-blur">
             <img
-              src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=1400&auto=format&fit=crop"
+              src="/brand/Carro-xd.avif"
               alt="Auto y moto Grupo Rise"
               className="h-[430px] w-full rounded-[2rem] object-cover"
             />

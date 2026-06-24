@@ -5,11 +5,34 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default async function InventoryPage() {
+type InventoryPageProps = {
+  searchParams: Promise<{
+    categoria?: string;
+  }>;
+};
+
+type InitialCategory = "TODOS" | "AUTO" | "MOTO" | "TODOTERRENO";
+
+function getInitialCategory(value?: string): InitialCategory {
+  if (value === "AUTO" || value === "MOTO" || value === "TODOTERRENO") {
+    return value;
+  }
+
+  return "TODOS";
+}
+
+export default async function InventoryPage({
+  searchParams,
+}: InventoryPageProps) {
+  const params = await searchParams;
+  const initialCategory = getInitialCategory(params.categoria);
   const [vehicles, brands, branches] = await Promise.all([
     prisma.vehicle.findMany({
       where: {
         active: true,
+        branch: {
+          active: true,
+        },
       },
       include: {
         brand: true,
@@ -88,11 +111,12 @@ export default async function InventoryPage() {
       <Header />
 
       <InventoryClient
+        key={initialCategory}
         vehicles={formattedVehicles}
         brands={formattedBrands}
         branches={formattedBranches}
+        initialCategory={initialCategory}
       />
-
       <Footer />
     </main>
   );
