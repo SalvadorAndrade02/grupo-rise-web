@@ -6,6 +6,7 @@ import { ChevronRight, Heart, MapPin } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { RequestModal } from "@/components/ui/RequestModal";
 import { SectionTitle } from "@/components/ui/SectionTitle";
+import { VehicleLeadActions } from "@/components/vehicles/VehicleLeadActions";
 
 type DbVehicleCategory = "AUTO" | "MOTO" | "TODOTERRENO";
 type DbVehicleCondition = "NUEVO" | "SEMINUEVO";
@@ -23,7 +24,9 @@ type HomeVehicle = {
   condition: DbVehicleCondition;
   status: DbVehicleStatus;
   brandName: string;
+  branchId: number;
   branchCity: string;
+  branchWhatsapp?: string | null;
   name: string;
   model: string;
   year: number;
@@ -106,11 +109,10 @@ export function FeaturedVehicles({ vehicles }: FeaturedVehiclesProps) {
               key={tab.value}
               type="button"
               onClick={() => setActiveTab(tab.value)}
-              className={`rounded-full px-5 py-2 text-sm font-black transition ${
-                activeTab === tab.value
+              className={`rounded-full px-5 py-2 text-sm font-black transition ${activeTab === tab.value
                   ? "bg-[var(--rise-navy)] text-white"
                   : "bg-white text-slate-600 hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
-              }`}
+                }`}
             >
               {tab.label}
             </button>
@@ -189,21 +191,21 @@ export function FeaturedVehicles({ vehicles }: FeaturedVehiclesProps) {
                     {vehicle.branchCity}
                   </div>
 
-                  <div className="mt-6 grid grid-cols-2 gap-3">
+                  <div className="mt-5 grid gap-3">
                     <Link
                       href={`/vehiculos/${vehicle.id}`}
-                      className="rounded-xl border border-[var(--rise-border)] px-4 py-3 text-center text-sm font-bold text-[var(--rise-blue)] transition hover:bg-[var(--rise-blue-soft)]"
+                      className="inline-flex items-center justify-center rounded-xl border border-[var(--rise-border)] px-4 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
                     >
                       Ver detalles
                     </Link>
 
-                    <button
-                      type="button"
-                      onClick={() => setSelectedVehicle(vehicle)}
-                      className="rounded-xl bg-[var(--rise-navy)] px-4 py-3 text-sm font-bold text-white shadow-sm shadow-slate-900/20 transition hover:bg-[var(--rise-blue)]"
-                    >
-                      Cotizar
-                    </button>
+                    <VehicleLeadActions
+                      vehicleId={vehicle.id}
+                      branchId={vehicle.branchId}
+                      vehicleName={`${vehicle.brandName} ${vehicle.name}`}
+                      whatsapp={vehicle.branchWhatsapp}
+                      mode="compact"
+                    />
                   </div>
                 </div>
               </article>

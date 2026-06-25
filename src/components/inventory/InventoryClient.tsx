@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { RequestModal } from "@/components/ui/RequestModal";
+import { VehicleLeadActions } from "@/components/vehicles/VehicleLeadActions";
 
 type DbVehicleCategory = "AUTO" | "MOTO" | "TODOTERRENO";
 type DbVehicleCondition = "NUEVO" | "SEMINUEVO";
@@ -32,6 +33,7 @@ type PublicVehicle = {
   branchId: number;
   branchName: string;
   branchCity: string;
+  branchWhatsapp?: string | null;
   name: string;
   model: string;
   version: string | null;
@@ -196,8 +198,7 @@ export function InventoryClient({
             </h1>
 
             <p className="mt-5 text-base leading-7 text-slate-300 md:text-lg">
-              Consulta unidades nuevas y seminuevas disponibles. Esta vista ya
-              se alimenta desde la base de datos local mediante Prisma.
+              Consulta unidades nuevas y seminuevas disponibles.
             </p>
           </div>
         </Container>
@@ -430,21 +431,21 @@ export function InventoryClient({
                       {vehicle.branchCity}
                     </div>
 
-                    <div className="mt-6 grid grid-cols-2 gap-3">
+                    <div className="mt-5 grid gap-3">
                       <Link
                         href={`/vehiculos/${vehicle.id}`}
-                        className="rounded-xl border border-[var(--rise-border)] px-4 py-3 text-center text-sm font-bold text-[var(--rise-blue)] transition hover:bg-[var(--rise-blue-soft)]"
+                        className="inline-flex items-center justify-center rounded-xl border border-[var(--rise-border)] px-4 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
                       >
                         Ver detalles
                       </Link>
 
-                      <button
-                        type="button"
-                        onClick={() => setSelectedVehicle(vehicle)}
-                        className="rounded-xl bg-[var(--rise-navy)] px-4 py-3 text-sm font-bold text-white shadow-sm shadow-slate-900/20 transition hover:bg-[var(--rise-blue)]"
-                      >
-                        Cotizar
-                      </button>
+                      <VehicleLeadActions
+                        vehicleId={vehicle.id}
+                        branchId={vehicle.branchId}
+                        vehicleName={`${vehicle.brandName} ${vehicle.name}`}
+                        whatsapp={vehicle.branchWhatsapp}
+                        mode="compact"
+                      />
                     </div>
                   </div>
                 </article>

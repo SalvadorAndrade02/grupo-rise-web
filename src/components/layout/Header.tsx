@@ -120,7 +120,7 @@ export function Header() {
 
           <div className="hidden items-center gap-3 lg:flex">
             <Link
-              href="/sucursales"
+              href="/agendar-cita"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
             >
               <CalendarDays size={18} />

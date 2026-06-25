@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { unlink } from "fs/promises";
 
 export type SavedVehicleMedia = {
   url: string;
@@ -95,4 +96,18 @@ export async function saveVehicleMediaFiles(
   }
 
   return savedFiles;
+}
+
+export async function deletePublicFile(url?: string | null) {
+  if (!url || !url.startsWith("/uploads/vehicles/")) {
+    return;
+  }
+
+  const filePath = path.join(process.cwd(), "public", url);
+
+  try {
+    await unlink(filePath);
+  } catch {
+    // Si el archivo ya no existe, no detenemos el proceso.
+  }
 }

@@ -159,8 +159,7 @@ export default async function BranchesPage() {
               </h2>
 
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Información de contacto y ubicación registrada desde el módulo
-                administrativo.
+                Consulta nuestras sucursales y contactanos lo mas cerca de ti posible.
               </p>
             </div>
 

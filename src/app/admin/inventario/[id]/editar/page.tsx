@@ -11,7 +11,15 @@ import {
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
+import { revalidatePath } from "next/cache";
+import {
+  VehicleCategory,
+  VehicleCondition,
+  VehicleStatus,
+} from "@prisma/client";
+import { Trash2, Upload } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { deletePublicFile, saveVehicleMediaFiles } from "@/lib/uploads";
 
 export const dynamic = "force-dynamic";
 
@@ -31,46 +39,133 @@ type DbVehicleStatus =
   | "PROXIMAMENTE"
   | "INACTIVO";
 
-async function updateVehicle(formData: FormData) {
+function getStringValue(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim();
+}
+
+function getNumberValue(formData: FormData, key: string) {
+  const value = Number(formData.get(key));
+
+  if (Number.isNaN(value)) {
+    return 0;
+  }
+
+  return value;
+}
+
+async function updateVehicle(vehicleId: number, formData: FormData) {
   "use server";
 
-  const id = Number(formData.get("id"));
+  const currentVehicle = await prisma.vehicle.findUnique({
+    where: {
+      id: vehicleId,
+    },
+    include: {
+      images: true,
+    },
+  });
 
-  const category = formData.get("category") as DbVehicleCategory;
-  const condition = formData.get("condition") as DbVehicleCondition;
-  const status = formData.get("status") as DbVehicleStatus;
+  if (!currentVehicle) {
+    notFound();
+  }
 
-  const brandId = Number(formData.get("brandId"));
-  const branchId = Number(formData.get("branchId"));
+  const category = getStringValue(formData, "category") as VehicleCategory;
+  const condition = getStringValue(formData, "condition") as VehicleCondition;
+  const status = getStringValue(formData, "status") as VehicleStatus;
 
-  const name = String(formData.get("name") ?? "");
-  const model = String(formData.get("model") ?? "");
-  const version = String(formData.get("version") ?? "");
-  const year = Number(formData.get("year"));
-  const price = Number(formData.get("price"));
-  const type = String(formData.get("type") ?? "");
-  const color = String(formData.get("color") ?? "");
+  const brandId = getNumberValue(formData, "brandId");
+  const branchId = getNumberValue(formData, "branchId");
 
-  const mileageValue = formData.get("mileage");
-  const mileage =
-    mileageValue && String(mileageValue).trim() !== ""
-      ? Number(mileageValue)
-      : null;
+  const name = getStringValue(formData, "name");
+  const model = getStringValue(formData, "model");
+  const version = getStringValue(formData, "version");
+  const year = getNumberValue(formData, "year");
+  const price = getNumberValue(formData, "price");
+  const type = getStringValue(formData, "type");
+  const color = getStringValue(formData, "color");
+  const mileage = getNumberValue(formData, "mileage");
+  const specs = getStringValue(formData, "specs");
+  const features = getStringValue(formData, "features");
+  const description = getStringValue(formData, "description");
+  const mainImageInput = getStringValue(formData, "mainImage");
 
-  const specs = String(formData.get("specs") ?? "");
-  const features = String(formData.get("features") ?? "");
-  const description = String(formData.get("description") ?? "");
-  const mainImage = String(formData.get("mainImage") ?? "");
   const isFeatured = formData.get("isFeatured") === "on";
   const active = formData.get("active") === "on";
 
-  if (!id || !brandId || !branchId || !name || !model || !year || !price || !type) {
-    throw new Error("Faltan campos obligatorios para actualizar el vehículo.");
+  const availabilityBranchIds = formData
+    .getAll("branchIds")
+    .map((value) => Number(value))
+    .filter(Boolean);
+
+  const uniqueBranchIds = Array.from(new Set([branchId, ...availabilityBranchIds]));
+
+  const deleteMediaIds = formData
+    .getAll("deleteMediaIds")
+    .map((value) => Number(value))
+    .filter(Boolean);
+
+  const mediaFiles = formData
+    .getAll("mediaFiles")
+    .filter((value): value is File => value instanceof File && value.size > 0);
+
+  const mediaToDelete = currentVehicle.images.filter((image) =>
+    deleteMediaIds.includes(image.id)
+  );
+
+  const remainingMedia = currentVehicle.images.filter(
+    (image) => !deleteMediaIds.includes(image.id)
+  );
+
+  if (remainingMedia.length + mediaFiles.length > 10) {
+    throw new Error("El vehículo solo puede tener máximo 10 archivos entre imágenes y videos.");
   }
+
+  const savedMedia = await saveVehicleMediaFiles(mediaFiles);
+
+  const firstUploadedImage = savedMedia.find((item) => item.type === "IMAGE");
+
+  const firstRemainingImage = remainingMedia.find(
+    (image) => image.type === "IMAGE"
+  );
+
+  const finalMainImage =
+    firstRemainingImage?.url ||
+    firstUploadedImage?.url ||
+    mainImageInput ||
+    currentVehicle.mainImage ||
+    "";
+
+  const imagesUpdate = {
+    ...(deleteMediaIds.length > 0
+      ? {
+        deleteMany: {
+          id: {
+            in: deleteMediaIds,
+          },
+        },
+      }
+      : {}),
+    ...(savedMedia.length > 0
+      ? {
+        create: savedMedia.map((item, index) => ({
+          url: item.url,
+          type: item.type,
+          alt: name,
+          order: remainingMedia.length + index,
+        })),
+      }
+      : {}),
+  };
 
   await prisma.vehicle.update({
     where: {
-      id,
+      id: vehicleId,
     },
     data: {
       category,
@@ -80,20 +175,34 @@ async function updateVehicle(formData: FormData) {
       branchId,
       name,
       model,
-      version: version || null,
+      version,
       year,
       price,
       type,
-      color: color || null,
+      color,
       mileage,
       specs,
       features,
       description,
-      mainImage: mainImage || null,
+      mainImage: finalMainImage,
       isFeatured,
       active,
+
+      branchAvailabilities: {
+        deleteMany: {},
+        create: uniqueBranchIds.map((id) => ({
+          branchId: id,
+        })),
+      },
+
+      images: Object.keys(imagesUpdate).length > 0 ? imagesUpdate : undefined,
     },
   });
+
+  await Promise.all(mediaToDelete.map((media) => deletePublicFile(media.url)));
+
+  revalidatePath("/admin/inventario");
+  revalidatePath(`/vehiculos/${vehicleId}`);
 
   redirect("/admin/inventario");
 }
@@ -110,43 +219,60 @@ function formatCategory(category: string) {
 
 export default async function EditVehiclePage({ params }: EditVehiclePageProps) {
   const { id } = await params;
+  const vehicleId = Number(id);
+
+  if (Number.isNaN(vehicleId)) {
+    notFound();
+  }
 
   const [vehicle, brands, branches] = await Promise.all([
     prisma.vehicle.findUnique({
       where: {
-        id: Number(id),
+        id: vehicleId,
       },
       include: {
         brand: true,
         branch: true,
+        images: {
+          orderBy: {
+            order: "asc",
+          },
+        },
+        branchAvailabilities: true,
       },
     }),
+
     prisma.brand.findMany({
+      where: {
+        active: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    }),
+
+    prisma.branch.findMany({
       where: {
         active: true,
       },
       orderBy: [
         {
-          category: "asc",
+          sortOrder: "asc",
         },
         {
-          name: "asc",
+          city: "asc",
         },
       ],
-    }),
-    prisma.branch.findMany({
-      where: {
-        active: true,
-      },
-      orderBy: {
-        city: "asc",
-      },
     }),
   ]);
 
   if (!vehicle) {
     notFound();
   }
+
+  const selectedBranchIds = new Set(
+    vehicle.branchAvailabilities.map((item) => item.branchId)
+  );
 
   return (
     <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
@@ -185,8 +311,8 @@ export default async function EditVehiclePage({ params }: EditVehiclePageProps) 
       <section className="py-8 md:py-12">
         <Container>
           <form
-            action={updateVehicle}
-            className="grid gap-8 lg:grid-cols-[1fr_360px]"
+            action={updateVehicle.bind(null, vehicle.id)}
+            className="mt-8 grid gap-5 md:grid-cols-2"
           >
             <input type="hidden" name="id" value={vehicle.id} />
 
@@ -371,6 +497,41 @@ export default async function EditVehiclePage({ params }: EditVehiclePageProps) 
                         </option>
                       ))}
                     </select>
+                    <div className="md:col-span-2">
+                      <span className="mb-2 block text-sm font-bold text-slate-700">
+                        Disponible también en
+                      </span>
+
+                      <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2">
+                        {branches.map((branch) => (
+                          <label
+                            key={branch.id}
+                            className="flex items-start gap-3 rounded-xl bg-white p-3"
+                          >
+                            <input
+                              type="checkbox"
+                              name="branchIds"
+                              value={branch.id}
+                              defaultChecked={selectedBranchIds.has(branch.id)}
+                              className="mt-1 h-4 w-4"
+                            />
+
+                            <span>
+                              <span className="block text-sm font-black text-slate-700">
+                                {branch.name}
+                              </span>
+                              <span className="block text-xs font-bold text-slate-500">
+                                {branch.city}, {branch.state}
+                              </span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+
+                      <p className="mt-2 text-xs text-slate-500">
+                        La sucursal principal se agregará automáticamente aunque no esté marcada.
+                      </p>
+                    </div>
                   </label>
 
                   <label className="block">
@@ -513,6 +674,84 @@ export default async function EditVehiclePage({ params }: EditVehiclePageProps) 
                   <span className="text-sm font-bold text-slate-700">
                     Publicación activa
                   </span>
+                </label>
+
+                <div className="md:col-span-2 rounded-[1.5rem] border border-[var(--rise-border)] bg-white p-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-lg font-black text-[var(--rise-navy)]">
+                        Galería actual
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Puedes marcar archivos para eliminarlos. El vehículo puede tener máximo 10 archivos.
+                      </p>
+                    </div>
+                  </div>
+
+                  {vehicle.images.length > 0 ? (
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {vehicle.images.map((media) => (
+                        <label
+                          key={media.id}
+                          className="group overflow-hidden rounded-2xl border border-[var(--rise-border)] bg-slate-50"
+                        >
+                          <div className="relative aspect-video bg-slate-900">
+                            {media.type === "VIDEO" ? (
+                              <video
+                                src={media.url}
+                                controls
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <img
+                                src={media.url}
+                                alt={media.alt ?? vehicle.name}
+                                className="h-full w-full object-cover"
+                              />
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3 p-4">
+                            <input
+                              type="checkbox"
+                              name="deleteMediaIds"
+                              value={media.id}
+                              className="h-4 w-4"
+                            />
+
+                            <span className="inline-flex items-center gap-2 text-sm font-black text-red-600">
+                              <Trash2 size={16} />
+                              Eliminar
+                            </span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                      <p className="text-sm font-bold text-slate-500">
+                        Este vehículo todavía no tiene imágenes o videos.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <label className="block md:col-span-2">
+                  <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                    Agregar nuevas imágenes o videos
+                  </span>
+
+                  <input
+                    name="mediaFiles"
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--rise-navy)] file:px-4 file:py-2 file:text-sm file:font-black file:text-white hover:file:bg-[var(--rise-blue)] focus:border-[var(--rise-blue)] focus:bg-white"
+                  />
+
+                  <p className="mt-2 text-xs font-semibold text-slate-500">
+                    Máximo 10 archivos por vehículo. Puedes subir JPG, PNG, WEBP, AVIF, MP4, WEBM o MOV.
+                  </p>
                 </label>
 
                 <button

@@ -53,6 +53,14 @@ export default async function InventoryPage({
       include: {
         brand: true,
         branch: true,
+        images: {
+          where: {
+            type: "IMAGE",
+          },
+          orderBy: {
+            order: "asc",
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -93,6 +101,7 @@ export default async function InventoryPage({
     branchId: vehicle.branchId,
     branchName: vehicle.branch.name,
     branchCity: vehicle.branch.city,
+    branchWhatsapp: vehicle.branch.whatsapp,
     name: vehicle.name,
     model: vehicle.model,
     version: vehicle.version,
@@ -105,7 +114,7 @@ export default async function InventoryPage({
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean),
-    mainImage: vehicle.mainImage,
+    mainImage: vehicle.images[0]?.url || vehicle.mainImage || "",
     isFeatured: vehicle.isFeatured,
   }));
 

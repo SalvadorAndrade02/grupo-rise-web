@@ -26,6 +26,14 @@ export default async function HomePage() {
       include: {
         brand: true,
         branch: true,
+        images: {
+          where: {
+            type: "IMAGE",
+          },
+          orderBy: {
+            order: "asc",
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -37,6 +45,14 @@ export default async function HomePage() {
       where: {
         active: true,
       },
+      orderBy: [
+        {
+          sortOrder: "asc",
+        },
+        {
+          city: "asc",
+        },
+      ],
     }),
   ]);
 
@@ -58,7 +74,9 @@ export default async function HomePage() {
     condition: vehicle.condition,
     status: vehicle.status,
     brandName: vehicle.brand.name,
+    branchId: vehicle.branchId,
     branchCity: vehicle.branch.city,
+    branchWhatsapp: vehicle.branch.whatsapp,
     name: vehicle.name,
     model: vehicle.model,
     year: vehicle.year,
@@ -68,7 +86,7 @@ export default async function HomePage() {
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean),
-    mainImage: vehicle.mainImage,
+    mainImage: vehicle.images[0]?.url || vehicle.mainImage || "",
   }));
 
   const stats = {
@@ -86,7 +104,7 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
       <Header />
-      <Hero />
+      <Hero vehicles={formattedVehicles} />
 
       <section className="relative z-20 -mt-6 md:-mt-10">
         <VehicleSearch />
