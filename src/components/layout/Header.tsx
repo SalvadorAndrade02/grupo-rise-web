@@ -28,16 +28,36 @@ const mainLinks = [
 
 const catalogLinks = [
   {
-    label: "Autos",
-    href: "/inventario?categoria=AUTO",
+    label: "Can-Am",
+    href: "/inventario",
   },
   {
-    label: "Motos",
-    href: "/inventario?categoria=MOTO",
+    label: "Polaris",
+    href: "/inventario",
   },
   {
-    label: "Todo terreno",
+    label: "Royal Enfield",
     href: "/inventario?categoria=TODOTERRENO",
+  },
+  {
+    label: "Sea-Doo",
+    href: "#",
+  },
+  {
+    label: "Triumph Motorcycles",
+    href: "#",
+  },
+  {
+    label: "Indian Motorcycle",
+    href: "#",
+  },
+  {
+    label: "Zeekrlife",
+    href: "/inventario",
+  },
+  {
+    label: "Lynk & Co",
+    href: "/inventario",
   },
 ];
 
