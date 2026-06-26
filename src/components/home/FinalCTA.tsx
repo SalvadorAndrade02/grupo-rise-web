@@ -1,6 +1,7 @@
 import { ChevronRight, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
+import Link from "next/link";
 
 export function FinalCTA() {
   return (
@@ -24,18 +25,22 @@ export function FinalCTA() {
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button className="bg-blue text-slate-950 hover:bg-slate-500">
-                Explorar inventario
-                <ChevronRight size={18} />
-              </Button>
+              <Link href="/inventario">
+                <Button className="bg-blue text-slate-950 hover:bg-slate-500">
+                  Explorar inventario
+                  <ChevronRight size={18} />
+                </Button>
+              </Link>
 
-              <Button
-                variant="secondary"
-                className="border-white/20 bg-white/10 text-white hover:bg-white/20"
-              >
-                <MessageCircle size={18} />
-                Contactar asesor
-              </Button>
+              <Link href="/contacto">
+                <Button
+                  variant="secondary"
+                  className="border-white/20 bg-white/10 text-white hover:bg-white/20"
+                >
+                  <MessageCircle size={18} />
+                  Contactar asesor
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

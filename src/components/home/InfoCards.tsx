@@ -21,7 +21,7 @@ const cards = [
     title: "Agenda una cita",
     description:
       "Elige una sucursal y ponte en contacto para recibir atención personalizada.",
-    href: "/sucursales",
+    href: "/agendar-cita",
     icon: CalendarCheck,
   },
   {
