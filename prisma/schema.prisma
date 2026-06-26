@@ -59,6 +59,9 @@ model Brand {
   category  VehicleCategory
   active    Boolean         @default(true)
   vehicles  Vehicle[]
+
+  catalogCategories CatalogCategory[]
+  catalogModels      CatalogModel[]
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 }
@@ -186,4 +189,77 @@ model VehicleBranch {
   createdAt DateTime @default(now())
 
   @@unique([vehicleId, branchId])
+}
+
+model CatalogCategory {
+  id        Int      @id @default(autoincrement())
+
+  brandId   Int
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  name      String
+  slug      String
+
+  parentId  Int?
+  parent    CatalogCategory?  @relation("CatalogCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children  CatalogCategory[] @relation("CatalogCategoryHierarchy")
+
+  models    CatalogModel[]
+
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([brandId, slug])
+}
+
+model CatalogModel {
+  id          Int      @id @default(autoincrement())
+
+  brandId     Int
+  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  categoryId  Int?
+  category    CatalogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  name        String
+  slug        String
+
+  categoryType VehicleCategory @default(TODOTERRENO)
+
+  year        Int?
+  priceFrom   Int?
+
+  subtitle    String?
+  description String  @default("")
+  specs       String  @default("")
+  features    String  @default("")
+
+  mainImage   String?
+
+  active      Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  images      CatalogImage[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([brandId, slug])
+}
+
+model CatalogImage {
+  id             Int          @id @default(autoincrement())
+
+  catalogModelId Int
+  catalogModel   CatalogModel @relation(fields: [catalogModelId], references: [id], onDelete: Cascade)
+
+  url            String
+  alt            String?
+  type           VehicleMediaType @default(IMAGE)
+  order          Int              @default(0)
+
+  createdAt      DateTime @default(now())
 }
