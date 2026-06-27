@@ -46,6 +46,7 @@ export default async function InventoryPage({
     prisma.vehicle.findMany({
       where: {
         active: true,
+        condition: "SEMINUEVO",
         branch: {
           active: true,
         },

@@ -1,8 +1,5 @@
 import Link from "next/link";
 import { Building2, MapPin, Phone, Plus, Store } from "lucide-react";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { Container } from "@/components/ui/Container";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -29,13 +26,11 @@ export default async function AdminBranchesPage() {
 
   return (
     <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
-      <Header />
 
-      <section className="bg-[var(--rise-navy)] py-12 text-white">
-        <Container>
+      <section className="py-10">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.25em] text-sky-200">
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
                 Administración
               </p>
 
@@ -43,7 +38,7 @@ export default async function AdminBranchesPage() {
                 Sucursales
               </h1>
 
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300">
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
                 Gestiona las agencias, ubicaciones, teléfonos, horarios y
                 servicios disponibles de Grupo Rise.
               </p>
@@ -51,17 +46,15 @@ export default async function AdminBranchesPage() {
 
             <Link
               href="/admin/sucursales/nueva"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-100"
+              className="inline-flex items-center gap-2 rounded-xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
             >
               <Plus size={18} />
               Nueva sucursal
             </Link>
           </div>
-        </Container>
       </section>
 
       <section className="py-8">
-        <Container>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-3xl border border-[var(--rise-border)] bg-white p-6 shadow-sm">
               <Building2 className="text-[var(--rise-blue)]" />
@@ -83,11 +76,9 @@ export default async function AdminBranchesPage() {
               <p className="mt-1 text-3xl font-black">{inactive}</p>
             </div>
           </div>
-        </Container>
       </section>
 
       <section className="pb-16">
-        <Container>
           <div className="overflow-hidden rounded-[2rem] border border-[var(--rise-border)] bg-white shadow-sm">
             <div className="border-b border-slate-100 p-6">
               <h2 className="text-2xl font-black">Sucursales registradas</h2>
@@ -198,10 +189,7 @@ export default async function AdminBranchesPage() {
               )}
             </div>
           </div>
-        </Container>
       </section>
-
-      <Footer />
-    </main>
+      </main>
   );
 }

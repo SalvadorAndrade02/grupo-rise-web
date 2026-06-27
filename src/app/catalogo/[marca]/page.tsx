@@ -390,16 +390,12 @@ export default async function CatalogBrandPage({
           {parentCategories.length > 0 ? (
             <div className="space-y-10">
               {parentCategories.map((category) => {
-                const directModels = category.models.filter(matchesFilters);
+                const categoryModels = [
+                  ...category.models.filter(matchesFilters),
+                  ...category.children.flatMap((child) => child.models.filter(matchesFilters)),
+                ];
 
-                const childCategories = category.children.map((child) => ({
-                  ...child,
-                  models: child.models.filter(matchesFilters),
-                }));
-
-                const hasModels =
-                  directModels.length > 0 ||
-                  childCategories.some((child) => child.models.length > 0);
+                const hasModels = categoryModels.length > 0;
 
                 if (!hasModels && hasActiveFilters) {
                   return null;
@@ -443,71 +439,31 @@ export default async function CatalogBrandPage({
                       </div>
 
                       <span className="rounded-full bg-[var(--rise-blue-soft)] px-4 py-2 text-xs font-black uppercase tracking-wider text-[var(--rise-blue)]">
-                        {childCategories.length > 0
-                          ? `${childCategories.length} subcategoría(s)`
-                          : `${directModels.length} modelo(s)`}
+                        {categoryModels.length} modelo(s)
                       </span>
                     </div>
 
-                    {directModels.length > 0 && (
-                      <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                        {directModels.map((model) => (
-                          <CatalogModelCard
-                            key={model.id}
-                            brandSlug={marca}
-                            brandName={brand.name}
-                            model={model}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {childCategories.length > 0 && (
-                      <div className="mt-8 space-y-8">
-                        {childCategories.map((child) => (
-                          <div key={child.id}>
-                            <div className="flex items-center gap-3">
-                              <div className="h-px flex-1 bg-slate-200" />
-
-                              <h3 className="rounded-full bg-slate-100 px-4 py-2 text-sm font-black text-slate-600">
-                                {child.name}
-                              </h3>
-
-                              <div className="h-px flex-1 bg-slate-200" />
-                            </div>
-
-                            {child.models.length > 0 ? (
-                              <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                                {child.models.map((model) => (
-                                  <CatalogModelCard
-                                    key={model.id}
-                                    brandSlug={marca}
-                                    brandName={brand.name}
-                                    model={model}
-                                  />
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="mt-5 rounded-2xl bg-slate-50 p-5 text-center text-sm font-bold text-slate-500">
-                                No hay modelos activos en esta subcategoría.
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                      {categoryModels.map((model) => (
+                        <CatalogModelCard
+                          key={model.id}
+                          brandSlug={marca}
+                          brandName={brand.name}
+                          model={model}
+                        />
+                      ))}
+                    </div>
                   </section>
                 );
               })}
               {hasActiveFilters &&
                 parentCategories.every((category) => {
-                  const directModels = category.models.filter(matchesFilters);
+                  const categoryModels = [
+                    ...category.models.filter(matchesFilters),
+                    ...category.children.flatMap((child) => child.models.filter(matchesFilters)),
+                  ];
 
-                  const childModels = category.children.flatMap((child) =>
-                    child.models.filter(matchesFilters)
-                  );
-
-                  return directModels.length === 0 && childModels.length === 0;
+                  return categoryModels.length === 0;
                 }) && (
                   <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-12 text-center">
                     <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-slate-100 text-slate-400">

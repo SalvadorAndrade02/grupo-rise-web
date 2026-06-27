@@ -2,10 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
-  CalendarDays,
   CheckCircle2,
-  ImageIcon,
-  MessageCircle,
   Tag,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
@@ -13,6 +10,8 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
+import { CatalogLeadActions } from "@/components/catalog/CatalogLeadActions";
+import { VehicleMediaGallery } from "@/components/vehicles/VehicleMediaGallery";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +78,6 @@ export default async function CatalogModelPage({
     notFound();
   }
 
-  const image = catalogModel.images[0]?.url || catalogModel.mainImage || "";
   const specs = splitList(catalogModel.specs);
   const features = splitList(catalogModel.features);
 
@@ -135,26 +133,11 @@ export default async function CatalogModelPage({
         <Container>
           <div className="grid gap-8 xl:grid-cols-[1fr_380px]">
             <div className="space-y-8">
-              <div className="overflow-hidden rounded-[2.5rem] border border-[var(--rise-border)] bg-white p-3 shadow-sm">
-                <div className="h-[320px] overflow-hidden rounded-[2rem] bg-slate-100 md:h-[520px]">
-                  {image ? (
-                    <img
-                      src={image}
-                      alt={`${catalogModel.brand.name} ${catalogModel.name}`}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="grid h-full place-items-center text-slate-400">
-                      <div className="text-center">
-                        <ImageIcon className="mx-auto" size={56} />
-                        <p className="mt-3 text-sm font-black uppercase tracking-wider">
-                          Sin imagen principal
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <VehicleMediaGallery
+                items={catalogModel.images}
+                fallbackImage={catalogModel.mainImage}
+                vehicleName={`${catalogModel.brand.name} ${catalogModel.name}`}
+              />
 
               <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm md:p-8">
                 <p className="text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
@@ -248,31 +231,23 @@ export default async function CatalogModelPage({
                 </div>
 
                 <div className="grid gap-3 p-6">
-                  <Link
-                    href={`/contacto?modelo=${catalogModel.slug}`}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 py-4 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-                  >
-                    <MessageCircle size={18} />
-                    Solicitar información
-                  </Link>
-
-                  <Link
-                    href="/agendar-cita"
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--rise-border)] bg-white px-5 py-4 text-sm font-black text-[var(--rise-navy)] transition hover:bg-[var(--rise-blue-soft)]"
-                  >
-                    <CalendarDays size={18} />
-                    Agendar cita
-                  </Link>
+                  <CatalogLeadActions
+                    brandName={catalogModel.brand.name}
+                    modelName={catalogModel.name}
+                  />
 
                   <div className="mt-3 rounded-2xl bg-slate-50 p-4">
-                    <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400">
-                      <Tag size={15} />
-                      Año modelo
-                    </p>
 
-                    <p className="mt-1 text-lg font-black">
-                      {catalogModel.year ?? "Por definir"}
-                    </p>
+                    <div className="mt-3 rounded-2xl bg-slate-50 p-4">
+                      <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400">
+                        <Tag size={15} />
+                        Año modelo
+                      </p>
+
+                      <p className="mt-1 text-lg font-black">
+                        {catalogModel.year ?? "Por definir"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

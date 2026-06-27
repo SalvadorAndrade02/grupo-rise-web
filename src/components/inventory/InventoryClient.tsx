@@ -136,9 +136,6 @@ export function InventoryClient({
       const matchesCategory =
         category === "TODOS" || vehicle.category === category;
 
-      const matchesCondition =
-        condition === "TODOS" || vehicle.condition === condition;
-
       const matchesBrand =
         brandId === "TODOS" || vehicle.brandId === Number(brandId);
 
@@ -166,7 +163,6 @@ export function InventoryClient({
 
       return (
         matchesCategory &&
-        matchesCondition &&
         matchesBrand &&
         matchesBranch &&
         matchesPrice &&
@@ -198,7 +194,7 @@ export function InventoryClient({
             </h1>
 
             <p className="mt-5 text-base leading-7 text-slate-300 md:text-lg">
-              Consulta unidades nuevas y seminuevas disponibles.
+              Consulta unidades seminuevas disponibles.
             </p>
           </div>
         </Container>

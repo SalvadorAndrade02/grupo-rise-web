@@ -13,7 +13,7 @@ const mainLinks = [
     href: "/",
   },
   {
-    label: "Inventario",
+    label: "Seminuevos",
     href: "/inventario",
   },
   {
@@ -28,16 +28,20 @@ const mainLinks = [
 
 const catalogLinks = [
   {
+    label: "Ver nuevos",
+    href: "/catalogo",
+  },
+  {
     label: "Can-Am",
     href: "/catalogo/can-am",
   },
   {
     label: "Polaris",
-    href: "/inventario",
+    href: "/catalogo/polaris",
   },
   {
     label: "Royal Enfield",
-    href: "",
+    href: "/catalogo/royal-enfield",
   },
   {
     label: "Sea-Doo",
@@ -45,19 +49,19 @@ const catalogLinks = [
   },
   {
     label: "Triumph Motorcycles",
-    href: "",
+    href: "/catalogo/triumph-motorcycles",
   },
   {
     label: "Indian Motorcycle",
-    href: "",
+    href: "/catalogo/indian-motorcycle",
   },
   {
     label: "Zeekrlife",
-    href: "",
+    href: "/catalogo/zeekrlife",
   },
   {
     label: "Lynk & Co",
-    href: "",
+    href: "/catalogo/lynk-co",
   },
 ];
 

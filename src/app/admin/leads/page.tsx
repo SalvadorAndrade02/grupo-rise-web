@@ -14,9 +14,6 @@ import {
   XCircle,
 } from "lucide-react";
 import { LeadStatus, LeadType, Prisma } from "@prisma/client";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { Container } from "@/components/ui/Container";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
 
@@ -318,11 +315,8 @@ export default async function AdminLeadsPage({
   ];
 
   return (
-    <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
-      <Header />
 
       <section className="py-10">
-        <Container>
           <div className="flex flex-wrap items-center justify-between gap-5">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
@@ -669,10 +663,6 @@ export default async function AdminLeadsPage({
               </div>
             )}
           </div>
-        </Container>
       </section>
-
-      <Footer />
-    </main>
   );
 }
