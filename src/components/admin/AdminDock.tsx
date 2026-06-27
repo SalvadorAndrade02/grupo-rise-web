@@ -27,7 +27,7 @@ const mainLinks = [
     icon: Home,
   },
   {
-    label: "Seminuevos",
+    label: "Inventario",
     href: "/admin/inventario",
     icon: Car,
   },

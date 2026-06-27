@@ -3,23 +3,26 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   BadgeCheck,
-  CalendarDays,
+  Building2,
   Car,
   CheckCircle2,
   Gauge,
   MapPin,
-  Palette,
   ShieldCheck,
-  Tag,
-  Wrench,
+  Tags,
 } from "lucide-react";
+import {
+  VehicleCondition,
+  VehicleMediaType,
+  VehicleStatus,
+} from "@prisma/client";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
-import { VehicleMediaGallery } from "@/components/vehicles/VehicleMediaGallery";
-import { VehicleDetailActions } from "@/components/vehicles/VehicleDetailActions";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
+import { VehicleMediaGallery } from "@/components/vehicles/VehicleMediaGallery";
+import { VehicleDetailActions } from "@/components/vehicles/VehicleDetailActions";
 
 export const dynamic = "force-dynamic";
 
@@ -29,47 +32,52 @@ type VehicleDetailPageProps = {
   }>;
 };
 
-function getCategoryLabel(value: string) {
+function getCategoryLabel(category: string) {
   const labels: Record<string, string> = {
     AUTO: "Auto",
     MOTO: "Moto",
     TODOTERRENO: "Todo terreno",
   };
 
-  return labels[value] ?? value;
+  return labels[category] ?? category;
 }
 
-function getConditionLabel(value: string) {
+function getConditionLabel(condition: string) {
   const labels: Record<string, string> = {
     NUEVO: "Nuevo",
     SEMINUEVO: "Seminuevo",
   };
 
-  return labels[value] ?? value;
+  return labels[condition] ?? condition;
 }
 
-function getStatusLabel(value: string) {
-  const labels: Record<string, string> = {
-    DISPONIBLE: "Disponible",
-    APARTADO: "Apartado",
-    VENDIDO: "Vendido",
-    EN_TRANSITO: "En tránsito",
-    PROXIMAMENTE: "Próximamente",
-    INACTIVO: "Inactivo",
-  };
+function formatMileage(value: number | null) {
+  if (value === null || value === undefined) {
+    return "Kilometraje por confirmar";
+  }
 
-  return labels[value] ?? value;
+  return `${new Intl.NumberFormat("es-MX").format(value)} km`;
 }
 
-function splitList(value?: string | null) {
-  return String(value ?? "")
-    .split(",")
+function splitText(value: string | null | undefined) {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split(/\n|,/)
     .map((item) => item.trim())
     .filter(Boolean);
 }
 
-function formatMileage(value?: number | null) {
-  return new Intl.NumberFormat("es-MX").format(value ?? 0);
+function getBackHref(condition: VehicleCondition) {
+  return condition === VehicleCondition.SEMINUEVO ? "/inventario" : "/catalogo";
+}
+
+function getBackLabel(condition: VehicleCondition) {
+  return condition === VehicleCondition.SEMINUEVO
+    ? "Volver a seminuevos"
+    : "Volver al catálogo";
 }
 
 export default async function VehicleDetailPage({
@@ -78,7 +86,7 @@ export default async function VehicleDetailPage({
   const { id } = await params;
   const vehicleId = Number(id);
 
-  if (Number.isNaN(vehicleId)) {
+  if (!vehicleId) {
     notFound();
   }
 
@@ -86,6 +94,7 @@ export default async function VehicleDetailPage({
     where: {
       id: vehicleId,
       active: true,
+      status: VehicleStatus.DISPONIBLE,
       branch: {
         active: true,
       },
@@ -116,252 +125,192 @@ export default async function VehicleDetailPage({
         not: vehicle.id,
       },
       active: true,
+      status: VehicleStatus.DISPONIBLE,
+      condition: vehicle.condition,
+      brandId: vehicle.brandId,
       branch: {
         active: true,
       },
-      OR: [
-        {
-          brandId: vehicle.brandId,
-        },
-        {
-          category: vehicle.category,
-        },
-      ],
     },
     include: {
       brand: true,
       branch: true,
       images: {
         where: {
-          type: "IMAGE",
+          type: VehicleMediaType.IMAGE,
         },
         orderBy: {
           order: "asc",
         },
+        take: 1,
       },
     },
     orderBy: {
-      createdAt: "desc",
+      updatedAt: "desc",
     },
     take: 3,
   });
 
-  const specs = splitList(vehicle.specs);
-  const features = splitList(vehicle.features);
+  const title = `${vehicle.brand.name} ${vehicle.name}`;
+  const isUsed = vehicle.condition === VehicleCondition.SEMINUEVO;
+  const backHref = getBackHref(vehicle.condition);
+  const backLabel = getBackLabel(vehicle.condition);
 
-  const mainTitle = `${vehicle.brand.name} ${vehicle.name}`;
-  const availableBranches =
-    vehicle.branchAvailabilities.length > 0
-      ? vehicle.branchAvailabilities
-      : [
-        {
-          id: vehicle.branch.id,
-          branchId: vehicle.branch.id,
-          vehicleId: vehicle.id,
-          createdAt: new Date(),
-          branch: vehicle.branch,
-        },
-      ];
+  const specs = splitText(vehicle.specs);
+  const features = splitText(vehicle.features);
 
-  const summaryItems = [
-    {
-      label: "Categoría",
-      value: getCategoryLabel(vehicle.category),
-      icon: Car,
-    },
-    {
-      label: "Condición",
-      value: getConditionLabel(vehicle.condition),
-      icon: ShieldCheck,
-    },
-    {
-      label: "Año",
-      value: String(vehicle.year),
-      icon: CalendarDays,
-    },
-    {
-      label: "Kilometraje",
-      value: `${formatMileage(vehicle.mileage)} km`,
-      icon: Gauge,
-    },
-    {
-      label: "Color",
-      value: vehicle.color || "No especificado",
-      icon: Palette,
-    },
-    {
-      label: "Estado",
-      value: getStatusLabel(vehicle.status),
-      icon: BadgeCheck,
-    },
+  const availableBranches = [
+    vehicle.branch,
+    ...vehicle.branchAvailabilities
+      .map((item) => item.branch)
+      .filter((branch) => branch.active && branch.id !== vehicle.branchId),
   ];
 
   return (
     <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
       <Header />
 
-      <section className="border-b border-[var(--rise-border)] bg-white">
+      <section className="py-10 md:py-14">
         <Container>
-          <div className="py-6">
-            <Link
-              href="/inventario"
-              className="inline-flex items-center gap-2 text-sm font-black text-slate-500 transition hover:text-[var(--rise-blue)]"
-            >
-              <ArrowLeft size={17} />
-              Volver al inventario
-            </Link>
+          <Link
+            href={backHref}
+            className="inline-flex items-center gap-2 text-sm font-black text-slate-500 transition hover:text-[var(--rise-blue)]"
+          >
+            <ArrowLeft size={18} />
+            {backLabel}
+          </Link>
 
-            <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
-              <div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-[var(--rise-blue-soft)] px-3 py-1 text-xs font-black uppercase tracking-wider text-[var(--rise-blue)]">
-                    {getCategoryLabel(vehicle.category)}
-                  </span>
-
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-700">
-                    {getConditionLabel(vehicle.condition)}
-                  </span>
-
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-600">
-                    {getStatusLabel(vehicle.status)}
-                  </span>
-                </div>
-
-                <h1 className="mt-4 text-4xl font-black tracking-tight md:text-6xl">
-                  {mainTitle}
-                </h1>
-
-                <p className="mt-3 text-base font-bold text-slate-500">
-                  {vehicle.model} · {vehicle.version || "Versión estándar"} ·{" "}
-                  {vehicle.year}
-                </p>
-              </div>
-
-              <div className="rounded-[1.5rem] bg-[var(--rise-navy)] px-6 py-5 text-white shadow-xl shadow-slate-900/10">
-                <p className="text-xs font-black uppercase tracking-[0.25em] text-white/60">
-                  Precio
-                </p>
-                <p className="mt-1 text-3xl font-black">
-                  {formatCurrency(vehicle.price)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      <section className="py-8">
-        <Container>
-          <div className="grid gap-8 xl:grid-cols-[1fr_390px]">
-            <div className="space-y-8">
+          <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
+            <div className="space-y-6">
               <VehicleMediaGallery
                 items={vehicle.images}
                 fallbackImage={vehicle.mainImage}
-                vehicleName={mainTitle}
+                vehicleName={title}
               />
 
-              <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm md:p-8">
-                <p className="text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                  Descripción
-                </p>
-
-                <h2 className="mt-3 text-3xl font-black">
-                  Conoce esta unidad
-                </h2>
-
-                <p className="mt-4 text-sm leading-7 text-slate-600 md:text-base">
-                  {vehicle.description ||
-                    "Unidad disponible en Grupo Rise. Solicita información para conocer disponibilidad, precio, condiciones y opciones de financiamiento."}
-                </p>
-              </section>
-
-              <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm md:p-8">
-                <div className="flex items-center justify-between gap-4">
+              <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-7">
+                <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                      Información
+                    <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+                      {vehicle.brand.name}
                     </p>
 
-                    <h2 className="mt-3 text-3xl font-black">
-                      Datos principales
-                    </h2>
+                    <h1 className="mt-3 text-4xl font-black tracking-tight md:text-6xl">
+                      {vehicle.name}
+                    </h1>
+
+                    <p className="mt-3 text-sm font-bold text-slate-500 md:text-base">
+                      {vehicle.year} · {getCategoryLabel(vehicle.category)} ·{" "}
+                      {getConditionLabel(vehicle.condition)}
+                    </p>
                   </div>
+
+                  <span
+                    className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider ${
+                      isUsed
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-blue-50 text-blue-700"
+                    }`}
+                  >
+                    {isUsed ? "Seminuevo disponible" : "Nuevo disponible"}
+                  </span>
                 </div>
 
-                <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {summaryItems.map((item) => {
-                    const Icon = item.icon;
+                {vehicle.description && (
+                  <p className="mt-6 text-sm leading-7 text-slate-600 md:text-base">
+                    {vehicle.description}
+                  </p>
+                )}
 
-                    return (
-                      <div
-                        key={item.label}
-                        className="rounded-2xl bg-slate-50 p-5"
-                      >
-                        <div className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
-                          <Icon size={21} />
-                        </div>
+                <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <Gauge className="text-[var(--rise-blue)]" size={23} />
+                    <p className="mt-3 text-xs font-black uppercase tracking-wider text-slate-400">
+                      Kilometraje
+                    </p>
+                    <p className="mt-1 text-sm font-black text-slate-700">
+                      {formatMileage(vehicle.mileage)}
+                    </p>
+                  </div>
 
-                        <p className="mt-4 text-xs font-black uppercase tracking-wider text-slate-400">
-                          {item.label}
-                        </p>
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <Tags className="text-[var(--rise-blue)]" size={23} />
+                    <p className="mt-3 text-xs font-black uppercase tracking-wider text-slate-400">
+                      Tipo
+                    </p>
+                    <p className="mt-1 text-sm font-black text-slate-700">
+                      {getCategoryLabel(vehicle.category)}
+                    </p>
+                  </div>
 
-                        <p className="mt-1 text-base font-black text-[var(--rise-navy)]">
-                          {item.value}
-                        </p>
-                      </div>
-                    );
-                  })}
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <MapPin className="text-[var(--rise-blue)]" size={23} />
+                    <p className="mt-3 text-xs font-black uppercase tracking-wider text-slate-400">
+                      Ciudad
+                    </p>
+                    <p className="mt-1 text-sm font-black text-slate-700">
+                      {vehicle.branch.city}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <Building2 className="text-[var(--rise-blue)]" size={23} />
+                    <p className="mt-3 text-xs font-black uppercase tracking-wider text-slate-400">
+                      Sucursal
+                    </p>
+                    <p className="mt-1 text-sm font-black text-slate-700">
+                      {vehicle.branch.name}
+                    </p>
+                  </div>
                 </div>
               </section>
 
-              {(specs.length > 0 || features.length > 0) && (
+              {(features.length > 0 || specs.length > 0) && (
                 <section className="grid gap-6 lg:grid-cols-2">
-                  {specs.length > 0 && (
-                    <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm md:p-8">
-                      <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                        <Wrench size={16} />
-                        Especificaciones
-                      </p>
+                  {features.length > 0 && (
+                    <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-7">
+                      <h2 className="text-2xl font-black">
+                        Características principales
+                      </h2>
 
-                      <div className="mt-6 grid gap-3">
-                        {specs.map((spec) => (
+                      <div className="mt-5 grid gap-3">
+                        {features.map((feature) => (
                           <div
-                            key={spec}
-                            className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3"
+                            key={feature}
+                            className="flex gap-3 rounded-2xl bg-slate-50 p-4"
                           >
                             <CheckCircle2
+                              className="mt-0.5 shrink-0 text-[var(--rise-blue)]"
                               size={18}
-                              className="shrink-0 text-[var(--rise-blue)]"
                             />
-                            <span className="text-sm font-bold text-slate-600">
-                              {spec}
-                            </span>
+                            <p className="text-sm font-bold leading-6 text-slate-600">
+                              {feature}
+                            </p>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {features.length > 0 && (
-                    <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm md:p-8">
-                      <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                        <Tag size={16} />
-                        Características
-                      </p>
+                  {specs.length > 0 && (
+                    <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-7">
+                      <h2 className="text-2xl font-black">
+                        Especificaciones
+                      </h2>
 
-                      <div className="mt-6 grid gap-3">
-                        {features.map((feature) => (
+                      <div className="mt-5 grid gap-3">
+                        {specs.map((spec) => (
                           <div
-                            key={feature}
-                            className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3"
+                            key={spec}
+                            className="flex gap-3 rounded-2xl bg-slate-50 p-4"
                           >
-                            <CheckCircle2
+                            <ShieldCheck
+                              className="mt-0.5 shrink-0 text-[var(--rise-blue)]"
                               size={18}
-                              className="shrink-0 text-emerald-600"
                             />
-                            <span className="text-sm font-bold text-slate-600">
-                              {feature}
-                            </span>
+                            <p className="text-sm font-bold leading-6 text-slate-600">
+                              {spec}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -370,157 +319,103 @@ export default async function VehicleDetailPage({
                 </section>
               )}
 
-              <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm md:p-8">
-                <p className="text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                  Disponibilidad
-                </p>
+              {availableBranches.length > 0 && (
+                <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-7">
+                  <h2 className="text-2xl font-black">
+                    Disponibilidad por sucursal
+                  </h2>
 
-                <h2 className="mt-3 text-3xl font-black">
-                  Sucursales disponibles
-                </h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Consulta la sucursal principal o puntos donde esta unidad
+                    puede estar disponible.
+                  </p>
 
-                <div className="mt-6 grid gap-4 md:grid-cols-2">
-                  {availableBranches.map((item) => (
-                    <div
-                      key={`${item.branch.id}-${item.branch.name}`}
-                      className="rounded-2xl border border-slate-100 bg-slate-50 p-5"
-                    >
-                      <div className="flex gap-3">
-                        <MapPin
-                          size={22}
-                          className="mt-0.5 shrink-0 text-[var(--rise-blue)]"
-                        />
+                  <div className="mt-5 grid gap-4 md:grid-cols-2">
+                    {availableBranches.map((branch) => (
+                      <div
+                        key={branch.id}
+                        className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                      >
+                        <p className="font-black">{branch.name}</p>
+                        <p className="mt-1 text-sm font-bold text-slate-500">
+                          {branch.city}, {branch.state}
+                        </p>
 
-                        <div>
-                          <p className="font-black text-[var(--rise-navy)]">
-                            {item.branch.name}
-                          </p>
-
-                          <p className="mt-1 text-sm font-bold text-slate-500">
-                            {item.branch.city}, {item.branch.state}
-                          </p>
-
-                          <p className="mt-2 text-sm leading-6 text-slate-500">
-                            {item.branch.address}
-                          </p>
-                        </div>
+                        {branch.whatsapp && (
+                          <a
+                            href={`https://wa.me/${branch.whatsapp.replace(
+                              /\D/g,
+                              ""
+                            )}`}
+                            target="_blank"
+                            className="mt-3 inline-flex text-sm font-black text-[var(--rise-blue)] hover:underline"
+                          >
+                            Contactar por WhatsApp
+                          </a>
+                        )}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {relatedVehicles.length > 0 && (
-                <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm md:p-8">
-                  <div className="flex flex-wrap items-end justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                        También te puede interesar
-                      </p>
-
-                      <h2 className="mt-3 text-3xl font-black">
-                        Vehículos relacionados
-                      </h2>
-                    </div>
-
-                    <Link
-                      href="/inventario"
-                      className="text-sm font-black text-[var(--rise-blue)] hover:underline"
-                    >
-                      Ver inventario
-                    </Link>
-                  </div>
-
-                  <div className="mt-6 grid gap-5 md:grid-cols-3">
-                    {relatedVehicles.map((related) => {
-                      const relatedImage =
-                        related.images[0]?.url || related.mainImage || "";
-
-                      return (
-                        <Link
-                          key={related.id}
-                          href={`/vehiculos/${related.id}`}
-                          className="group overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg hover:shadow-slate-900/10"
-                        >
-                          <div className="h-36 overflow-hidden bg-slate-200">
-                            {relatedImage ? (
-                              <img
-                                src={relatedImage}
-                                alt={related.name}
-                                className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                              />
-                            ) : (
-                              <div className="grid h-full place-items-center text-xs font-black text-slate-400">
-                                Sin imagen
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="p-4">
-                            <p className="text-xs font-black uppercase tracking-wider text-[var(--rise-blue)]">
-                              {related.brand.name}
-                            </p>
-
-                            <h3 className="mt-2 line-clamp-2 text-sm font-black text-[var(--rise-navy)]">
-                              {related.name}
-                            </h3>
-
-                            <p className="mt-2 text-sm font-black text-[var(--rise-blue)]">
-                              {formatCurrency(related.price)}
-                            </p>
-                          </div>
-                        </Link>
-                      );
-                    })}
+                    ))}
                   </div>
                 </section>
               )}
             </div>
 
-            <aside className="xl:sticky xl:top-28 xl:self-start">
-              <div className="overflow-hidden rounded-[2rem] border border-[var(--rise-border)] bg-white shadow-xl shadow-slate-900/10">
-                <div className="bg-[var(--rise-navy)] p-6 text-white">
-                  <p className="text-xs font-black uppercase tracking-[0.25em] text-white/60">
-                    Solicita información
+            <aside className="xl:sticky xl:top-6 xl:self-start">
+              <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-xl shadow-slate-900/10 md:p-6">
+                <span
+                  className={`inline-flex rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider ${
+                    isUsed
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-blue-50 text-blue-700"
+                  }`}
+                >
+                  {isUsed ? "Unidad seminueva" : "Unidad nueva"}
+                </span>
+
+                <p className="mt-5 text-sm font-black uppercase tracking-wider text-slate-400">
+                  Precio
+                </p>
+
+                <p className="mt-1 text-4xl font-black text-[var(--rise-blue)]">
+                  {formatCurrency(vehicle.price)}
+                </p>
+
+                <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+                  <p className="text-sm font-black text-[var(--rise-navy)]">
+                    {isUsed
+                      ? "Seminuevo listo para cotizar"
+                      : "Nuevo disponible para información"}
                   </p>
 
-                  <h2 className="mt-3 text-3xl font-black">
-                    {formatCurrency(vehicle.price)}
-                  </h2>
-
-                  <p className="mt-2 text-sm leading-6 text-white/70">
-                    Un asesor puede ayudarte con cotización, disponibilidad o
-                    prueba de manejo.
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Solicita información y un asesor de Grupo Rise se pondrá en
+                    contacto contigo.
                   </p>
                 </div>
 
-                <div className="p-6">
+                <div className="mt-5">
                   <VehicleDetailActions
                     vehicleId={vehicle.id}
                     branchId={vehicle.branchId}
-                    vehicleName={mainTitle}
+                    vehicleName={title}
                     whatsapp={vehicle.branch.whatsapp}
                   />
+                </div>
 
-                  <div className="mt-6 rounded-2xl bg-slate-50 p-4">
-                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-                      Sucursal principal
-                    </p>
-
-                    <p className="mt-2 text-sm font-black text-[var(--rise-navy)]">
-                      {vehicle.branch.name}
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-500">
-                      {vehicle.branch.city}, {vehicle.branch.state}
-                    </p>
+                <div className="mt-5 grid gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                    <BadgeCheck size={18} className="text-[var(--rise-blue)]" />
+                    Estado: Disponible
                   </div>
 
-                  <div className="mt-4 rounded-2xl bg-emerald-50 p-4">
-                    <p className="inline-flex items-center gap-2 text-sm font-black text-emerald-700">
-                      <CheckCircle2 size={18} />
-                      Unidad visible y disponible para cotización
-                    </p>
+                  <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                    <MapPin size={18} className="text-[var(--rise-blue)]" />
+                    {vehicle.branch.city}
+                  </div>
+
+                  <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                    <Building2 size={18} className="text-[var(--rise-blue)]" />
+                    {vehicle.branch.name}
                   </div>
                 </div>
               </div>
@@ -528,6 +423,75 @@ export default async function VehicleDetailPage({
           </div>
         </Container>
       </section>
+
+      {relatedVehicles.length > 0 && (
+        <section className="pb-14 md:pb-20">
+          <Container>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+                  También te puede interesar
+                </p>
+
+                <h2 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">
+                  Más unidades {vehicle.brand.name}
+                </h2>
+              </div>
+
+              <Link
+                href={backHref}
+                className="text-sm font-black text-[var(--rise-blue)] hover:underline"
+              >
+                Ver más
+              </Link>
+            </div>
+
+            <div className="mt-6 grid gap-5 md:grid-cols-3">
+              {relatedVehicles.map((item) => {
+                const image = item.images[0]?.url || item.mainImage || "";
+
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/vehiculos/${item.id}`}
+                    className="group overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
+                  >
+                    <div className="h-44 overflow-hidden bg-slate-100">
+                      {image ? (
+                        <img
+                          src={image}
+                          alt={`${item.brand.name} ${item.name}`}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="grid h-full place-items-center text-slate-400">
+                          <Car size={40} />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-5">
+                      <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--rise-blue)]">
+                        {item.brand.name}
+                      </p>
+
+                      <h3 className="mt-2 text-xl font-black">{item.name}</h3>
+
+                      <p className="mt-2 text-sm font-bold text-slate-500">
+                        {item.year} · {item.branch.city}
+                      </p>
+
+                      <p className="mt-4 text-xl font-black text-[var(--rise-blue)]">
+                        {formatCurrency(item.price)}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </Container>
+        </section>
+      )}
 
       <Footer />
     </main>

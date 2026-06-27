@@ -42,110 +42,60 @@ export default async function InventoryPage({
   const initialCondition = getInitialCondition(params.condicion);
   const initialSearch = params.q ?? "";
   const initialMaxPrice = params.precioMax ?? "TODOS";
-  const [vehicles, brands, branches] = await Promise.all([
-    prisma.vehicle.findMany({
-      where: {
-        active: true,
-        condition: "SEMINUEVO",
-        branch: {
-          active: true,
-        },
-      },
-      include: {
-        brand: true,
-        branch: true,
-        images: {
-          where: {
-            type: "IMAGE",
-          },
-          orderBy: {
-            order: "asc",
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    }),
-
-    prisma.brand.findMany({
-      where: {
+  const vehicles = await prisma.vehicle.findMany({
+    where: {
+      active: true,
+      condition: "SEMINUEVO",
+      status: "DISPONIBLE",
+      branch: {
         active: true,
       },
-      orderBy: [
-        {
-          category: "asc",
+    },
+    include: {
+      brand: true,
+      branch: true,
+      images: {
+        where: {
+          type: "IMAGE",
         },
-        {
+        orderBy: {
+          order: "asc",
+        },
+      },
+    },
+    orderBy: [
+      {
+        brand: {
           name: "asc",
         },
-      ],
-    }),
-
-    prisma.branch.findMany({
-      where: {
-        active: true,
       },
-      orderBy: {
-        city: "asc",
+      {
+        createdAt: "desc",
       },
-    }),
-  ]);
+    ],
+  });
 
   const formattedVehicles = vehicles.map((vehicle) => ({
     id: vehicle.id,
+    name: vehicle.name,
+    brandName: vehicle.brand.name,
     category: vehicle.category,
     condition: vehicle.condition,
     status: vehicle.status,
-    brandId: vehicle.brandId,
-    brandName: vehicle.brand.name,
+    year: vehicle.year,
+    price: vehicle.price,
+    mileage: vehicle.mileage,
     branchId: vehicle.branchId,
     branchName: vehicle.branch.name,
     branchCity: vehicle.branch.city,
     branchWhatsapp: vehicle.branch.whatsapp,
-    name: vehicle.name,
-    model: vehicle.model,
-    version: vehicle.version,
-    year: vehicle.year,
-    price: vehicle.price,
-    type: vehicle.type,
-    color: vehicle.color,
-    mileage: vehicle.mileage,
-    specs: vehicle.specs
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean),
     mainImage: vehicle.images[0]?.url || vehicle.mainImage || "",
-    isFeatured: vehicle.isFeatured,
   }));
-
-  const formattedBrands = brands.map((brand) => ({
-    id: brand.id,
-    name: brand.name,
-    category: brand.category,
-  }));
-
-  const formattedBranches = branches.map((branch) => ({
-    id: branch.id,
-    name: branch.name,
-    city: branch.city,
-    state: branch.state,
-  }));
-
   return (
     <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
       <Header />
 
-      <InventoryClient
-        key={`${initialCategory}-${initialCondition}-${initialSearch}-${initialMaxPrice}`}
-        vehicles={formattedVehicles}
-        brands={formattedBrands}
-        branches={formattedBranches}
-        initialCategory={initialCategory}
-        initialCondition={initialCondition}
-        initialSearch={initialSearch}
-        initialMaxPrice={initialMaxPrice}
-      />
+      <InventoryClient vehicles={formattedVehicles} />
       <Footer />
     </main>
   );

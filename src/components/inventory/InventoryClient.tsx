@@ -1,483 +1,497 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
-  ChevronRight,
-  Heart,
+  ArrowRight,
+  Building2,
+  Car,
+  Gauge,
+  ImageIcon,
   MapPin,
   Search,
   SlidersHorizontal,
+  Tags,
 } from "lucide-react";
-import { Container } from "@/components/ui/Container";
-import { RequestModal } from "@/components/ui/RequestModal";
+import { formatCurrency } from "@/lib/formatters";
 import { VehicleLeadActions } from "@/components/vehicles/VehicleLeadActions";
 
-type DbVehicleCategory = "AUTO" | "MOTO" | "TODOTERRENO";
-type DbVehicleCondition = "NUEVO" | "SEMINUEVO";
-type DbVehicleStatus =
-  | "DISPONIBLE"
-  | "APARTADO"
-  | "VENDIDO"
-  | "EN_TRANSITO"
-  | "PROXIMAMENTE"
-  | "INACTIVO";
-
-type PublicVehicle = {
+type InventoryVehicle = {
   id: number;
-  category: DbVehicleCategory;
-  condition: DbVehicleCondition;
-  status: DbVehicleStatus;
-  brandId: number;
+  name: string;
   brandName: string;
+  category: "AUTO" | "MOTO" | "TODOTERRENO";
+  condition: "NUEVO" | "SEMINUEVO";
+  status: string;
+  year: number;
+  price: number;
+  mileage: number | null;
   branchId: number;
   branchName: string;
   branchCity: string;
-  branchWhatsapp?: string | null;
-  name: string;
-  model: string;
-  version: string | null;
-  year: number;
-  price: number;
-  type: string;
-  color: string | null;
-  mileage: number | null;
-  specs: string[];
-  mainImage: string | null;
-  isFeatured: boolean;
+  branchWhatsapp: string | null;
+  mainImage: string;
 };
-
-type PublicBrand = {
-  id: number;
-  name: string;
-  category: DbVehicleCategory;
-};
-
-type PublicBranch = {
-  id: number;
-  name: string;
-  city: string;
-  state: string;
-};
-
-type CategoryFilter = "TODOS" | DbVehicleCategory;
-type ConditionFilter = "TODOS" | DbVehicleCondition;
 
 type InventoryClientProps = {
-  vehicles: PublicVehicle[];
-  brands: PublicBrand[];
-  branches: PublicBranch[];
-  initialCategory?: CategoryFilter;
-  initialCondition?: ConditionFilter;
-  initialSearch?: string;
-  initialMaxPrice?: string;
+  vehicles: InventoryVehicle[];
 };
 
+function getCategoryLabel(category: string) {
+  const labels: Record<string, string> = {
+    AUTO: "Auto",
+    MOTO: "Moto",
+    TODOTERRENO: "Todo terreno",
+  };
 
-const categoryLabels: Record<DbVehicleCategory, string> = {
-  AUTO: "Auto",
-  MOTO: "Moto",
-  TODOTERRENO: "Todo terreno",
-};
-
-const conditionLabels: Record<DbVehicleCondition, string> = {
-  NUEVO: "Nuevo",
-  SEMINUEVO: "Seminuevo",
-};
-
-const statusLabels: Record<DbVehicleStatus, string> = {
-  DISPONIBLE: "Disponible",
-  APARTADO: "Apartado",
-  VENDIDO: "Vendido",
-  EN_TRANSITO: "En tránsito",
-  PROXIMAMENTE: "Próximamente",
-  INACTIVO: "Inactivo",
-};
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    maximumFractionDigits: 0,
-  }).format(value);
+  return labels[category] ?? category;
 }
 
-export function InventoryClient({
-  vehicles,
-  brands,
-  branches,
-  initialCategory = "TODOS",
-  initialCondition = "TODOS",
-  initialSearch = "",
-  initialMaxPrice = "TODOS",
-}: InventoryClientProps) {
-  const [category, setCategory] = useState<CategoryFilter>(initialCategory);
-  const [condition, setCondition] = useState<ConditionFilter>(initialCondition);
-  const [brandId, setBrandId] = useState("TODOS");
-  const [branchId, setBranchId] = useState("TODOS");
-  const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
-  const [search, setSearch] = useState(initialSearch);
-  const [selectedVehicle, setSelectedVehicle] = useState<PublicVehicle | null>(
-    null
+function formatMileage(value: number | null) {
+  if (value === null || value === undefined) {
+    return "Kilometraje por confirmar";
+  }
 
-  );
+  return `${new Intl.NumberFormat("es-MX").format(value)} km`;
+}
 
+export function InventoryClient({ vehicles }: InventoryClientProps) {
+  const [search, setSearch] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("TODAS");
+  const [selectedCategory, setSelectedCategory] = useState("TODAS");
+  const [selectedYear, setSelectedYear] = useState("TODOS");
+  const [selectedBranch, setSelectedBranch] = useState("TODAS");
 
-  const availableBrands = useMemo(() => {
-    if (category === "TODOS") {
-      return brands;
-    }
+  const brands = useMemo(() => {
+    return Array.from(new Set(vehicles.map((vehicle) => vehicle.brandName))).sort();
+  }, [vehicles]);
 
-    return brands.filter((brand) => brand.category === category);
-  }, [brands, category]);
+  const years = useMemo(() => {
+    return Array.from(new Set(vehicles.map((vehicle) => vehicle.year)))
+      .filter(Boolean)
+      .sort((a, b) => b - a);
+  }, [vehicles]);
+
+  const branches = useMemo(() => {
+    return Array.from(
+      new Set(
+        vehicles.map((vehicle) => `${vehicle.branchName}|${vehicle.branchCity}`)
+      )
+    )
+      .map((value) => {
+        const [name, city] = value.split("|");
+
+        return {
+          value,
+          label: `${name} · ${city}`,
+        };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [vehicles]);
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter((vehicle) => {
-      const matchesCategory =
-        category === "TODOS" || vehicle.category === category;
-
-      const matchesBrand =
-        brandId === "TODOS" || vehicle.brandId === Number(brandId);
-
-      const matchesBranch =
-        branchId === "TODOS" || vehicle.branchId === Number(branchId);
-
-      const matchesPrice =
-        maxPrice === "TODOS" || vehicle.price <= Number(maxPrice);
-
-      const searchText = [
-        vehicle.name,
+      const searchableText = [
         vehicle.brandName,
-        vehicle.model,
-        vehicle.version,
-        vehicle.type,
+        vehicle.name,
+        vehicle.year,
+        vehicle.branchName,
         vehicle.branchCity,
+        getCategoryLabel(vehicle.category),
       ]
-        .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
-      const matchesSearch =
-        search.trim() === "" ||
-        searchText.includes(search.trim().toLowerCase());
+      const matchesSearch = search
+        ? searchableText.includes(search.trim().toLowerCase())
+        : true;
+
+      const matchesBrand =
+        selectedBrand === "TODAS" || vehicle.brandName === selectedBrand;
+
+      const matchesCategory =
+        selectedCategory === "TODAS" || vehicle.category === selectedCategory;
+
+      const matchesYear =
+        selectedYear === "TODOS" || vehicle.year === Number(selectedYear);
+
+      const branchValue = `${vehicle.branchName}|${vehicle.branchCity}`;
+      const matchesBranch =
+        selectedBranch === "TODAS" || branchValue === selectedBranch;
 
       return (
-        matchesCategory &&
+        matchesSearch &&
         matchesBrand &&
-        matchesBranch &&
-        matchesPrice &&
-        matchesSearch
+        matchesCategory &&
+        matchesYear &&
+        matchesBranch
       );
     });
-  }, [vehicles, category, condition, brandId, branchId, maxPrice, search]);
+  }, [vehicles, search, selectedBrand, selectedCategory, selectedYear, selectedBranch]);
 
-  function resetFilters() {
-    setCategory("TODOS");
-    setCondition("TODOS");
-    setBrandId("TODOS");
-    setBranchId("TODOS");
-    setMaxPrice("TODOS");
+  const groupedVehicles = useMemo(() => {
+    return brands
+      .map((brand) => ({
+        brand,
+        vehicles: filteredVehicles.filter((vehicle) => vehicle.brandName === brand),
+      }))
+      .filter((group) => group.vehicles.length > 0);
+  }, [brands, filteredVehicles]);
+
+  const brandCards = useMemo(() => {
+    return brands.map((brand) => {
+      const brandVehicles = vehicles.filter((vehicle) => vehicle.brandName === brand);
+      const firstImage = brandVehicles.find((vehicle) => vehicle.mainImage)?.mainImage;
+
+      return {
+        brand,
+        total: brandVehicles.length,
+        image: firstImage || "",
+      };
+    });
+  }, [brands, vehicles]);
+
+  function clearFilters() {
     setSearch("");
+    setSelectedBrand("TODAS");
+    setSelectedCategory("TODAS");
+    setSelectedYear("TODOS");
+    setSelectedBranch("TODAS");
   }
 
+  const hasFilters =
+    Boolean(search) ||
+    selectedBrand !== "TODAS" ||
+    selectedCategory !== "TODAS" ||
+    selectedYear !== "TODOS" ||
+    selectedBranch !== "TODAS";
+
   return (
-    <>
-      <section className="bg-[var(--rise-navy)] py-14 text-white md:py-20">
-        <Container>
-          <div className="max-w-3xl">
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-sky-200">
-              Inventario Grupo Rise
+    <section className="pb-12 md:pb-16">
+      <div className="rounded-[2.5rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-8">
+        <div className="flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+              Seminuevos por marca
             </p>
 
-            <h1 className="mt-4 text-4xl font-black tracking-tight md:text-6xl">
-              Explora autos, motos y todo terreno.
-            </h1>
+            <h2 className="mt-3 text-3xl font-black tracking-tight md:text-5xl">
+              Inventario disponible
+            </h2>
 
-            <p className="mt-5 text-base leading-7 text-slate-300 md:text-lg">
-              Consulta unidades seminuevas disponibles.
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
+              Explora unidades seminuevas reales, agrupadas por marca, sucursal,
+              año y tipo de vehículo.
             </p>
           </div>
-        </Container>
-      </section>
 
-      <section className="py-8">
-        <Container>
-          <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
-                <SlidersHorizontal size={22} />
-              </div>
+          <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-4 py-2 text-sm font-black text-slate-500">
+            <SlidersHorizontal size={17} />
+            {filteredVehicles.length} resultado(s)
+          </div>
+        </div>
 
-              <div>
-                <h2 className="text-xl font-black text-[var(--rise-navy)]">
-                  Filtros de búsqueda
-                </h2>
-                <p className="text-sm text-slate-500">
-                  Encuentra el vehículo ideal por categoría, marca, condición y
-                  sucursal.
-                </p>
-              </div>
-            </div>
+        {brandCards.length > 0 && (
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {brandCards.map((brand) => {
+              const active = selectedBrand === brand.brand;
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-              <label className="block xl:col-span-2">
-                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Buscar
-                </span>
-
-                <div className="relative">
-                  <Search
-                    size={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-
-                  <input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Marca, modelo, versión o sucursal"
-                    className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                  />
-                </div>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Categoría
-                </span>
-
-                <select
-                  value={category}
-                  onChange={(event) => {
-                    setCategory(event.target.value as CategoryFilter);
-                    setBrandId("TODOS");
-                  }}
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                >
-                  <option value="TODOS">Todas</option>
-                  <option value="AUTO">Auto</option>
-                  <option value="MOTO">Moto</option>
-                  <option value="TODOTERRENO">Todo terreno</option>
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Condición
-                </span>
-
-                <select
-                  value={condition}
-                  onChange={(event) =>
-                    setCondition(event.target.value as ConditionFilter)
+              return (
+                <button
+                  key={brand.brand}
+                  type="button"
+                  onClick={() =>
+                    setSelectedBrand(active ? "TODAS" : brand.brand)
                   }
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
+                  className={`group overflow-hidden rounded-[2rem] border text-left transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10 ${
+                    active
+                      ? "border-[var(--rise-blue)] bg-[var(--rise-blue-soft)]"
+                      : "border-slate-100 bg-slate-50 hover:bg-white"
+                  }`}
                 >
-                  <option value="TODOS">Todas</option>
-                  <option value="NUEVO">Nuevo</option>
-                  <option value="SEMINUEVO">Seminuevo</option>
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Marca
-                </span>
-
-                <select
-                  value={brandId}
-                  onChange={(event) => setBrandId(event.target.value)}
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                >
-                  <option value="TODOS">Todas</option>
-                  {availableBrands.map((brand) => (
-                    <option key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Sucursal
-                </span>
-
-                <select
-                  value={branchId}
-                  onChange={(event) => setBranchId(event.target.value)}
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                >
-                  <option value="TODOS">Todas</option>
-                  {branches.map((branch) => (
-                    <option key={branch.id} value={branch.id}>
-                      {branch.city}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Precio máximo
-                </span>
-
-                <select
-                  value={maxPrice}
-                  onChange={(event) => setMaxPrice(event.target.value)}
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                >
-                  <option value="TODOS">Sin límite</option>
-                  <option value="150000">$150,000</option>
-                  <option value="300000">$300,000</option>
-                  <option value="500000">$500,000</option>
-                  <option value="800000">$800,000</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm font-semibold text-slate-600">
-                {filteredVehicles.length} resultado(s) encontrados
-              </p>
-
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="text-sm font-black text-[var(--rise-blue)] hover:text-[var(--rise-navy)]"
-              >
-                Limpiar filtros
-              </button>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      <section className="pb-16 pt-4">
-        <Container>
-          {filteredVehicles.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-              {filteredVehicles.map((vehicle) => (
-                <article
-                  key={vehicle.id}
-                  className="group overflow-hidden rounded-3xl border border-[var(--rise-border)] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
-                >
-                  <div className="relative h-56 overflow-hidden bg-slate-100">
-                    {vehicle.mainImage ? (
+                  <div className="h-36 overflow-hidden bg-slate-100">
+                    {brand.image ? (
                       <img
-                        src={vehicle.mainImage}
-                        alt={vehicle.name}
+                        src={brand.image}
+                        alt={brand.brand}
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="grid h-full w-full place-items-center bg-[var(--rise-blue-soft)] text-sm font-black text-[var(--rise-blue)]">
-                        Sin imagen
+                      <div className="grid h-full place-items-center text-slate-400">
+                        <ImageIcon size={36} />
                       </div>
                     )}
-
-                    <span className="absolute left-4 top-4 rounded-full bg-[var(--rise-navy)]/90 px-3 py-1 text-xs font-bold text-white backdrop-blur">
-                      {vehicle.type}
-                    </span>
-
-                    <button
-                      type="button"
-                      className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-slate-700 shadow-sm backdrop-blur hover:text-[var(--rise-blue)]"
-                      aria-label="Agregar a favoritos"
-                    >
-                      <Heart size={18} />
-                    </button>
                   </div>
 
                   <div className="p-5">
-                    <div className="mb-3 flex flex-wrap gap-2">
-                      <span className="rounded-full bg-[var(--rise-blue-soft)] px-3 py-1 text-xs font-black text-[var(--rise-blue)]">
-                        {conditionLabels[vehicle.condition]}
-                      </span>
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--rise-blue)]">
+                      Marca
+                    </p>
 
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
-                        {statusLabels[vehicle.status]}
-                      </span>
-                    </div>
-
-                    <h3 className="text-lg font-black text-[var(--rise-navy)]">
-                      {vehicle.name}
+                    <h3 className="mt-2 text-xl font-black text-[var(--rise-navy)]">
+                      {brand.brand}
                     </h3>
 
-                    <p className="mt-1 text-sm font-semibold text-slate-500">
-                      {vehicle.brandName} · {vehicle.year} ·{" "}
-                      {categoryLabels[vehicle.category]}
+                    <p className="mt-2 text-sm font-bold text-slate-500">
+                      {brand.total} seminuevo(s) disponible(s)
                     </p>
-
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-slate-500">
-                      {vehicle.specs.slice(0, 3).map((spec) => (
-                        <span
-                          key={spec}
-                          className="rounded-full bg-slate-100 px-3 py-1"
-                        >
-                          {spec}
-                        </span>
-                      ))}
-                    </div>
-
-                    <p className="mt-5 text-2xl font-black text-[var(--rise-navy)]">
-                      {formatCurrency(vehicle.price)}
-                    </p>
-
-                    <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
-                      <MapPin size={16} className="text-[var(--rise-blue)]" />
-                      {vehicle.branchCity}
-                    </div>
-
-                    <div className="mt-5 grid gap-3">
-                      <Link
-                        href={`/vehiculos/${vehicle.id}`}
-                        className="inline-flex items-center justify-center rounded-xl border border-[var(--rise-border)] px-4 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
-                      >
-                        Ver detalles
-                      </Link>
-
-                      <VehicleLeadActions
-                        vehicleId={vehicle.id}
-                        branchId={vehicle.branchId}
-                        vehicleName={`${vehicle.brandName} ${vehicle.name}`}
-                        whatsapp={vehicle.branchWhatsapp}
-                        mode="compact"
-                      />
-                    </div>
                   </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-10 text-center shadow-sm">
-              <h3 className="text-2xl font-black text-[var(--rise-navy)]">
-                No encontramos resultados
-              </h3>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-              <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">
-                Intenta cambiar los filtros o limpiar la búsqueda para ver más
-                unidades disponibles.
-              </p>
+        <div className="mt-8 rounded-[2rem] border border-slate-100 bg-slate-50 p-4 md:p-5">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_1fr_1fr_auto]">
+            <label className="block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                Buscar
+              </span>
 
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="mt-6 rounded-xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+              <div className="relative">
+                <Search
+                  size={18}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Ej. Classic, RZR, Defender..."
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)]"
+                />
+              </div>
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                Marca
+              </span>
+
+              <select
+                value={selectedBrand}
+                onChange={(event) => setSelectedBrand(event.target.value)}
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)]"
               >
-                Limpiar filtros
-              </button>
-            </div>
-          )}
-        </Container>
-      </section>
+                <option value="TODAS">Todas</option>
 
-      <RequestModal
-        isOpen={Boolean(selectedVehicle)}
-        title="Solicita una cotización"
-        description="Déjanos tus datos y un asesor de Grupo Rise te contactará para compartirte disponibilidad, precio y opciones de financiamiento."
-        requestType="Cotización"
-        vehicleName={selectedVehicle?.name}
-        onClose={() => setSelectedVehicle(null)}
-      />
-    </>
+                {brands.map((brand) => (
+                  <option key={brand} value={brand}>
+                    {brand}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                Tipo
+              </span>
+
+              <select
+                value={selectedCategory}
+                onChange={(event) => setSelectedCategory(event.target.value)}
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)]"
+              >
+                <option value="TODAS">Todos</option>
+                <option value="AUTO">Autos</option>
+                <option value="MOTO">Motos</option>
+                <option value="TODOTERRENO">Todo terreno</option>
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                Año
+              </span>
+
+              <select
+                value={selectedYear}
+                onChange={(event) => setSelectedYear(event.target.value)}
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)]"
+              >
+                <option value="TODOS">Todos</option>
+
+                {years.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                Sucursal
+              </span>
+
+              <select
+                value={selectedBranch}
+                onChange={(event) => setSelectedBranch(event.target.value)}
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)]"
+              >
+                <option value="TODAS">Todas</option>
+
+                {branches.map((branch) => (
+                  <option key={branch.value} value={branch.value}>
+                    {branch.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              disabled={!hasFilters}
+              className="h-12 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-black text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 xl:self-end"
+            >
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        {groupedVehicles.length > 0 ? (
+          <div className="mt-10 grid gap-10">
+            {groupedVehicles.map((group) => (
+              <section key={group.brand}>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+                      {group.brand}
+                    </p>
+
+                    <h3 className="mt-2 text-3xl font-black tracking-tight">
+                      {group.vehicles.length} seminuevo(s) disponible(s)
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                  {group.vehicles.map((vehicle) => {
+                    const vehicleName = `${vehicle.brandName} ${vehicle.name}`;
+
+                    return (
+                      <article
+                        key={vehicle.id}
+                        className="group overflow-hidden rounded-[2rem] border border-slate-100 bg-slate-50 transition hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-slate-900/10"
+                      >
+                        <Link href={`/vehiculos/${vehicle.id}`}>
+                          <div className="relative h-56 overflow-hidden bg-slate-100">
+                            {vehicle.mainImage ? (
+                              <img
+                                src={vehicle.mainImage}
+                                alt={vehicleName}
+                                className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                              />
+                            ) : (
+                              <div className="grid h-full place-items-center text-slate-400">
+                                <ImageIcon size={46} />
+                              </div>
+                            )}
+
+                            <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-black uppercase tracking-wider text-[var(--rise-blue)] shadow-sm">
+                              Seminuevo
+                            </div>
+                          </div>
+                        </Link>
+
+                        <div className="p-5">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                              <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--rise-blue)]">
+                                {vehicle.brandName}
+                              </p>
+
+                              <Link href={`/vehiculos/${vehicle.id}`}>
+                                <h4 className="mt-2 line-clamp-2 text-2xl font-black text-[var(--rise-navy)] transition hover:text-[var(--rise-blue)]">
+                                  {vehicle.name}
+                                </h4>
+                              </Link>
+                            </div>
+
+                            <p className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500">
+                              {vehicle.year}
+                            </p>
+                          </div>
+
+                          <div className="mt-4 grid gap-2 text-sm font-bold text-slate-500">
+                            <div className="flex items-center gap-2">
+                              <Tags size={16} className="text-[var(--rise-blue)]" />
+                              {getCategoryLabel(vehicle.category)}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Gauge size={16} className="text-[var(--rise-blue)]" />
+                              {formatMileage(vehicle.mileage)}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <MapPin size={16} className="text-[var(--rise-blue)]" />
+                              {vehicle.branchCity}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Building2
+                                size={16}
+                                className="text-[var(--rise-blue)]"
+                              />
+                              {vehicle.branchName}
+                            </div>
+                          </div>
+
+                          <p className="mt-5 text-2xl font-black text-[var(--rise-blue)]">
+                            {formatCurrency(vehicle.price)}
+                          </p>
+
+                          <div className="mt-5 grid gap-3">
+                            <VehicleLeadActions
+                              vehicleId={vehicle.id}
+                              branchId={vehicle.branchId}
+                              vehicleName={vehicleName}
+                              whatsapp={vehicle.branchWhatsapp}
+                              mode="stack"
+                            />
+
+                            <Link
+                              href={`/vehiculos/${vehicle.id}`}
+                              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
+                            >
+                              Ver detalle
+                              <ArrowRight size={17} />
+                            </Link>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-10 rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
+            <Car className="mx-auto text-slate-400" size={50} />
+
+            <h3 className="mt-4 text-2xl font-black">
+              No encontramos seminuevos con esos filtros.
+            </h3>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Intenta buscar por otra marca, año, tipo o sucursal.
+            </p>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="mt-5 rounded-xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
