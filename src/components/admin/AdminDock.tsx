@@ -11,8 +11,10 @@ import {
   Gauge,
   Home,
   MessageSquare,
+  AlertTriangle,
   Plus,
   Tags,
+  FolderTree,
 } from "lucide-react";
 
 type AdminDockProps = {
@@ -32,9 +34,19 @@ const mainLinks = [
     icon: Car,
   },
   {
-    label: "Catálogo",
+    label: "Salud inventario",
+    href: "/admin/inventario/salud",
+    icon: AlertTriangle,
+  },
+  {
+    label: "Catálogo base",
     href: "/admin/catalogo",
     icon: Tags,
+  },
+  {
+    label: "Categorías",
+    href: "/admin/catalogo/categorias",
+    icon: FolderTree,
   },
   {
     label: "Solicitudes",
@@ -141,8 +153,8 @@ export function AdminDock({ collapsed = false, onToggle }: AdminDockProps) {
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   className={`flex items-center rounded-2xl text-sm font-black transition ${collapsed
-                      ? "justify-center px-3 py-3"
-                      : "gap-3 px-4 py-3"
+                    ? "justify-center px-3 py-3"
+                    : "gap-3 px-4 py-3"
                     } ${active
                       ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
                       : "text-slate-600 hover:bg-slate-50 hover:text-[var(--rise-blue)]"
@@ -174,8 +186,8 @@ export function AdminDock({ collapsed = false, onToggle }: AdminDockProps) {
                     href={item.href}
                     title={collapsed ? item.label : undefined}
                     className={`flex items-center rounded-2xl text-sm font-black transition ${collapsed
-                        ? "justify-center px-3 py-3"
-                        : "gap-3 px-4 py-3"
+                      ? "justify-center px-3 py-3"
+                      : "gap-3 px-4 py-3"
                       } ${active
                         ? "bg-[var(--rise-navy)] text-white"
                         : "bg-slate-50 text-slate-600 hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
@@ -215,8 +227,8 @@ export function AdminDock({ collapsed = false, onToggle }: AdminDockProps) {
                 key={item.href}
                 href={item.href}
                 className={`flex min-w-[92px] flex-col items-center justify-center gap-1 rounded-2xl px-3 py-3 text-[11px] font-black transition ${active
-                    ? "bg-[var(--rise-navy)] text-white"
-                    : "text-slate-500 hover:bg-slate-50"
+                  ? "bg-[var(--rise-navy)] text-white"
+                  : "text-slate-500 hover:bg-slate-50"
                   }`}
               >
                 <Icon size={18} />

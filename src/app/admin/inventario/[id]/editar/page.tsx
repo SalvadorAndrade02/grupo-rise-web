@@ -22,18 +22,25 @@ type EditVehiclePageProps = {
   }>;
 };
 
-const validCategories = ["AUTO", "MOTO", "TODOTERRENO"] as const;
+const validCategories: VehicleCategory[] = [
+  VehicleCategory.AUTO,
+  VehicleCategory.MOTO,
+  VehicleCategory.TODOTERRENO,
+];
 
-const validConditions = ["NUEVO", "SEMINUEVO"] as const;
+const validConditions: VehicleCondition[] = [
+  VehicleCondition.NUEVO,
+  VehicleCondition.SEMINUEVO,
+];
 
-const validStatuses = [
-  "DISPONIBLE",
-  "APARTADO",
-  "VENDIDO",
-  "EN_TRANSITO",
-  "PROXIMAMENTE",
-  "INACTIVO",
-] as const;
+const validStatuses: VehicleStatus[] = [
+  VehicleStatus.DISPONIBLE,
+  VehicleStatus.APARTADO,
+  VehicleStatus.VENDIDO,
+  VehicleStatus.EN_TRANSITO,
+  VehicleStatus.PROXIMAMENTE,
+  VehicleStatus.INACTIVO,
+];
 
 function getStringValue(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -55,22 +62,31 @@ function getNumberValue(formData: FormData, key: string) {
   return value;
 }
 
-function parseCategory(value: string): VehicleCategory {
+function parseCategory(
+  value: FormDataEntryValue | null,
+  fallback: VehicleCategory
+): VehicleCategory {
   return validCategories.includes(value as VehicleCategory)
     ? (value as VehicleCategory)
-    : "AUTO";
+    : fallback;
 }
 
-function parseCondition(value: FormDataEntryValue | null): VehicleCondition {
+function parseCondition(
+  value: FormDataEntryValue | null,
+  fallback: VehicleCondition
+): VehicleCondition {
   return validConditions.includes(value as VehicleCondition)
     ? (value as VehicleCondition)
-    : "NUEVO";
+    : fallback;
 }
 
-function parseStatus(value: FormDataEntryValue | null): VehicleStatus {
+function parseStatus(
+  value: FormDataEntryValue | null,
+  fallback: VehicleStatus
+): VehicleStatus {
   return validStatuses.includes(value as VehicleStatus)
     ? (value as VehicleStatus)
-    : "DISPONIBLE";
+    : fallback;
 }
 
 async function updateVehicle(vehicleId: number, formData: FormData) {
@@ -93,9 +109,14 @@ async function updateVehicle(vehicleId: number, formData: FormData) {
     notFound();
   }
 
-  const category = parseCategory(getStringValue(formData, "category"));
-  const condition = parseCondition(formData.get("condition"));
-  const status = parseStatus(formData.get("status"));
+  const category = parseCategory(formData.get("category"), currentVehicle.category);
+
+  const condition = parseCondition(
+    formData.get("condition"),
+    currentVehicle.condition
+  );
+
+  const status = parseStatus(formData.get("status"), currentVehicle.status);
 
   const brandId = getNumberValue(formData, "brandId");
   const branchId = getNumberValue(formData, "branchId");
@@ -105,7 +126,7 @@ async function updateVehicle(vehicleId: number, formData: FormData) {
   const version = getStringValue(formData, "version");
   const year = getNumberValue(formData, "year");
   const price = getNumberValue(formData, "price");
-  const type = getStringValue(formData, "type");
+  const type = category;
   const color = getStringValue(formData, "color");
   const mileage = getNumberValue(formData, "mileage");
   const specs = getStringValue(formData, "specs");
@@ -164,22 +185,22 @@ async function updateVehicle(vehicleId: number, formData: FormData) {
   const imagesUpdate = {
     ...(deleteMediaIds.length > 0
       ? {
-          deleteMany: {
-            id: {
-              in: deleteMediaIds,
-            },
+        deleteMany: {
+          id: {
+            in: deleteMediaIds,
           },
-        }
+        },
+      }
       : {}),
     ...(savedMedia.length > 0
       ? {
-          create: savedMedia.map((item, index) => ({
-            url: item.url,
-            type: item.type,
-            alt: name,
-            order: remainingMedia.length + index,
-          })),
-        }
+        create: savedMedia.map((item, index) => ({
+          url: item.url,
+          type: item.type,
+          alt: name,
+          order: remainingMedia.length + index,
+        })),
+      }
       : {}),
   };
 
@@ -223,6 +244,8 @@ async function updateVehicle(vehicleId: number, formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/inventario");
+  revalidatePath("/admin/inventario/salud");
+  revalidatePath("/catalogo");
   revalidatePath("/inventario");
   revalidatePath(`/vehiculos/${vehicleId}`);
 
@@ -459,17 +482,19 @@ export default async function EditVehiclePage({ params }: EditVehiclePageProps) 
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-700">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <span className="block text-xs font-black uppercase tracking-wider text-slate-500">
                   Tipo / Clasificación
                 </span>
-                <input
-                  name="type"
-                  required
-                  defaultValue={vehicle.type}
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                />
-              </label>
+
+                <p className="mt-2 text-sm font-black text-[var(--rise-navy)]">
+                  Se toma automáticamente de la categoría seleccionada.
+                </p>
+
+                <p className="mt-1 text-xs text-slate-500">
+                  Auto, Moto o Todo terreno.
+                </p>
+              </div>
 
               <label className="block">
                 <span className="mb-2 block text-sm font-bold text-slate-700">

@@ -1,40 +1,33 @@
 import Link from "next/link";
 import {
+  AlertTriangle,
   ArrowRight,
   BadgeCheck,
+  BarChart3,
+  Bell,
   Building2,
+  CalendarDays,
   Car,
   CheckCircle2,
   Clock,
-  Eye,
-  Gauge,
+  EyeOff,
   ImageIcon,
-  Inbox,
-  Layers3,
   MessageSquare,
   Plus,
-  Store,
+  Sparkles,
   Tags,
+  TrendingUp,
 } from "lucide-react";
 import {
   LeadStatus,
   VehicleCondition,
+  VehicleMediaType,
   VehicleStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
 
 export const dynamic = "force-dynamic";
-
-function formatDate(value: Date) {
-  return new Intl.DateTimeFormat("es-MX", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(value);
-}
 
 function getLeadTypeLabel(type: string) {
   const labels: Record<string, string> = {
@@ -86,37 +79,63 @@ function getVehicleStatusLabel(status: string) {
   return labels[status] ?? status;
 }
 
-function getBrandSlug(name: string) {
-  const map: Record<string, string> = {
-    "Can-Am": "can-am",
-    Polaris: "polaris",
-    "Royal Enfield": "royal-enfield",
-    "Sea-Doo": "sea-doo",
-    "Sea Doo": "sea-doo",
-    SeaDoo: "sea-doo",
-    Triumph: "triumph-motorcycles",
-    Indian: "indian-motorcycle",
-    Zeekr: "zeekrlife",
-    "Lynk & Co": "lynk-co",
+function getConditionLabel(condition: string) {
+  const labels: Record<string, string> = {
+    NUEVO: "Nuevo",
+    SEMINUEVO: "Seminuevo",
   };
 
-  return map[name] ?? name.toLowerCase().replace(/\s+/g, "-");
+  return labels[condition] ?? condition;
+}
+
+function getVehicleIssues(vehicle: {
+  mainImage: string;
+  description: string;
+  price: number;
+  active: boolean;
+  status: VehicleStatus;
+  images: { id: number }[];
+}) {
+  const issues: string[] = [];
+
+  if (!vehicle.mainImage && vehicle.images.length === 0) {
+    issues.push("Sin imagen");
+  }
+
+  if (!vehicle.description?.trim()) {
+    issues.push("Sin descripción");
+  }
+
+  if (!vehicle.price || vehicle.price <= 0) {
+    issues.push("Sin precio válido");
+  }
+
+  if (vehicle.active && vehicle.status !== VehicleStatus.DISPONIBLE) {
+    issues.push("Visible pero no disponible");
+  }
+
+  return issues;
 }
 
 export default async function AdminDashboardPage() {
   const [
     totalVehicles,
-    totalNewVehicles,
-    totalUsedVehicles,
-    totalPublicInventory,
-    totalCatalogModels,
-    activeCatalogModels,
-    activeBranches,
-    totalLeads,
+    newVehicles,
+    usedVehicles,
+    publishedNewVehicles,
+    publishedUsedVehicles,
+    hiddenVehicles,
+    soldOrReservedVehicles,
+    vehiclesWithoutImage,
+    vehiclesWithoutDescription,
     newLeads,
-    latestLeads,
-    latestVehicles,
-    latestCatalogModels,
+    contactedLeads,
+    followUpLeads,
+    closedLeads,
+    lostLeads,
+    recentLeads,
+    recentVehicles,
+    attentionVehicles,
   ] = await Promise.all([
     prisma.vehicle.count(),
 
@@ -135,29 +154,61 @@ export default async function AdminDashboardPage() {
     prisma.vehicle.count({
       where: {
         active: true,
-        condition: VehicleCondition.SEMINUEVO,
+        condition: VehicleCondition.NUEVO,
         status: VehicleStatus.DISPONIBLE,
         branch: {
+          active: true,
+        },
+        brand: {
           active: true,
         },
       },
     }),
 
-    prisma.catalogModel.count(),
-
-    prisma.catalogModel.count({
+    prisma.vehicle.count({
       where: {
         active: true,
+        condition: VehicleCondition.SEMINUEVO,
+        status: VehicleStatus.DISPONIBLE,
+        branch: {
+          active: true,
+        },
+        brand: {
+          active: true,
+        },
       },
     }),
 
-    prisma.branch.count({
+    prisma.vehicle.count({
       where: {
-        active: true,
+        active: false,
       },
     }),
 
-    prisma.lead.count(),
+    prisma.vehicle.count({
+      where: {
+        status: {
+          in: [VehicleStatus.VENDIDO, VehicleStatus.APARTADO],
+        },
+      },
+    }),
+
+    prisma.vehicle.count({
+      where: {
+        mainImage: "",
+        images: {
+          none: {
+            type: VehicleMediaType.IMAGE,
+          },
+        },
+      },
+    }),
+
+    prisma.vehicle.count({
+      where: {
+        description: "",
+      },
+    }),
 
     prisma.lead.count({
       where: {
@@ -165,11 +216,35 @@ export default async function AdminDashboardPage() {
       },
     }),
 
+    prisma.lead.count({
+      where: {
+        status: LeadStatus.CONTACTADO,
+      },
+    }),
+
+    prisma.lead.count({
+      where: {
+        status: LeadStatus.EN_SEGUIMIENTO,
+      },
+    }),
+
+    prisma.lead.count({
+      where: {
+        status: LeadStatus.CERRADO,
+      },
+    }),
+
+    prisma.lead.count({
+      where: {
+        status: LeadStatus.PERDIDO,
+      },
+    }),
+
     prisma.lead.findMany({
+      take: 5,
       orderBy: {
         createdAt: "desc",
       },
-      take: 5,
       include: {
         vehicle: {
           include: {
@@ -181,16 +256,16 @@ export default async function AdminDashboardPage() {
     }),
 
     prisma.vehicle.findMany({
+      take: 5,
       orderBy: {
         updatedAt: "desc",
       },
-      take: 5,
       include: {
         brand: true,
         branch: true,
         images: {
           where: {
-            type: "IMAGE",
+            type: VehicleMediaType.IMAGE,
           },
           orderBy: {
             order: "asc",
@@ -200,17 +275,43 @@ export default async function AdminDashboardPage() {
       },
     }),
 
-    prisma.catalogModel.findMany({
+    prisma.vehicle.findMany({
+      take: 6,
+      where: {
+        OR: [
+          {
+            mainImage: "",
+            images: {
+              none: {
+                type: VehicleMediaType.IMAGE,
+              },
+            },
+          },
+          {
+            description: "",
+          },
+          {
+            price: {
+              lte: 0,
+            },
+          },
+          {
+            active: true,
+            status: {
+              not: VehicleStatus.DISPONIBLE,
+            },
+          },
+        ],
+      },
       orderBy: {
         updatedAt: "desc",
       },
-      take: 5,
       include: {
         brand: true,
-        category: true,
+        branch: true,
         images: {
           where: {
-            type: "IMAGE",
+            type: VehicleMediaType.IMAGE,
           },
           orderBy: {
             order: "asc",
@@ -221,426 +322,354 @@ export default async function AdminDashboardPage() {
     }),
   ]);
 
-  const stats = [
+  const publishedVehicles = publishedNewVehicles + publishedUsedVehicles;
+  const totalLeads =
+    newLeads + contactedLeads + followUpLeads + closedLeads + lostLeads;
+
+  const mainStats = [
     {
-      title: "Unidades registradas",
-      value: totalVehicles,
-      description: "Nuevas, seminuevas, vendidas u ocultas",
-      icon: Car,
-      href: "/admin/inventario",
-      className: "bg-blue-50 text-blue-700",
+      label: "Solicitudes nuevas",
+      value: newLeads,
+      description: "Leads pendientes de contactar",
+      icon: Bell,
+      href: "/admin/leads?estado=NUEVO",
+      tone: "blue",
     },
     {
-      title: "Nuevos",
-      value: totalNewVehicles,
-      description: "Unidades registradas como nuevas",
+      label: "En seguimiento",
+      value: followUpLeads,
+      description: "Prospectos activos",
+      icon: Clock,
+      href: "/admin/leads?estado=EN_SEGUIMIENTO",
+      tone: "amber",
+    },
+    {
+      label: "Vehículos publicados",
+      value: publishedVehicles,
+      description: "Catálogo + inventario público",
       icon: BadgeCheck,
-      href: "/admin/inventario?condicion=NUEVO",
-      className: "bg-purple-50 text-purple-700",
+      href: "/admin/inventario",
+      tone: "emerald",
     },
     {
-      title: "Seminuevos",
-      value: totalUsedVehicles,
-      description: "Unidades registradas como seminuevas",
-      icon: Gauge,
-      href: "/admin/inventario?condicion=SEMINUEVO",
-      className: "bg-amber-50 text-amber-700",
-    },
-    {
-      title: "Inventario público",
-      value: totalPublicInventory,
-      description: "Seminuevos disponibles y visibles",
-      icon: Eye,
-      href: "/inventario",
-      className: "bg-emerald-50 text-emerald-700",
+      label: "Requieren atención",
+      value: vehiclesWithoutImage + vehiclesWithoutDescription,
+      description: "Sin imagen o descripción",
+      icon: AlertTriangle,
+      href: "/admin/inventario",
+      tone: "red",
     },
   ];
 
-  const quickActions = [
+  const inventoryStats = [
     {
-      title: "Registrar unidad",
-      description: "Alta de vehículo nuevo o seminuevo.",
-      href: "/admin/inventario/nuevo",
-      icon: Plus,
+      label: "Unidades registradas",
+      value: totalVehicles,
+      icon: Car,
     },
     {
-      title: "Nuevo modelo catálogo",
-      description: "Agregar ficha comercial por marca.",
-      href: "/admin/catalogo/nuevo",
+      label: "Nuevos",
+      value: newVehicles,
+      icon: Sparkles,
+    },
+    {
+      label: "Seminuevos",
+      value: usedVehicles,
       icon: Tags,
     },
     {
-      title: "Solicitudes",
-      description: "Revisar cotizaciones y citas recibidas.",
-      href: "/admin/leads",
-      icon: MessageSquare,
+      label: "Ocultos",
+      value: hiddenVehicles,
+      icon: EyeOff,
     },
     {
-      title: "Sucursales",
-      description: "Administrar puntos de atención.",
-      href: "/admin/sucursales",
-      icon: Store,
+      label: "Vendidos / apartados",
+      value: soldOrReservedVehicles,
+      icon: CheckCircle2,
+    },
+    {
+      label: "Sin imagen",
+      value: vehiclesWithoutImage,
+      icon: ImageIcon,
     },
   ];
 
-  const modules = [
+  const leadStats = [
     {
-      title: "Inventario de unidades",
-      description:
-        "Administra vehículos reales nuevos o seminuevos, su estado, visibilidad, precio, fotos, sucursal y disponibilidad pública.",
-      href: "/admin/inventario",
-      publicHref: "/inventario",
-      icon: Car,
-      stats: `${totalVehicles} unidad(es) · ${totalPublicInventory} visible(s) en público`,
+      label: "Total",
+      value: totalLeads,
     },
     {
-      title: "Catálogo de modelos",
-      description:
-        "Gestiona modelos comerciales por marca, categoría, descripción, precio desde, galería y ficha pública.",
-      href: "/admin/catalogo",
-      publicHref: "/catalogo",
-      icon: Layers3,
-      stats: `${activeCatalogModels} modelo(s) activo(s) de ${totalCatalogModels}`,
+      label: "Nuevos",
+      value: newLeads,
     },
     {
-      title: "Solicitudes CRM",
-      description:
-        "Da seguimiento a cotizaciones, pruebas de manejo, citas, financiamiento y mensajes enviados desde el sitio.",
-      href: "/admin/leads",
-      publicHref: "/contacto",
-      icon: MessageSquare,
-      stats: `${newLeads} nueva(s) · ${totalLeads} total(es)`,
+      label: "Contactados",
+      value: contactedLeads,
     },
     {
-      title: "Sucursales",
-      description:
-        "Administra direcciones, ciudades, WhatsApp, teléfonos, horarios y datos de contacto por sucursal.",
-      href: "/admin/sucursales",
-      publicHref: "/sucursales",
-      icon: Building2,
-      stats: `${activeBranches} sucursal(es) activa(s)`,
+      label: "Seguimiento",
+      value: followUpLeads,
+    },
+    {
+      label: "Cerrados",
+      value: closedLeads,
+    },
+    {
+      label: "Perdidos",
+      value: lostLeads,
     },
   ];
 
   return (
     <div>
-      <section>
-        <div className="flex flex-wrap items-center justify-between gap-5">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-              Panel administrativo
-            </p>
+      <div className="flex flex-wrap items-start justify-between gap-5">
+        <div>
+          <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+            Panel administrativo
+          </p>
 
-            <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">
-              Dashboard Grupo Rise
-            </h1>
+          <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">
+            Dashboard Grupo Rise
+          </h1>
 
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
-              Administra unidades reales, catálogo comercial, solicitudes,
-              sucursales y contenido público desde un solo lugar.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/"
-              target="_blank"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--rise-border)] bg-white px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
-            >
-              <Eye size={17} />
-              Ver sitio
-            </Link>
-
-            <Link
-              href="/admin/inventario/nuevo"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-            >
-              <Plus size={17} />
-              Registrar unidad
-            </Link>
-          </div>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+            Resumen de inventario, catálogo, seminuevos y solicitudes
+            comerciales del sitio.
+          </p>
         </div>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {stats.map((item) => {
-            const Icon = item.icon;
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/admin/inventario/nuevo"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+          >
+            <Plus size={18} />
+            Registrar unidad
+          </Link>
 
-            return (
-              <Link
-                key={item.title}
-                href={item.href}
-                className="group rounded-[1.5rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
-              >
+          <Link
+            href="/admin/leads"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--rise-border)] bg-white px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
+          >
+            <MessageSquare size={18} />
+            Ver solicitudes
+          </Link>
+        </div>
+      </div>
+
+      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {mainStats.map((stat) => {
+          const Icon = stat.icon;
+
+          return (
+            <Link
+              key={stat.label}
+              href={stat.href}
+              className="group rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
+            >
+              <div className="flex items-start justify-between gap-4">
                 <div
-                  className={`grid h-12 w-12 place-items-center rounded-2xl ${item.className}`}
+                  className={`grid h-12 w-12 place-items-center rounded-2xl ${
+                    stat.tone === "blue"
+                      ? "bg-blue-50 text-blue-700"
+                      : stat.tone === "amber"
+                        ? "bg-amber-50 text-amber-700"
+                        : stat.tone === "emerald"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-red-50 text-red-700"
+                  }`}
                 >
                   <Icon size={23} />
                 </div>
 
-                <p className="mt-5 text-4xl font-black">{item.value}</p>
+                <ArrowRight
+                  size={18}
+                  className="text-slate-300 transition group-hover:translate-x-1 group-hover:text-[var(--rise-blue)]"
+                />
+              </div>
 
-                <h2 className="mt-2 text-base font-black">{item.title}</h2>
+              <p className="mt-5 text-4xl font-black text-[var(--rise-navy)]">
+                {stat.value}
+              </p>
 
-                <p className="mt-1 text-sm font-bold text-slate-500">
-                  {item.description}
-                </p>
+              <h2 className="mt-2 text-sm font-black uppercase tracking-wider text-slate-700">
+                {stat.label}
+              </h2>
 
-                <div className="mt-4 inline-flex items-center gap-2 text-sm font-black text-[var(--rise-blue)]">
-                  Abrir
-                  <ArrowRight
-                    size={16}
-                    className="transition group-hover:translate-x-1"
-                  />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                {stat.description}
+              </p>
+            </Link>
+          );
+        })}
+      </section>
 
-        <section className="mt-8 rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
+      <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.9fr]">
+        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-black">Accesos rápidos</h2>
-
-              <p className="mt-1 text-sm text-slate-500">
-                Acciones frecuentes para operar el sitio.
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+                Inventario
               </p>
+
+              <h2 className="mt-2 text-2xl font-black">
+                Estado de unidades
+              </h2>
             </div>
+
+            <Link
+              href="/admin/inventario"
+              className="text-sm font-black text-[var(--rise-blue)] hover:underline"
+            >
+              Administrar inventario
+            </Link>
           </div>
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {inventoryStats.map((stat) => {
+              const Icon = stat.icon;
 
               return (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className="group rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:bg-white hover:shadow-lg hover:shadow-slate-900/10"
+                <div
+                  key={stat.label}
+                  className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
                 >
-                  <div className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
-                    <Icon size={21} />
-                  </div>
+                  <Icon size={22} className="text-[var(--rise-blue)]" />
 
-                  <h3 className="mt-4 font-black">{action.title}</h3>
-
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    {action.description}
+                  <p className="mt-4 text-3xl font-black text-[var(--rise-navy)]">
+                    {stat.value}
                   </p>
 
-                  <div className="mt-4 inline-flex items-center gap-2 text-sm font-black text-[var(--rise-blue)]">
-                    Ir
-                    <ArrowRight
-                      size={16}
-                      className="transition group-hover:translate-x-1"
-                    />
-                  </div>
-                </Link>
+                  <p className="mt-1 text-xs font-black uppercase tracking-wider text-slate-500">
+                    {stat.label}
+                  </p>
+                </div>
               );
             })}
           </div>
-        </section>
 
-        <section className="mt-8">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-              Módulos
+          <div className="mt-6 grid gap-4 rounded-2xl bg-slate-50 p-4 md:grid-cols-2">
+            <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+                Catálogo público
+              </p>
+
+              <p className="mt-2 text-3xl font-black text-[var(--rise-blue)]">
+                {publishedNewVehicles}
+              </p>
+
+              <p className="mt-1 text-sm font-bold text-slate-500">
+                Nuevos disponibles publicados
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+                Inventario público
+              </p>
+
+              <p className="mt-2 text-3xl font-black text-[var(--rise-blue)]">
+                {publishedUsedVehicles}
+              </p>
+
+              <p className="mt-1 text-sm font-bold text-slate-500">
+                Seminuevos disponibles publicados
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+                CRM
+              </p>
+
+              <h2 className="mt-2 text-2xl font-black">
+                Estado de solicitudes
+              </h2>
+            </div>
+
+            <Link
+              href="/admin/leads"
+              className="text-sm font-black text-[var(--rise-blue)] hover:underline"
+            >
+              Ver CRM
+            </Link>
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {leadStats.map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
+              >
+                <p className="text-3xl font-black text-[var(--rise-navy)]">
+                  {stat.value}
+                </p>
+
+                <p className="mt-1 text-xs font-black uppercase tracking-wider text-slate-500">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 rounded-2xl bg-[var(--rise-blue-soft)] p-5">
+            <TrendingUp size={24} className="text-[var(--rise-blue)]" />
+
+            <p className="mt-3 text-sm font-black text-[var(--rise-navy)]">
+              Seguimiento recomendado
             </p>
 
-            <h2 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">
-              Administración del sitio
-            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Prioriza solicitudes nuevas y las que están en seguimiento. Las
+              solicitudes cerradas ayudan a medir avance comercial.
+            </p>
           </div>
+        </div>
+      </section>
 
-          <div className="mt-5 grid gap-5 lg:grid-cols-2">
-            {modules.map((module) => {
-              const Icon = module.icon;
-
-              return (
-                <article
-                  key={module.href}
-                  className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm"
-                >
-                  <div className="flex gap-4">
-                    <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[var(--rise-navy)] text-white">
-                      <Icon size={25} />
-                    </div>
-
-                    <div>
-                      <h3 className="text-2xl font-black">{module.title}</h3>
-
-                      <p className="mt-2 text-sm leading-7 text-slate-600">
-                        {module.description}
-                      </p>
-
-                      <p className="mt-3 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-500">
-                        {module.stats}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <Link
-                      href={module.href}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-                    >
-                      Administrar
-                      <ArrowRight size={17} />
-                    </Link>
-
-                    <Link
-                      href={module.publicHref}
-                      target="_blank"
-                      className="inline-flex items-center justify-center rounded-xl border border-[var(--rise-border)] px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
-                    >
-                      Ver público
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="mt-8 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="inline-flex items-center gap-2 text-2xl font-black">
-                  <Clock size={23} />
-                  Últimas solicitudes
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Prospectos recientes recibidos desde el sitio.
-                </p>
-              </div>
-
-              <Link
-                href="/admin/leads"
-                className="text-sm font-black text-[var(--rise-blue)] hover:underline"
-              >
-                Ver todas
-              </Link>
-            </div>
-
-            <div className="mt-5 grid gap-3">
-              {latestLeads.map((lead) => (
-                <Link
-                  key={lead.id}
-                  href="/admin/leads"
-                  className="rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:bg-white hover:shadow-md hover:shadow-slate-900/5"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-black">{lead.name}</p>
-
-                      <p className="mt-1 text-sm font-bold text-slate-500">
-                        {getLeadTypeLabel(lead.type)}
-                        {lead.vehicle
-                          ? ` · ${lead.vehicle.brand.name} ${lead.vehicle.name}`
-                          : ""}
-                      </p>
-
-                      <p className="mt-1 text-xs font-bold text-slate-400">
-                        {formatDate(lead.createdAt)}
-                      </p>
-                    </div>
-
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${getLeadStatusClasses(
-                        lead.status
-                      )}`}
-                    >
-                      {getLeadStatusLabel(lead.status)}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-
-              {latestLeads.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                  <MessageSquare className="mx-auto text-slate-400" size={42} />
-
-                  <p className="mt-3 text-sm font-black text-slate-500">
-                    Aún no hay solicitudes.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
+      <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.9fr]">
+        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-black">Regla de publicación</h2>
-
-              <p className="mt-1 text-sm text-slate-500">
-                Así se decide qué aparece en el inventario público.
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+                Atención requerida
               </p>
+
+              <h2 className="mt-2 text-2xl font-black">
+                Vehículos por revisar
+              </h2>
             </div>
 
-            <div className="mt-5 grid gap-4">
-              <div className="rounded-2xl bg-emerald-50 p-5 text-emerald-800">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 size={24} />
-                  <p className="font-black">Sí aparece en /inventario</p>
-                </div>
-
-                <p className="mt-2 text-sm font-bold">
-                  Condición Seminuevo + Estado Disponible + Visible + Sucursal
-                  activa.
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-slate-50 p-5 text-slate-600">
-                <div className="flex items-center gap-3">
-                  <Inbox size={24} />
-                  <p className="font-black">No aparece públicamente</p>
-                </div>
-
-                <p className="mt-2 text-sm font-bold">
-                  Si está como Nuevo, Vendido, Apartado, Inactivo u Oculto, se
-                  queda solo para control interno.
-                </p>
-              </div>
-            </div>
+            <Link
+              href="/admin/inventario"
+              className="text-sm font-black text-[var(--rise-blue)] hover:underline"
+            >
+              Revisar inventario
+            </Link>
           </div>
-        </section>
 
-        <section className="mt-8 grid gap-6 xl:grid-cols-2">
-          <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-black">Unidades recientes</h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Últimos vehículos modificados en inventario.
-                </p>
-              </div>
-
-              <Link
-                href="/admin/inventario"
-                className="text-sm font-black text-[var(--rise-blue)] hover:underline"
-              >
-                Administrar
-              </Link>
-            </div>
-
-            <div className="mt-5 grid gap-3">
-              {latestVehicles.map((vehicle) => {
+          <div className="mt-6 space-y-3">
+            {attentionVehicles.length > 0 ? (
+              attentionVehicles.map((vehicle) => {
                 const image = vehicle.images[0]?.url || vehicle.mainImage || "";
+                const issues = getVehicleIssues(vehicle);
 
                 return (
                   <Link
                     key={vehicle.id}
                     href={`/admin/inventario/${vehicle.id}/editar`}
-                    className="grid gap-4 rounded-2xl bg-slate-50 p-3 transition hover:bg-white hover:shadow-md hover:shadow-slate-900/5 sm:grid-cols-[96px_1fr]"
+                    className="grid gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:bg-white hover:shadow-lg hover:shadow-slate-900/5 md:grid-cols-[96px_1fr_auto]"
                   >
-                    <div className="h-24 overflow-hidden rounded-xl bg-slate-200">
+                    <div className="h-24 overflow-hidden rounded-2xl bg-slate-200">
                       {image ? (
                         <img
                           src={image}
-                          alt={vehicle.name}
+                          alt={`${vehicle.brand.name} ${vehicle.name}`}
                           className="h-full w-full object-cover"
                         />
                       ) : (
@@ -651,133 +680,249 @@ export default async function AdminDashboardPage() {
                     </div>
 
                     <div>
-                      <p className="font-black">
-                        {vehicle.brand.name} {vehicle.name}
+                      <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--rise-blue)]">
+                        {vehicle.brand.name}
                       </p>
+
+                      <h3 className="mt-1 text-lg font-black">
+                        {vehicle.name}
+                      </h3>
 
                       <p className="mt-1 text-sm font-bold text-slate-500">
-                        {vehicle.year} · {vehicle.branch.city}
-                      </p>
-
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-500">
-                          {vehicle.condition === VehicleCondition.SEMINUEVO
-                            ? "Seminuevo"
-                            : "Nuevo"}
-                        </span>
-
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-500">
-                          {getVehicleStatusLabel(vehicle.status)}
-                        </span>
-                      </div>
-
-                      <p className="mt-2 text-sm font-black text-[var(--rise-blue)]">
-                        {formatCurrency(vehicle.price)}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-
-              {latestVehicles.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                  <Car className="mx-auto text-slate-400" size={42} />
-
-                  <p className="mt-3 text-sm font-black text-slate-500">
-                    Aún no hay unidades registradas.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-black">Catálogo reciente</h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Últimos modelos comerciales modificados.
-                </p>
-              </div>
-
-              <Link
-                href="/admin/catalogo"
-                className="text-sm font-black text-[var(--rise-blue)] hover:underline"
-              >
-                Administrar
-              </Link>
-            </div>
-
-            <div className="mt-5 grid gap-3">
-              {latestCatalogModels.map((model) => {
-                const image = model.images[0]?.url || model.mainImage || "";
-                const brandSlug = getBrandSlug(model.brand.name);
-
-                return (
-                  <article
-                    key={model.id}
-                    className="grid gap-4 rounded-2xl bg-slate-50 p-3 sm:grid-cols-[96px_1fr]"
-                  >
-                    <div className="h-24 overflow-hidden rounded-xl bg-slate-200">
-                      {image ? (
-                        <img
-                          src={image}
-                          alt={model.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="grid h-full place-items-center text-slate-400">
-                          <ImageIcon size={28} />
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <p className="font-black">
-                        {model.brand.name} {model.name}
-                      </p>
-
-                      <p className="mt-1 text-sm font-bold text-slate-500">
-                        {model.category?.name ?? "Sin categoría"} ·{" "}
-                        {model.year ?? "Año N/D"}
+                        {vehicle.branch.name} · {vehicle.branch.city}
                       </p>
 
                       <div className="mt-3 flex flex-wrap gap-2">
-                        <Link
-                          href={`/admin/catalogo/${model.id}/editar`}
-                          className="rounded-full bg-[var(--rise-navy)] px-3 py-1 text-xs font-black uppercase tracking-wider text-white"
-                        >
-                          Editar
-                        </Link>
-
-                        {model.active && (
-                          <Link
-                            href={`/catalogo/${brandSlug}/${model.slug}`}
-                            target="_blank"
-                            className="rounded-full bg-[var(--rise-blue-soft)] px-3 py-1 text-xs font-black uppercase tracking-wider text-[var(--rise-blue)]"
+                        {issues.map((issue) => (
+                          <span
+                            key={issue}
+                            className="rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700"
                           >
-                            Ver público
-                          </Link>
-                        )}
+                            {issue}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                  </article>
+
+                    <div className="flex items-center text-sm font-black text-[var(--rise-blue)]">
+                      Editar
+                    </div>
+                  </Link>
                 );
-              })}
+              })
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                <CheckCircle2
+                  size={42}
+                  className="mx-auto text-emerald-600"
+                />
 
-              {latestCatalogModels.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                  <Tags className="mx-auto text-slate-400" size={42} />
+                <h3 className="mt-3 text-xl font-black">
+                  Todo se ve bien
+                </h3>
 
-                  <p className="mt-3 text-sm font-black text-slate-500">
-                    Aún no hay modelos de catálogo.
+                <p className="mt-2 text-sm text-slate-500">
+                  No hay vehículos con alertas principales por ahora.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+                Solicitudes recientes
+              </p>
+
+              <h2 className="mt-2 text-2xl font-black">
+                Últimos prospectos
+              </h2>
+            </div>
+
+            <Link
+              href="/admin/leads"
+              className="text-sm font-black text-[var(--rise-blue)] hover:underline"
+            >
+              Ver todas
+            </Link>
+          </div>
+
+          <div className="mt-6 space-y-3">
+            {recentLeads.length > 0 ? (
+              recentLeads.map((lead) => {
+                const vehicleName = lead.vehicle
+                  ? `${lead.vehicle.brand.name} ${lead.vehicle.name}`
+                  : "Solicitud general";
+
+                return (
+                  <Link
+                    key={lead.id}
+                    href="/admin/leads"
+                    className="block rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:bg-white hover:shadow-lg hover:shadow-slate-900/5"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-black">{lead.name}</p>
+
+                        <p className="mt-1 text-xs font-bold text-slate-500">
+                          {vehicleName}
+                        </p>
+                      </div>
+
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-black ${getLeadStatusClasses(
+                          lead.status
+                        )}`}
+                      >
+                        {getLeadStatusLabel(lead.status)}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500">
+                        {getLeadTypeLabel(lead.type)}
+                      </span>
+
+                      {lead.branch && (
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500">
+                          {lead.branch.city}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                <MessageSquare size={42} className="mx-auto text-slate-400" />
+
+                <h3 className="mt-3 text-xl font-black">
+                  Sin solicitudes todavía
+                </h3>
+
+                <p className="mt-2 text-sm text-slate-500">
+                  Cuando un cliente solicite información aparecerá aquí.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+              Actividad reciente
+            </p>
+
+            <h2 className="mt-2 text-2xl font-black">
+              Últimas unidades actualizadas
+            </h2>
+          </div>
+
+          <Link
+            href="/admin/inventario"
+            className="text-sm font-black text-[var(--rise-blue)] hover:underline"
+          >
+            Ver inventario
+          </Link>
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-5">
+          {recentVehicles.map((vehicle) => {
+            const image = vehicle.images[0]?.url || vehicle.mainImage || "";
+
+            return (
+              <Link
+                key={vehicle.id}
+                href={`/admin/inventario/${vehicle.id}/editar`}
+                className="group overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 transition hover:bg-white hover:shadow-xl hover:shadow-slate-900/10"
+              >
+                <div className="h-36 bg-slate-200">
+                  {image ? (
+                    <img
+                      src={image}
+                      alt={`${vehicle.brand.name} ${vehicle.name}`}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="grid h-full place-items-center text-slate-400">
+                      <ImageIcon size={34} />
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--rise-blue)]">
+                    {vehicle.brand.name}
+                  </p>
+
+                  <h3 className="mt-2 line-clamp-2 text-base font-black">
+                    {vehicle.name}
+                  </h3>
+
+                  <p className="mt-2 text-xs font-bold text-slate-500">
+                    {getConditionLabel(vehicle.condition)} ·{" "}
+                    {getVehicleStatusLabel(vehicle.status)}
+                  </p>
+
+                  <p className="mt-3 text-lg font-black text-[var(--rise-blue)]">
+                    {formatCurrency(vehicle.price)}
                   </p>
                 </div>
-              )}
-            </div>
-          </div>
-        </section>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Link
+          href="/admin/inventario/nuevo"
+          className="rounded-[2rem] border border-[var(--rise-border)] bg-[var(--rise-navy)] p-5 text-white shadow-sm transition hover:bg-[var(--rise-blue)]"
+        >
+          <Plus size={24} />
+          <h3 className="mt-4 text-xl font-black">Registrar unidad</h3>
+          <p className="mt-2 text-sm leading-6 text-white/70">
+            Alta de vehículo nuevo o seminuevo.
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/inventario"
+          className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
+        >
+          <Car size={24} className="text-[var(--rise-blue)]" />
+          <h3 className="mt-4 text-xl font-black">Inventario</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Administrar unidades, publicación, estado y galería.
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/leads"
+          className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
+        >
+          <MessageSquare size={24} className="text-[var(--rise-blue)]" />
+          <h3 className="mt-4 text-xl font-black">Solicitudes</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            CRM comercial para seguimiento de clientes.
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/sucursales"
+          className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
+        >
+          <Building2 size={24} className="text-[var(--rise-blue)]" />
+          <h3 className="mt-4 text-xl font-black">Sucursales</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Revisar puntos de venta y datos de contacto.
+          </p>
+        </Link>
       </section>
     </div>
   );

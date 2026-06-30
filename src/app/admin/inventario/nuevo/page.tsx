@@ -22,6 +22,18 @@ function getNumberValue(formData: FormData, fieldName: string) {
   return Number.isFinite(value) ? value : 0;
 }
 
+function getOptionalNumberValue(formData: FormData, fieldName: string) {
+  const rawValue = String(formData.get(fieldName) ?? "").trim();
+
+  if (!rawValue) {
+    return null;
+  }
+
+  const value = Number(rawValue);
+
+  return Number.isFinite(value) ? value : null;
+}
+
 async function createVehicle(formData: FormData) {
   "use server";
 
@@ -64,8 +76,15 @@ async function createVehicle(formData: FormData) {
     new Set([branchId, ...availabilityBranchIds].filter(Boolean))
   );
 
-  const year = Number(formData.get("year"));
-  const price = Number(formData.get("price"));
+  const year =
+    getOptionalNumberValue(formData, "year") ??
+    getOptionalNumberValue(formData, "catalogYear") ??
+    0;
+
+  const price =
+    getOptionalNumberValue(formData, "price") ??
+    getOptionalNumberValue(formData, "catalogPriceFrom") ??
+    0;
 
   const name = String(formData.get("name") || "").trim();
   const model = String(formData.get("model") || name).trim();
@@ -94,10 +113,21 @@ async function createVehicle(formData: FormData) {
       ? Number(mileageValue)
       : null;
 
-  const specs = String(formData.get("specs") || "").trim();
-  const features = String(formData.get("features") || "").trim();
-  const description = String(formData.get("description") || "").trim();
-  const mainImageInput = String(formData.get("mainImage") || "").trim();
+  const specs = String(
+    formData.get("specs") || formData.get("catalogSpecs") || ""
+  ).trim();
+
+  const features = String(
+    formData.get("features") || formData.get("catalogFeatures") || ""
+  ).trim();
+
+  const description = String(
+    formData.get("description") || formData.get("catalogDescription") || ""
+  ).trim();
+
+  const mainImageInput = String(
+    formData.get("mainImage") || formData.get("catalogMainImage") || ""
+  ).trim();
 
   if (!brandId || !branchId || !name || !model || !type) {
     throw new Error("Faltan campos obligatorios para crear el vehículo.");
@@ -306,6 +336,11 @@ export default async function NewVehiclePage() {
               categoryType: model.categoryType,
               year: model.year,
               priceFrom: model.priceFrom,
+              subtitle: model.subtitle,
+              description: model.description,
+              specs: model.specs,
+              features: model.features,
+              mainImage: model.mainImage,
               categoryName: model.category?.name ?? null,
             }))}
           />

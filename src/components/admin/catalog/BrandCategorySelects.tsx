@@ -26,6 +26,11 @@ type CatalogModelOption = {
   categoryType: VehicleCategoryValue;
   year?: number | null;
   priceFrom?: number | null;
+  subtitle?: string | null;
+  description?: string | null;
+  specs?: string | null;
+  features?: string | null;
+  mainImage?: string | null;
   categoryName?: string | null;
 };
 
@@ -50,6 +55,32 @@ function getCategoryLabel(category: VehicleCategoryValue) {
   };
 
   return labels[category];
+}
+function setFormFieldValue(
+  name: string,
+  value: string | number | null | undefined,
+  overwrite = false
+) {
+  if (value === null || value === undefined || value === "") {
+    return;
+  }
+
+  const field = document.querySelector<
+    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+  >(`[name="${name}"]`);
+
+  if (!field) {
+    return;
+  }
+
+  if (!overwrite && field.value.trim()) {
+    return;
+  }
+
+  field.value = String(value);
+
+  field.dispatchEvent(new Event("input", { bubbles: true }));
+  field.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
 export function BrandCategorySelects({
@@ -141,13 +172,22 @@ export function BrandCategorySelects({
 
     const model = catalogModels.find((item) => String(item.id) === value);
 
-    if (model) {
-      setVehicleName(model.name);
-
-      if (model.categoryId) {
-        setSelectedCategoryId(String(model.categoryId));
-      }
+    if (!model) {
+      return;
     }
+
+    setVehicleName(model.name);
+
+    if (model.categoryId) {
+      setSelectedCategoryId(String(model.categoryId));
+    }
+
+    setFormFieldValue("year", model.year);
+    setFormFieldValue("price", model.priceFrom);
+    setFormFieldValue("description", model.description);
+    setFormFieldValue("specs", model.specs);
+    setFormFieldValue("features", model.features);
+    setFormFieldValue("mainImage", model.mainImage);
   }
 
   return (
@@ -296,6 +336,22 @@ export function BrandCategorySelects({
           <input type="hidden" name="model" value={vehicleName} />
           <input type="hidden" name="category" value={selectedVehicleCategory} />
           <input type="hidden" name="type" value={selectedVehicleCategory} />
+
+          <input
+            type="hidden"
+            name="model"
+            value={selectedCatalogModel?.name ?? vehicleName}
+          />
+
+          <input type="hidden" name="category" value={selectedVehicleCategory} />
+          <input type="hidden" name="type" value={selectedVehicleCategory} />
+
+          <input type="hidden" name="catalogYear" value={selectedCatalogModel?.year ?? ""} />
+          <input type="hidden" name="catalogPriceFrom" value={selectedCatalogModel?.priceFrom ?? ""} />
+          <input type="hidden" name="catalogDescription" value={selectedCatalogModel?.description ?? ""} />
+          <input type="hidden" name="catalogSpecs" value={selectedCatalogModel?.specs ?? ""} />
+          <input type="hidden" name="catalogFeatures" value={selectedCatalogModel?.features ?? ""} />
+          <input type="hidden" name="catalogMainImage" value={selectedCatalogModel?.mainImage ?? ""} />
         </>
       )}
     </div>
