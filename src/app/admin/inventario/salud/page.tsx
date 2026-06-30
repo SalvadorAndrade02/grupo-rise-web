@@ -151,27 +151,33 @@ function getVehiclePublicTarget(vehicle: {
 }
 
 function getVehicleIssues(vehicle: {
-  mainImage: string;
-  description: string;
+  mainImage: string | null;
+  description: string | null;
   price: number;
   active: boolean;
   status: VehicleStatus;
-  brand: { active: boolean };
-  branch: { active: boolean };
-  images: { type: VehicleMediaType }[];
-}) {
+  brand: {
+    active: boolean;
+  };
+  branch: {
+    active: boolean;
+  };
+  images: {
+    type: VehicleMediaType;
+  }[];
+}): IssueKey[] {
   const issues: IssueKey[] = [];
 
-  const hasImageInGallery = vehicle.images.some(
+  const hasImage =
+    Boolean(vehicle.mainImage) ||
+    vehicle.images.some((image) => image.type === VehicleMediaType.IMAGE);
+
+  const hasGalleryImage = vehicle.images.some(
     (image) => image.type === VehicleMediaType.IMAGE
   );
 
-  if (!vehicle.mainImage?.trim() && !hasImageInGallery) {
+  if (!hasImage) {
     issues.push("SIN_IMAGEN");
-  }
-
-  if (!vehicle.images.length) {
-    issues.push("SIN_GALERIA");
   }
 
   if (!vehicle.description?.trim()) {
@@ -203,6 +209,10 @@ function getVehicleIssues(vehicle: {
     vehicle.status === VehicleStatus.APARTADO
   ) {
     issues.push("VENDIDO_APARTADO");
+  }
+
+  if (!hasGalleryImage) {
+    issues.push("SIN_GALERIA");
   }
 
   return issues;
@@ -612,11 +622,10 @@ export default async function InventoryHealthPage({
             <Link
               key={option.value}
               href={buildHealthHref(option.value, search)}
-              className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider transition ${
-                issueFilter === option.value
-                  ? "bg-[var(--rise-navy)] text-white"
-                  : "bg-slate-50 text-slate-500 hover:bg-slate-100"
-              }`}
+              className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider transition ${issueFilter === option.value
+                ? "bg-[var(--rise-navy)] text-white"
+                : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                }`}
             >
               {option.label}
             </Link>
@@ -686,12 +695,11 @@ export default async function InventoryHealthPage({
                       </div>
 
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${
-                          publicTarget === "Catálogo" ||
+                        className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${publicTarget === "Catálogo" ||
                           publicTarget === "Inventario"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-slate-200 text-slate-700"
-                        }`}
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-slate-200 text-slate-700"
+                          }`}
                       >
                         {publicTarget}
                       </span>

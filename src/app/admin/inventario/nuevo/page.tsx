@@ -8,10 +8,14 @@ import {
   MapPin,
   Save,
 } from "lucide-react";
-import { VehicleCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { saveVehicleMediaFiles } from "@/lib/uploads";
-import { VehicleCondition, VehicleStatus } from "@prisma/client";
+import {
+  VehicleCategory,
+  VehicleCondition,
+  VehicleMediaType,
+  VehicleStatus,
+} from "@prisma/client";
 import { BrandCategorySelects } from "@/components/admin/catalog/BrandCategorySelects";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +24,47 @@ function getNumberValue(formData: FormData, fieldName: string) {
   const value = Number(formData.get(fieldName));
 
   return Number.isFinite(value) ? value : 0;
+}
+function parseCatalogImages(formData: FormData) {
+  const rawValue = String(formData.get("catalogImages") ?? "").trim();
+
+  if (!rawValue) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(rawValue);
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .map((item, index) => {
+        const url = typeof item.url === "string" ? item.url.trim() : "";
+
+        if (!url) {
+          return null;
+        }
+
+        const type =
+          item.type === VehicleMediaType.VIDEO
+            ? VehicleMediaType.VIDEO
+            : VehicleMediaType.IMAGE;
+
+        const alt = typeof item.alt === "string" ? item.alt : null;
+
+        return {
+          url,
+          type,
+          alt,
+          order: index,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  } catch {
+    return [];
+  }
 }
 
 function getOptionalNumberValue(formData: FormData, fieldName: string) {
@@ -151,6 +196,19 @@ async function createVehicle(formData: FormData) {
 
   let savedMedia: Awaited<ReturnType<typeof saveVehicleMediaFiles>> = [];
 
+  const catalogImages = parseCatalogImages(formData);
+
+  const finalGalleryMedia =
+    savedMedia.length > 0 ? savedMedia : catalogImages;
+
+  const firstUploadedImage = savedMedia.find(
+    (item) => item.type === VehicleMediaType.IMAGE
+  );
+
+  const firstCatalogImage = catalogImages.find(
+    (item) => item.type === VehicleMediaType.IMAGE
+  );
+
   try {
     savedMedia = await saveVehicleMediaFiles(mediaFiles);
   } catch (error) {
@@ -164,7 +222,11 @@ async function createVehicle(formData: FormData) {
   }
 
   const firstImage = savedMedia.find((item) => item.type === "IMAGE");
-  const finalMainImage = firstImage?.url || mainImageInput || "";
+  const finalMainImage =
+    firstUploadedImage?.url ||
+    mainImageInput ||
+    firstCatalogImage?.url ||
+    "";
 
   await prisma.vehicle.create({
     data: {
@@ -186,12 +248,12 @@ async function createVehicle(formData: FormData) {
       active,
       isFeatured,
 
-      images: savedMedia.length
+      images: finalGalleryMedia.length
         ? {
-          create: savedMedia.map((item, index) => ({
+          create: finalGalleryMedia.map((item, index) => ({
             url: item.url,
             type: item.type,
-            alt: name,
+            alt: "alt" in item && item.alt ? item.alt : name,
             order: index,
           })),
         }
@@ -252,6 +314,11 @@ export default async function NewVehiclePage() {
       },
       include: {
         category: true,
+        images: {
+          orderBy: {
+            order: "asc",
+          },
+        },
       },
       orderBy: [
         {
@@ -342,6 +409,12 @@ export default async function NewVehiclePage() {
               features: model.features,
               mainImage: model.mainImage,
               categoryName: model.category?.name ?? null,
+              images: model.images.map((image) => ({
+                url: image.url,
+                type: image.type,
+                alt: image.alt,
+                order: image.order,
+              })),
             }))}
           />
 

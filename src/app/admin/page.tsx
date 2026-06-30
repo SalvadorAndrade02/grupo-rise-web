@@ -89,16 +89,20 @@ function getConditionLabel(condition: string) {
 }
 
 function getVehicleIssues(vehicle: {
-  mainImage: string;
-  description: string;
+  mainImage: string | null;
+  description: string | null;
   price: number;
   active: boolean;
   status: VehicleStatus;
-  images: { id: number }[];
+  images: {
+    id: number;
+  }[];
 }) {
   const issues: string[] = [];
 
-  if (!vehicle.mainImage && vehicle.images.length === 0) {
+  const hasImage = Boolean(vehicle.mainImage) || vehicle.images.length > 0;
+
+  if (!hasImage) {
     issues.push("Sin imagen");
   }
 
@@ -110,8 +114,19 @@ function getVehicleIssues(vehicle: {
     issues.push("Sin precio válido");
   }
 
+  if (!vehicle.active) {
+    issues.push("Oculto");
+  }
+
   if (vehicle.active && vehicle.status !== VehicleStatus.DISPONIBLE) {
     issues.push("Visible pero no disponible");
+  }
+
+  if (
+    vehicle.status === VehicleStatus.VENDIDO ||
+    vehicle.status === VehicleStatus.APARTADO
+  ) {
+    issues.push("Vendido/apartado");
   }
 
   return issues;
@@ -470,15 +485,14 @@ export default async function AdminDashboardPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div
-                  className={`grid h-12 w-12 place-items-center rounded-2xl ${
-                    stat.tone === "blue"
+                  className={`grid h-12 w-12 place-items-center rounded-2xl ${stat.tone === "blue"
                       ? "bg-blue-50 text-blue-700"
                       : stat.tone === "amber"
                         ? "bg-amber-50 text-amber-700"
                         : stat.tone === "emerald"
                           ? "bg-emerald-50 text-emerald-700"
                           : "bg-red-50 text-red-700"
-                  }`}
+                    }`}
                 >
                   <Icon size={23} />
                 </div>

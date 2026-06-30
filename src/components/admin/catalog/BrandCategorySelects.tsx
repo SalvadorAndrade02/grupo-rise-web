@@ -18,6 +18,13 @@ type CategoryOption = {
   parentName?: string | null;
 };
 
+type CatalogModelImageOption = {
+  url: string;
+  type: "IMAGE" | "VIDEO";
+  alt?: string | null;
+  order?: number | null;
+};
+
 type CatalogModelOption = {
   id: number;
   brandId: number;
@@ -32,6 +39,7 @@ type CatalogModelOption = {
   features?: string | null;
   mainImage?: string | null;
   categoryName?: string | null;
+  images?: CatalogModelImageOption[];
 };
 
 type BrandCategorySelectsProps = {
@@ -73,7 +81,9 @@ function setFormFieldValue(
     return;
   }
 
-  if (!overwrite && field.value.trim()) {
+  const currentValue = typeof field.value === "string" ? field.value : "";
+
+  if (!overwrite && currentValue.trim()) {
     return;
   }
 
@@ -182,12 +192,12 @@ export function BrandCategorySelects({
       setSelectedCategoryId(String(model.categoryId));
     }
 
-    setFormFieldValue("year", model.year);
-    setFormFieldValue("price", model.priceFrom);
-    setFormFieldValue("description", model.description);
-    setFormFieldValue("specs", model.specs);
-    setFormFieldValue("features", model.features);
-    setFormFieldValue("mainImage", model.mainImage);
+    setFormFieldValue("year", model.year, true);
+    setFormFieldValue("price", model.priceFrom, true);
+    setFormFieldValue("description", model.description, true);
+    setFormFieldValue("specs", model.specs, true);
+    setFormFieldValue("features", model.features, true);
+    setFormFieldValue("mainImage", model.mainImage, true);
   }
 
   return (
@@ -272,7 +282,9 @@ export function BrandCategorySelects({
 
               <select
                 value={selectedCatalogModelId}
-                onChange={(event) => handleCatalogModelChange(event.target.value)}
+                onChange={(event) =>
+                  handleCatalogModelChange(event.target.value)
+                }
                 disabled={!selectedBrandId}
                 className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -333,25 +345,65 @@ export function BrandCategorySelects({
             </p>
           </div>
 
-          <input type="hidden" name="model" value={vehicleName} />
-          <input type="hidden" name="category" value={selectedVehicleCategory} />
-          <input type="hidden" name="type" value={selectedVehicleCategory} />
-
           <input
             type="hidden"
             name="model"
             value={selectedCatalogModel?.name ?? vehicleName}
           />
 
-          <input type="hidden" name="category" value={selectedVehicleCategory} />
-          <input type="hidden" name="type" value={selectedVehicleCategory} />
+          <input
+            type="hidden"
+            name="category"
+            value={selectedVehicleCategory}
+          />
 
-          <input type="hidden" name="catalogYear" value={selectedCatalogModel?.year ?? ""} />
-          <input type="hidden" name="catalogPriceFrom" value={selectedCatalogModel?.priceFrom ?? ""} />
-          <input type="hidden" name="catalogDescription" value={selectedCatalogModel?.description ?? ""} />
-          <input type="hidden" name="catalogSpecs" value={selectedCatalogModel?.specs ?? ""} />
-          <input type="hidden" name="catalogFeatures" value={selectedCatalogModel?.features ?? ""} />
-          <input type="hidden" name="catalogMainImage" value={selectedCatalogModel?.mainImage ?? ""} />
+          <input
+            type="hidden"
+            name="type"
+            value={selectedVehicleCategory}
+          />
+
+          <input
+            type="hidden"
+            name="catalogYear"
+            value={selectedCatalogModel?.year ?? ""}
+          />
+
+          <input
+            type="hidden"
+            name="catalogPriceFrom"
+            value={selectedCatalogModel?.priceFrom ?? ""}
+          />
+
+          <input
+            type="hidden"
+            name="catalogDescription"
+            value={selectedCatalogModel?.description ?? ""}
+          />
+
+          <input
+            type="hidden"
+            name="catalogSpecs"
+            value={selectedCatalogModel?.specs ?? ""}
+          />
+
+          <input
+            type="hidden"
+            name="catalogFeatures"
+            value={selectedCatalogModel?.features ?? ""}
+          />
+
+          <input
+            type="hidden"
+            name="catalogMainImage"
+            value={selectedCatalogModel?.mainImage ?? ""}
+          />
+
+          <input
+            type="hidden"
+            name="catalogImages"
+            value={JSON.stringify(selectedCatalogModel?.images ?? [])}
+          />
         </>
       )}
     </div>
