@@ -15,6 +15,7 @@ import {
   Plus,
   Tags,
   FolderTree,
+  BookOpen
 } from "lucide-react";
 
 type AdminDockProps = {
@@ -29,14 +30,14 @@ const mainLinks = [
     icon: Home,
   },
   {
-    label: "Inventario",
-    href: "/admin/inventario",
-    icon: Car,
-  },
-  {
     label: "Salud inventario",
     href: "/admin/inventario/salud",
     icon: AlertTriangle,
+  },
+  {
+    label: "Inventario",
+    href: "/admin/inventario",
+    icon: Car,
   },
   {
     label: "Catálogo base",
@@ -57,6 +58,11 @@ const mainLinks = [
     label: "Sucursales",
     href: "/admin/sucursales",
     icon: Building2,
+  },
+  {
+    label: "Ayuda",
+    href: "/admin/ayuda",
+    icon: BookOpen,
   },
 ];
 

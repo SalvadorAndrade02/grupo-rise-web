@@ -45,7 +45,7 @@ const catalogLinks = [
   },
   {
     label: "Sea-Doo",
-    href: "",
+    href: "/catalogo/sea-doo",
   },
   {
     label: "Triumph Motorcycles",

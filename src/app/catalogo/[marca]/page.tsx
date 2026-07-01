@@ -80,10 +80,15 @@ const catalogBrandNames = [
   "Can-Am",
   "Polaris",
   "Sea-Doo",
+  "Sea Doo",
+  "SeaDoo",
+  "Triumph",
   "Triumph Motorcycles",
   "Royal Enfield",
+  "Indian",
   "Indian Motorcycle",
   "Zeekr",
+  "Zeekrlife",
   "Lynk & Co",
 ];
 
@@ -165,16 +170,22 @@ function getBrandSlug(brandName: string) {
   const customSlugs: Record<string, string> = {
     "Can-Am": "can-am",
     Polaris: "polaris",
-    "Royal Enfield": "royal-enfield",
+
     "Sea-Doo": "sea-doo",
     "Sea Doo": "sea-doo",
     SeaDoo: "sea-doo",
+
     Triumph: "triumph-motorcycles",
     "Triumph Motorcycles": "triumph-motorcycles",
+
+    "Royal Enfield": "royal-enfield",
+
     Indian: "indian-motorcycle",
     "Indian Motorcycle": "indian-motorcycle",
+
     Zeekr: "zeekrlife",
     Zeekrlife: "zeekrlife",
+
     "Lynk & Co": "lynk-co",
   };
 
