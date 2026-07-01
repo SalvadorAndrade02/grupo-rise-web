@@ -4,11 +4,13 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  ArrowUpDown,
   Building2,
   Car,
   Gauge,
   ImageIcon,
   MapPin,
+  MessageCircle,
   Search,
   SlidersHorizontal,
   Tags,
@@ -37,6 +39,95 @@ type InventoryClientProps = {
   vehicles: InventoryVehicle[];
 };
 
+const priceFilters = [
+  {
+    label: "Todos",
+    value: "TODOS",
+    min: null,
+    max: null,
+  },
+  {
+    label: "Hasta $250 mil",
+    value: "0-250000",
+    min: 0,
+    max: 250000,
+  },
+  {
+    label: "$250 mil a $500 mil",
+    value: "250000-500000",
+    min: 250000,
+    max: 500000,
+  },
+  {
+    label: "$500 mil a $800 mil",
+    value: "500000-800000",
+    min: 500000,
+    max: 800000,
+  },
+  {
+    label: "Más de $800 mil",
+    value: "800000",
+    min: 800000,
+    max: null,
+  },
+];
+
+const mileageFilters = [
+  {
+    label: "Todos",
+    value: "TODOS",
+    min: null,
+    max: null,
+  },
+  {
+    label: "Hasta 5,000 km",
+    value: "0-5000",
+    min: 0,
+    max: 5000,
+  },
+  {
+    label: "5,000 a 15,000 km",
+    value: "5000-15000",
+    min: 5000,
+    max: 15000,
+  },
+  {
+    label: "15,000 a 30,000 km",
+    value: "15000-30000",
+    min: 15000,
+    max: 30000,
+  },
+  {
+    label: "Más de 30,000 km",
+    value: "30000",
+    min: 30000,
+    max: null,
+  },
+];
+
+const orderOptions = [
+  {
+    label: "Más recientes",
+    value: "recientes",
+  },
+  {
+    label: "Precio menor a mayor",
+    value: "precio-asc",
+  },
+  {
+    label: "Precio mayor a menor",
+    value: "precio-desc",
+  },
+  {
+    label: "Año más nuevo",
+    value: "anio-desc",
+  },
+  {
+    label: "Menor kilometraje",
+    value: "km-asc",
+  },
+];
+
 function getCategoryLabel(category: string) {
   const labels: Record<string, string> = {
     AUTO: "Auto",
@@ -55,15 +146,54 @@ function formatMileage(value: number | null) {
   return `${new Intl.NumberFormat("es-MX").format(value)} km`;
 }
 
+function cleanPhone(value?: string | null) {
+  return value?.replace(/\D/g, "") ?? "";
+}
+
+function getWhatsAppHref(phone?: string | null, message?: string) {
+  const phoneNumber = cleanPhone(phone);
+
+  if (!phoneNumber) {
+    return "";
+  }
+
+  const finalPhone = phoneNumber.startsWith("52")
+    ? phoneNumber
+    : `52${phoneNumber}`;
+
+  const text = message ? `?text=${encodeURIComponent(message)}` : "";
+
+  return `https://wa.me/${finalPhone}${text}`;
+}
+
+function getPriceFilter(value: string) {
+  return priceFilters.find((filter) => filter.value === value) ?? priceFilters[0];
+}
+
+function getMileageFilter(value: string) {
+  return (
+    mileageFilters.find((filter) => filter.value === value) ?? mileageFilters[0]
+  );
+}
+
+function getMileageValue(value: number | null) {
+  return value ?? 999999999;
+}
+
 export function InventoryClient({ vehicles }: InventoryClientProps) {
   const [search, setSearch] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("TODAS");
   const [selectedCategory, setSelectedCategory] = useState("TODAS");
   const [selectedYear, setSelectedYear] = useState("TODOS");
   const [selectedBranch, setSelectedBranch] = useState("TODAS");
+  const [selectedPrice, setSelectedPrice] = useState("TODOS");
+  const [selectedMileage, setSelectedMileage] = useState("TODOS");
+  const [selectedOrder, setSelectedOrder] = useState("recientes");
 
   const brands = useMemo(() => {
-    return Array.from(new Set(vehicles.map((vehicle) => vehicle.brandName))).sort();
+    return Array.from(
+      new Set(vehicles.map((vehicle) => vehicle.brandName))
+    ).sort();
   }, [vehicles]);
 
   const years = useMemo(() => {
@@ -90,7 +220,10 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
   }, [vehicles]);
 
   const filteredVehicles = useMemo(() => {
-    return vehicles.filter((vehicle) => {
+    const priceFilter = getPriceFilter(selectedPrice);
+    const mileageFilter = getMileageFilter(selectedMileage);
+
+    const results = vehicles.filter((vehicle) => {
       const searchableText = [
         vehicle.brandName,
         vehicle.name,
@@ -116,37 +249,103 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
         selectedYear === "TODOS" || vehicle.year === Number(selectedYear);
 
       const branchValue = `${vehicle.branchName}|${vehicle.branchCity}`;
+
       const matchesBranch =
         selectedBranch === "TODAS" || branchValue === selectedBranch;
+
+      const matchesPriceMin =
+        priceFilter.min !== null ? vehicle.price >= priceFilter.min : true;
+
+      const matchesPriceMax =
+        priceFilter.max !== null ? vehicle.price <= priceFilter.max : true;
+
+      const vehicleMileage = vehicle.mileage ?? null;
+
+      const matchesMileageMin =
+        mileageFilter.min !== null && vehicleMileage !== null
+          ? vehicleMileage >= mileageFilter.min
+          : mileageFilter.min === null;
+
+      const matchesMileageMax =
+        mileageFilter.max !== null && vehicleMileage !== null
+          ? vehicleMileage <= mileageFilter.max
+          : mileageFilter.max === null;
 
       return (
         matchesSearch &&
         matchesBrand &&
         matchesCategory &&
         matchesYear &&
-        matchesBranch
+        matchesBranch &&
+        matchesPriceMin &&
+        matchesPriceMax &&
+        matchesMileageMin &&
+        matchesMileageMax
       );
     });
-  }, [vehicles, search, selectedBrand, selectedCategory, selectedYear, selectedBranch]);
+
+    return [...results].sort((a, b) => {
+      if (selectedOrder === "precio-asc") {
+        return a.price - b.price;
+      }
+
+      if (selectedOrder === "precio-desc") {
+        return b.price - a.price;
+      }
+
+      if (selectedOrder === "anio-desc") {
+        return b.year - a.year;
+      }
+
+      if (selectedOrder === "km-asc") {
+        return getMileageValue(a.mileage) - getMileageValue(b.mileage);
+      }
+
+      return b.id - a.id;
+    });
+  }, [
+    vehicles,
+    search,
+    selectedBrand,
+    selectedCategory,
+    selectedYear,
+    selectedBranch,
+    selectedPrice,
+    selectedMileage,
+    selectedOrder,
+  ]);
 
   const groupedVehicles = useMemo(() => {
     return brands
       .map((brand) => ({
         brand,
-        vehicles: filteredVehicles.filter((vehicle) => vehicle.brandName === brand),
+        vehicles: filteredVehicles.filter(
+          (vehicle) => vehicle.brandName === brand
+        ),
       }))
       .filter((group) => group.vehicles.length > 0);
   }, [brands, filteredVehicles]);
 
   const brandCards = useMemo(() => {
     return brands.map((brand) => {
-      const brandVehicles = vehicles.filter((vehicle) => vehicle.brandName === brand);
-      const firstImage = brandVehicles.find((vehicle) => vehicle.mainImage)?.mainImage;
+      const brandVehicles = vehicles.filter(
+        (vehicle) => vehicle.brandName === brand
+      );
+
+      const firstImage = brandVehicles.find(
+        (vehicle) => vehicle.mainImage
+      )?.mainImage;
+
+      const minPrice =
+        brandVehicles.length > 0
+          ? Math.min(...brandVehicles.map((vehicle) => vehicle.price))
+          : 0;
 
       return {
         brand,
         total: brandVehicles.length,
         image: firstImage || "",
+        minPrice,
       };
     });
   }, [brands, vehicles]);
@@ -157,6 +356,9 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
     setSelectedCategory("TODAS");
     setSelectedYear("TODOS");
     setSelectedBranch("TODAS");
+    setSelectedPrice("TODOS");
+    setSelectedMileage("TODOS");
+    setSelectedOrder("recientes");
   }
 
   const hasFilters =
@@ -164,11 +366,14 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
     selectedBrand !== "TODAS" ||
     selectedCategory !== "TODAS" ||
     selectedYear !== "TODOS" ||
-    selectedBranch !== "TODAS";
+    selectedBranch !== "TODAS" ||
+    selectedPrice !== "TODOS" ||
+    selectedMileage !== "TODOS" ||
+    selectedOrder !== "recientes";
 
   return (
-    <section className="pb-12 md:pb-16">
-      <div className="rounded-[2.5rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-8">
+    <section className="relative z-10 -mt-10 px-4 pb-14 md:-mt-14 md:pb-20">
+      <div className="mx-auto max-w-7xl rounded-[2.5rem] border border-[var(--rise-border)] bg-white p-5 shadow-xl shadow-slate-900/10 md:p-8">
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
@@ -180,8 +385,8 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
             </h2>
 
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
-              Explora unidades seminuevas reales, agrupadas por marca, sucursal,
-              año y tipo de vehículo.
+              Explora unidades seminuevas reales, filtra por marca, sucursal,
+              año, precio, kilometraje y tipo de vehículo.
             </p>
           </div>
 
@@ -203,13 +408,12 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
                   onClick={() =>
                     setSelectedBrand(active ? "TODAS" : brand.brand)
                   }
-                  className={`group overflow-hidden rounded-[2rem] border text-left transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10 ${
-                    active
+                  className={`group overflow-hidden rounded-[2rem] border text-left transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10 ${active
                       ? "border-[var(--rise-blue)] bg-[var(--rise-blue-soft)]"
                       : "border-slate-100 bg-slate-50 hover:bg-white"
-                  }`}
+                    }`}
                 >
-                  <div className="h-36 overflow-hidden bg-slate-100">
+                  <div className="relative h-40 overflow-hidden bg-slate-100">
                     {brand.image ? (
                       <img
                         src={brand.image}
@@ -221,6 +425,10 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
                         <ImageIcon size={36} />
                       </div>
                     )}
+
+                    <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-black uppercase tracking-wider text-[var(--rise-blue)] shadow-sm">
+                      Seminuevos
+                    </div>
                   </div>
 
                   <div className="p-5">
@@ -232,9 +440,29 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
                       {brand.brand}
                     </h3>
 
-                    <p className="mt-2 text-sm font-bold text-slate-500">
-                      {brand.total} seminuevo(s) disponible(s)
-                    </p>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="rounded-2xl bg-white p-3">
+                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                          Unidades
+                        </p>
+
+                        <p className="mt-1 text-lg font-black text-[var(--rise-navy)]">
+                          {brand.total}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl bg-white p-3">
+                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                          Desde
+                        </p>
+
+                        <p className="mt-1 text-lg font-black text-[var(--rise-navy)]">
+                          {brand.minPrice
+                            ? formatCurrency(brand.minPrice)
+                            : "Consultar"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </button>
               );
@@ -243,7 +471,7 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
         )}
 
         <div className="mt-8 rounded-[2rem] border border-slate-100 bg-slate-50 p-4 md:p-5">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_1fr_1fr_auto]">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr_1fr]">
             <label className="block">
               <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
                 Buscar
@@ -320,6 +548,44 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
                 ))}
               </select>
             </label>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+            <label className="block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                Precio
+              </span>
+
+              <select
+                value={selectedPrice}
+                onChange={(event) => setSelectedPrice(event.target.value)}
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)]"
+              >
+                {priceFilters.map((filter) => (
+                  <option key={filter.value} value={filter.value}>
+                    {filter.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                Kilometraje
+              </span>
+
+              <select
+                value={selectedMileage}
+                onChange={(event) => setSelectedMileage(event.target.value)}
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)]"
+              >
+                {mileageFilters.map((filter) => (
+                  <option key={filter.value} value={filter.value}>
+                    {filter.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <label className="block">
               <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
@@ -341,6 +607,24 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
               </select>
             </label>
 
+            <label className="block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                Ordenar
+              </span>
+
+              <select
+                value={selectedOrder}
+                onChange={(event) => setSelectedOrder(event.target.value)}
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)]"
+              >
+                {orderOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <button
               type="button"
               onClick={clearFilters}
@@ -352,8 +636,28 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
           </div>
         </div>
 
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+              Resultados
+            </p>
+
+            <h3 className="mt-2 text-2xl font-black">
+              {filteredVehicles.length} seminuevo
+              {filteredVehicles.length === 1 ? "" : "s"} disponible
+              {filteredVehicles.length === 1 ? "" : "s"}
+            </h3>
+          </div>
+
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-500">
+            <ArrowUpDown size={17} />
+            {orderOptions.find((option) => option.value === selectedOrder)
+              ?.label ?? "Más recientes"}
+          </div>
+        </div>
+
         {groupedVehicles.length > 0 ? (
-          <div className="mt-10 grid gap-10">
+          <div className="mt-8 grid gap-10">
             {groupedVehicles.map((group) => (
               <section key={group.brand}>
                 <div className="flex flex-wrap items-center justify-between gap-4">
@@ -363,7 +667,9 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
                     </p>
 
                     <h3 className="mt-2 text-3xl font-black tracking-tight">
-                      {group.vehicles.length} seminuevo(s) disponible(s)
+                      {group.vehicles.length} seminuevo
+                      {group.vehicles.length === 1 ? "" : "s"} disponible
+                      {group.vehicles.length === 1 ? "" : "s"}
                     </h3>
                   </div>
                 </div>
@@ -372,13 +678,18 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
                   {group.vehicles.map((vehicle) => {
                     const vehicleName = `${vehicle.brandName} ${vehicle.name}`;
 
+                    const whatsappHref = getWhatsAppHref(
+                      vehicle.branchWhatsapp,
+                      `Hola, me interesa recibir información de ${vehicleName} ${vehicle.year}.`
+                    );
+
                     return (
                       <article
                         key={vehicle.id}
                         className="group overflow-hidden rounded-[2rem] border border-slate-100 bg-slate-50 transition hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-slate-900/10"
                       >
                         <Link href={`/vehiculos/${vehicle.id}`}>
-                          <div className="relative h-56 overflow-hidden bg-slate-100">
+                          <div className="relative h-60 overflow-hidden bg-slate-100">
                             {vehicle.mainImage ? (
                               <img
                                 src={vehicle.mainImage}
@@ -393,6 +704,10 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
 
                             <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-black uppercase tracking-wider text-[var(--rise-blue)] shadow-sm">
                               Seminuevo
+                            </div>
+
+                            <div className="absolute bottom-4 left-4 rounded-full bg-black/60 px-3 py-1 text-xs font-black text-white backdrop-blur">
+                              {getCategoryLabel(vehicle.category)}
                             </div>
                           </div>
                         </Link>
@@ -418,17 +733,26 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
 
                           <div className="mt-4 grid gap-2 text-sm font-bold text-slate-500">
                             <div className="flex items-center gap-2">
-                              <Tags size={16} className="text-[var(--rise-blue)]" />
+                              <Tags
+                                size={16}
+                                className="text-[var(--rise-blue)]"
+                              />
                               {getCategoryLabel(vehicle.category)}
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <Gauge size={16} className="text-[var(--rise-blue)]" />
+                              <Gauge
+                                size={16}
+                                className="text-[var(--rise-blue)]"
+                              />
                               {formatMileage(vehicle.mileage)}
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <MapPin size={16} className="text-[var(--rise-blue)]" />
+                              <MapPin
+                                size={16}
+                                className="text-[var(--rise-blue)]"
+                              />
                               {vehicle.branchCity}
                             </div>
 
@@ -441,7 +765,7 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
                             </div>
                           </div>
 
-                          <p className="mt-5 text-2xl font-black text-[var(--rise-blue)]">
+                          <p className="mt-5 text-3xl font-black text-[var(--rise-blue)]">
                             {formatCurrency(vehicle.price)}
                           </p>
 
@@ -450,9 +774,20 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
                               vehicleId={vehicle.id}
                               branchId={vehicle.branchId}
                               vehicleName={vehicleName}
-                              whatsapp={vehicle.branchWhatsapp}
                               mode="stack"
                             />
+
+                            {whatsappHref && (
+                              <a
+                                href={whatsappHref}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-700 transition hover:bg-emerald-100"
+                              >
+                                <MessageCircle size={17} />
+                                WhatsApp
+                              </a>
+                            )}
 
                             <Link
                               href={`/vehiculos/${vehicle.id}`}
@@ -479,7 +814,8 @@ export function InventoryClient({ vehicles }: InventoryClientProps) {
             </h3>
 
             <p className="mt-2 text-sm text-slate-500">
-              Intenta buscar por otra marca, año, tipo o sucursal.
+              Intenta buscar por otra marca, año, tipo, precio, kilometraje o
+              sucursal.
             </p>
 
             <button
