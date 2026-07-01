@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  ArrowRight,
   ArrowUpDown,
   BadgeCheck,
   Car,
@@ -37,6 +38,19 @@ const categoryLabels: Record<VehicleCategory, string> = {
   MOTO: "Motos",
   TODOTERRENO: "Todo terreno",
 };
+
+const catalogBrandNames = [
+  "Can-Am",
+  "Polaris",
+  "Sea-Doo",
+  "Triumph",
+  "Triumph Motorcycles",
+  "Royal Enfield",
+  "Indian",
+  "Indian Motorcycle",
+  "Zeekr",
+  "Lynk & Co",
+];
 
 const priceFilters = [
   {
@@ -103,6 +117,56 @@ function normalize(value: string) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+function slugifyBrand(value: string) {
+  return normalize(value)
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}
+
+function getBrandSlug(brandName: string) {
+  const customSlugs: Record<string, string> = {
+    "Can-Am": "can-am",
+    Polaris: "polaris",
+    "Sea-Doo": "sea-doo",
+    "Sea Doo": "sea-doo",
+    SeaDoo: "sea-doo",
+
+    Triumph: "triumph-motorcycles",
+    "Triumph Motorcycles": "triumph-motorcycles",
+
+    Indian: "indian-motorcycle",
+    "Indian Motorcycle": "indian-motorcycle",
+
+    "Royal Enfield": "royal-enfield",
+    Zeekr: "zeekrlife",
+    Zeekrlife: "zeekrlife",
+    "Lynk & Co": "lynk-co",
+  };
+
+  return customSlugs[brandName] ?? slugifyBrand(brandName);
+}
+
+function getBrandCover(brandName: string) {
+  const covers: Record<string, string> = {
+    "Can-Am": "/catalog/brands/can-am.jpg",
+    Polaris: "/catalog/brands/polaris.jpg",
+    "Sea-Doo": "/catalog/brands/sea-doo.jpg",
+
+    Triumph: "/catalog/brands/triumph.jpg",
+    "Triumph Motorcycles": "/catalog/brands/triumph.jpg",
+
+    Indian: "/catalog/brands/indian.jpg",
+    "Indian Motorcycle": "/catalog/brands/indian.jpg",
+
+    "Royal Enfield": "/catalog/brands/royal-enfield.jpg",
+    Zeekr: "/catalog/brands/zeekr.jpg",
+    "Lynk & Co": "/catalog/brands/lynkco.jpg",
+  };
+
+  return covers[brandName] ?? "";
 }
 
 function buildCatalogHref(params: {
@@ -194,12 +258,8 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
     prisma.brand.findMany({
       where: {
         active: true,
-        vehicles: {
-          some: {
-            active: true,
-            condition: VehicleCondition.NUEVO,
-            status: VehicleStatus.DISPONIBLE,
-          },
+        name: {
+          in: catalogBrandNames,
         },
       },
       orderBy: {
@@ -262,6 +322,28 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       ? Math.min(...vehicles.map((vehicle) => vehicle.price))
       : 0;
 
+  const brandCards = brands
+    .map((brand) => {
+      const brandVehicles = vehicles.filter(
+        (vehicle) => vehicle.brandId === brand.id
+      );
+
+      const minBrandPrice =
+        brandVehicles.length > 0
+          ? Math.min(...brandVehicles.map((vehicle) => vehicle.price))
+          : 0;
+
+      return {
+        id: brand.id,
+        name: brand.name,
+        slug: getBrandSlug(brand.name),
+        count: brandVehicles.length,
+        cover: getBrandCover(brand.name),
+        minPrice: minBrandPrice,
+      };
+    })
+    .filter(Boolean);
+
   return (
     <>
       <Header />
@@ -315,6 +397,99 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         </section>
 
         <section className="mx-auto max-w-7xl px-4 py-10">
+          <section className="mb-10">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+                  Explora por marca
+                </p>
+
+                <h2 className="mt-2 text-3xl font-black">
+                  Catálogos disponibles
+                </h2>
+
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                  Accede directamente al catálogo de cada marca y consulta sus unidades
+                  nuevas disponibles.
+                </p>
+              </div>
+
+              <Link
+                href="/catalogo"
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-[var(--rise-border)] bg-white px-4 text-sm font-black text-slate-600 transition hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
+              >
+                Ver todo
+              </Link>
+            </div>
+
+            <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {brandCards.map((brand) => (
+                <Link
+                  key={brand.id}
+                  href={`/catalogo/${brand.slug}`}
+                  className="group overflow-hidden rounded-[2rem] border border-[var(--rise-border)] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-900/10"
+                >
+                  <div className="relative h-52 overflow-hidden bg-slate-100">
+                    {brand.cover ? (
+                      <img
+                        src={brand.cover}
+                        alt={brand.name}
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <ImageIcon size={46} className="text-slate-400" />
+                      </div>
+                    )}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <p className="text-xs font-black uppercase tracking-[0.25em] text-blue-100">
+                        Catálogo
+                      </p>
+
+                      <h3 className="mt-1 text-3xl font-black text-white">
+                        {brand.name}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="p-5">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-2xl bg-slate-50 p-3">
+                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                          Unidades
+                        </p>
+
+                        <p className="mt-1 text-lg font-black text-[var(--rise-navy)]">
+                          {brand.count}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl bg-slate-50 p-3">
+                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                          Desde
+                        </p>
+
+                        <p className="mt-1 text-lg font-black text-[var(--rise-navy)]">
+                          {brand.minPrice ? formatMoney(brand.minPrice) : "Consultar"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 inline-flex items-center gap-2 text-sm font-black text-[var(--rise-blue)]">
+                      Ver catálogo {brand.name}
+                      <ArrowRight
+                        size={17}
+                        className="transition group-hover:translate-x-1"
+                      />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
           <form
             action="/catalogo"
             className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-xl shadow-slate-900/5 md:p-6"
