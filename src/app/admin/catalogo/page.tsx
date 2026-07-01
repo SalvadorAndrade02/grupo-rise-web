@@ -405,7 +405,7 @@ export default async function AdminCatalogPage({
         <div className="grid gap-4">
           {filteredModels.length > 0 ? (
             filteredModels.map((model) => {
-              const image = model.images[0]?.url || model.mainImage || "";
+              const image = model.mainImage || model.images[0]?.url || "";
               const hasIssues =
                 !image || !model.description?.trim() || !model.priceFrom;
 

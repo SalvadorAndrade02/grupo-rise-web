@@ -756,7 +756,7 @@ export default async function AdminInventoryPage({
           {vehicles.length > 0 ? (
             <div className="grid gap-4">
               {vehicles.map((vehicle) => {
-                const image = vehicle.images[0]?.url || vehicle.mainImage || "";
+                const image = vehicle.mainImage || vehicle.images[0]?.url || "";
                 const publicVisible =
                   vehicle.active &&
                   vehicle.condition === "SEMINUEVO" &&

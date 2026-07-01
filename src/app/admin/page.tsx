@@ -486,12 +486,12 @@ export default async function AdminDashboardPage() {
               <div className="flex items-start justify-between gap-4">
                 <div
                   className={`grid h-12 w-12 place-items-center rounded-2xl ${stat.tone === "blue"
-                      ? "bg-blue-50 text-blue-700"
-                      : stat.tone === "amber"
-                        ? "bg-amber-50 text-amber-700"
-                        : stat.tone === "emerald"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-red-50 text-red-700"
+                    ? "bg-blue-50 text-blue-700"
+                    : stat.tone === "amber"
+                      ? "bg-amber-50 text-amber-700"
+                      : stat.tone === "emerald"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-red-50 text-red-700"
                     }`}
                 >
                   <Icon size={23} />
@@ -670,7 +670,7 @@ export default async function AdminDashboardPage() {
           <div className="mt-6 space-y-3">
             {attentionVehicles.length > 0 ? (
               attentionVehicles.map((vehicle) => {
-                const image = vehicle.images[0]?.url || vehicle.mainImage || "";
+                const image = vehicle.mainImage || vehicle.images[0]?.url || "";
                 const issues = getVehicleIssues(vehicle);
 
                 return (
@@ -847,7 +847,7 @@ export default async function AdminDashboardPage() {
 
         <div className="mt-6 grid gap-4 lg:grid-cols-5">
           {recentVehicles.map((vehicle) => {
-            const image = vehicle.images[0]?.url || vehicle.mainImage || "";
+            const image = vehicle.mainImage || vehicle.images[0]?.url || "";
 
             return (
               <Link

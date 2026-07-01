@@ -20,7 +20,7 @@ const mainLinks = [
     label: "Sucursales",
     href: "/sucursales",
   },
-{
+  {
     label: "Servicios",
     href: "#",
   },
@@ -104,11 +104,10 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
-                    active
+                  className={`rounded-xl px-4 py-2 text-sm font-bold transition ${active
                       ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
                       : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
-                  }`}
+                    }`}
                 >
                   {item.label}
                 </Link>
@@ -118,26 +117,30 @@ export function Header() {
             <div className="group relative">
               <button
                 type="button"
-                className={`inline-flex items-center gap-1 rounded-xl px-4 py-2 text-sm font-bold transition ${
-                  pathname.startsWith("/inventario")
+                className={`inline-flex items-center gap-1 rounded-xl px-4 py-2 text-sm font-bold transition ${pathname.startsWith("/catalogo")
                     ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
                     : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
-                }`}
+                  }`}
               >
                 Catálogo
-                <ChevronDown size={16} />
+                <ChevronDown
+                  size={16}
+                  className="transition group-hover:rotate-180"
+                />
               </button>
 
-              <div className="invisible absolute left-0 top-full w-56 translate-y-2 rounded-2xl border border-[var(--rise-border)] bg-white p-2 opacity-0 shadow-xl shadow-slate-900/10 transition group-hover:visible group-hover:translate-y-1 group-hover:opacity-100">
-                {catalogLinks.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="block rounded-xl px-4 py-3 text-sm font-bold text-slate-600 transition hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+              <div className="invisible absolute left-0 top-full z-50 w-56 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100">
+                <div className="rounded-2xl border border-[var(--rise-border)] bg-white p-2 shadow-xl shadow-slate-900/10">
+                  {catalogLinks.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="block rounded-xl px-4 py-3 text-sm font-bold text-slate-600 transition hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </nav>
@@ -173,11 +176,10 @@ export function Header() {
                     key={item.href}
                     href={item.href}
                     onClick={closeMobileMenu}
-                    className={`rounded-xl px-4 py-3 text-sm font-black transition ${
-                      active
+                    className={`rounded-xl px-4 py-3 text-sm font-black transition ${active
                         ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
                         : "text-slate-700 hover:bg-slate-100"
-                    }`}
+                      }`}
                   >
                     {item.label}
                   </Link>

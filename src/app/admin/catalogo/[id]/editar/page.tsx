@@ -1,20 +1,26 @@
 import Link from "next/link";
-import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
-import { VehicleCategory } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 import {
   ArrowLeft,
   Eye,
+  EyeOff,
   ImageIcon,
+  Plus,
   Save,
+  Star,
+  Tags,
   Trash2,
-  UploadCloud,
 } from "lucide-react";
+import {
+  VehicleCategory,
+  VehicleMediaType,
+} from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { Container } from "@/components/ui/Container";
-import { deletePublicFile, saveVehicleMediaFiles } from "@/lib/uploads";
+import {
+  deletePublicFile,
+  saveVehicleMediaFiles,
+} from "@/lib/uploads";
 import { BrandCategorySelects } from "@/components/admin/catalog/BrandCategorySelects";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +29,27 @@ type EditCatalogModelPageProps = {
   params: Promise<{
     id: string;
   }>;
+  searchParams: Promise<{
+    error?: string;
+    success?: string;
+  }>;
 };
+
+function getStringValue(formData: FormData, fieldName: string) {
+  return String(formData.get(fieldName) || "").trim();
+}
+
+function getOptionalNumberValue(formData: FormData, fieldName: string) {
+  const rawValue = String(formData.get(fieldName) ?? "").trim();
+
+  if (!rawValue) {
+    return null;
+  }
+
+  const value = Number(rawValue);
+
+  return Number.isFinite(value) ? value : null;
+}
 
 function slugify(value: string) {
   return value
@@ -35,44 +61,61 @@ function slugify(value: string) {
     .replace(/(^-|-$)+/g, "");
 }
 
-function getBrandSlug(name: string) {
-  const map: Record<string, string> = {
-    "Can-Am": "can-am",
-    Polaris: "polaris",
-    "Royal Enfield": "royal-enfield",
-    "Sea-Doo": "sea-doo",
-    Triumph: "triumph-motorcycles",
-    Indian: "indian-motorcycle",
-    Zeekr: "zeekrlife",
-    "Lynk & Co": "lynk-co",
-  };
+async function getUniqueCatalogSlug(
+  brandId: number,
+  name: string,
+  currentModelId: number
+) {
+  const baseSlug = slugify(name) || "modelo";
+  let slug = baseSlug;
+  let suffix = 2;
 
-  return map[name] ?? name.toLowerCase().replace(/\s+/g, "-");
-}
-
-function getValidCategoryType(value: FormDataEntryValue | null) {
-  const categoryType = String(value ?? "TODOTERRENO");
-
-  if (
-    categoryType === VehicleCategory.AUTO ||
-    categoryType === VehicleCategory.MOTO ||
-    categoryType === VehicleCategory.TODOTERRENO
+  while (
+    await prisma.catalogModel.findFirst({
+      where: {
+        brandId,
+        slug,
+        NOT: {
+          id: currentModelId,
+        },
+      },
+    })
   ) {
-    return categoryType;
+    slug = `${baseSlug}-${suffix}`;
+    suffix += 1;
   }
 
-  return VehicleCategory.TODOTERRENO;
+  return slug;
 }
 
-async function updateCatalogModel(modelId: number, formData: FormData) {
+function getVehicleCategoryValue(value: FormDataEntryValue | null) {
+  const categoryValue = String(value || VehicleCategory.TODOTERRENO);
+
+  const validCategories: VehicleCategory[] = [
+    VehicleCategory.AUTO,
+    VehicleCategory.MOTO,
+    VehicleCategory.TODOTERRENO,
+  ];
+
+  return validCategories.includes(categoryValue as VehicleCategory)
+    ? (categoryValue as VehicleCategory)
+    : VehicleCategory.TODOTERRENO;
+}
+
+async function updateCatalogModel(formData: FormData) {
   "use server";
+
+  const modelId = Number(formData.get("modelId"));
+
+  if (!modelId) {
+    redirect("/admin/catalogo?error=Modelo no válido");
+  }
 
   const currentModel = await prisma.catalogModel.findUnique({
     where: {
       id: modelId,
     },
     include: {
-      brand: true,
       images: {
         orderBy: {
           order: "asc",
@@ -82,150 +125,289 @@ async function updateCatalogModel(modelId: number, formData: FormData) {
   });
 
   if (!currentModel) {
-    throw new Error("No se encontró el modelo.");
+    redirect("/admin/catalogo?error=El modelo ya no existe");
   }
 
   const brandId = Number(formData.get("brandId"));
-  const categoryId = Number(formData.get("categoryId"));
-  const name = String(formData.get("name") ?? "").trim();
-  const slugInput = String(formData.get("slug") ?? "").trim();
-  const yearInput = String(formData.get("year") ?? "").trim();
-  const priceFromInput = String(formData.get("priceFrom") ?? "").trim();
-  const subtitle = String(formData.get("subtitle") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
-  const specs = String(formData.get("specs") ?? "").trim();
-  const features = String(formData.get("features") ?? "").trim();
-  const mainImageInput = String(formData.get("mainImage") ?? "").trim();
-  const sortOrderInput = String(formData.get("sortOrder") ?? "").trim();
+  const categoryId = getOptionalNumberValue(formData, "categoryId");
+
+  const name = getStringValue(formData, "name");
+  const subtitle = getStringValue(formData, "subtitle");
+  const description = getStringValue(formData, "description");
+  const specs = getStringValue(formData, "specs");
+  const features = getStringValue(formData, "features");
+
+  const year = getOptionalNumberValue(formData, "year");
+  const priceFrom = getOptionalNumberValue(formData, "priceFrom");
+  const sortOrder = getOptionalNumberValue(formData, "sortOrder") ?? 0;
+
+  const categoryType = getVehicleCategoryValue(formData.get("categoryType"));
   const active = formData.get("active") === "on";
-  const categoryType = getValidCategoryType(formData.get("categoryType"));
+
+  const mainImageUrl = getStringValue(formData, "mainImageUrl");
+  const mainImageSelection = getStringValue(formData, "mainImageSelection");
 
   if (!brandId || !name) {
-    throw new Error("Marca y nombre son obligatorios.");
+    redirect(
+      `/admin/catalogo/${modelId}/editar?error=${encodeURIComponent(
+        "Selecciona una marca y captura el nombre del modelo."
+      )}`
+    );
   }
-
-  const category =
-    categoryId && !Number.isNaN(categoryId)
-      ? await prisma.catalogCategory.findUnique({
-        where: {
-          id: categoryId,
-        },
-      })
-      : null;
-
-  if (categoryId && category && category.brandId !== brandId) {
-    throw new Error("La categoría seleccionada no pertenece a la marca.");
-  }
-
-  const slug = slugInput ? slugify(slugInput) : slugify(name);
-
-  const deleteMediaIds = formData
-    .getAll("deleteMediaIds")
-    .map((value) => Number(value))
-    .filter((value) => !Number.isNaN(value));
-
-  const mediaToDelete = currentModel.images.filter((image) =>
-    deleteMediaIds.includes(image.id)
-  );
-
-  const remainingMedia = currentModel.images.filter(
-    (image) => !deleteMediaIds.includes(image.id)
-  );
 
   const mediaFiles = formData
     .getAll("mediaFiles")
     .filter((value): value is File => value instanceof File && value.size > 0);
 
-  const savedMedia = await saveVehicleMediaFiles(mediaFiles);
+  let savedMedia: Awaited<ReturnType<typeof saveVehicleMediaFiles>> = [];
 
-  if (remainingMedia.length + savedMedia.length > 10) {
-    throw new Error("El modelo no puede tener más de 10 archivos.");
+  try {
+    savedMedia = await saveVehicleMediaFiles(mediaFiles);
+  } catch (error) {
+    console.error(error);
+
+    redirect(
+      `/admin/catalogo/${modelId}/editar?error=${encodeURIComponent(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron guardar las imágenes."
+      )}`
+    );
   }
 
-  const firstRemainingImage = remainingMedia.find(
-    (image) => image.type === "IMAGE"
+  const currentHighestOrder = currentModel.images.reduce((highest, image) => {
+    return image.order > highest ? image.order : highest;
+  }, -1);
+
+  const firstUploadedImage = savedMedia.find(
+    (item) => item.type === VehicleMediaType.IMAGE
   );
 
-  const firstUploadedImage = savedMedia.find((item) => item.type === "IMAGE");
+  const firstExistingImage = currentModel.images.find(
+    (item) => item.type === VehicleMediaType.IMAGE
+  );
 
   const finalMainImage =
-    mainImageInput ||
-    firstRemainingImage?.url ||
+    mainImageSelection ||
+    mainImageUrl ||
+    currentModel.mainImage ||
+    firstExistingImage?.url ||
     firstUploadedImage?.url ||
-    null;
+    "";
 
-  if (deleteMediaIds.length > 0) {
-    await prisma.catalogImage.deleteMany({
-      where: {
-        catalogModelId: modelId,
-        id: {
-          in: deleteMediaIds,
-        },
-      },
-    });
-  }
+  const slug = await getUniqueCatalogSlug(brandId, name, modelId);
 
-  const updatedModel = await prisma.catalogModel.update({
+  await prisma.catalogModel.update({
     where: {
       id: modelId,
     },
     data: {
       brandId,
-      categoryId: categoryId && !Number.isNaN(categoryId) ? categoryId : null,
+      categoryId: categoryId || null,
       name,
       slug,
       categoryType,
-      year: yearInput ? Number(yearInput) : null,
-      priceFrom: priceFromInput ? Number(priceFromInput) : null,
-      subtitle: subtitle || null,
+      year,
+      priceFrom,
+      subtitle,
       description,
       specs,
       features,
       mainImage: finalMainImage,
       active,
-      sortOrder: sortOrderInput ? Number(sortOrderInput) : 0,
-      images:
-        savedMedia.length > 0
-          ? {
-            create: savedMedia.map((item, index) => ({
-              url: item.url,
-              type: item.type,
-              alt: name,
-              order: remainingMedia.length + index,
-            })),
-          }
-          : undefined,
-    },
-    include: {
-      brand: true,
+      sortOrder,
+
+      images: savedMedia.length
+        ? {
+          create: savedMedia.map((item, index) => ({
+            url: item.url,
+            type: item.type,
+            alt: name,
+            order: currentHighestOrder + index + 1,
+          })),
+        }
+        : undefined,
     },
   });
 
-  await Promise.all(mediaToDelete.map((image) => deletePublicFile(image.url)));
-
-  const oldBrandSlug = getBrandSlug(currentModel.brand.name);
-  const newBrandSlug = getBrandSlug(updatedModel.brand.name);
-
+  revalidatePath("/admin");
   revalidatePath("/admin/catalogo");
-  revalidatePath(`/catalogo/${oldBrandSlug}`);
-  revalidatePath(`/catalogo/${oldBrandSlug}/${currentModel.slug}`);
-  revalidatePath(`/catalogo/${newBrandSlug}`);
-  revalidatePath(`/catalogo/${newBrandSlug}/${updatedModel.slug}`);
+  revalidatePath(`/admin/catalogo/${modelId}/editar`);
+  revalidatePath("/admin/inventario/nuevo");
+  revalidatePath("/catalogo");
 
-  redirect("/admin/catalogo");
+  redirect(
+    `/admin/catalogo/${modelId}/editar?success=${encodeURIComponent(
+      "Modelo actualizado correctamente."
+    )}`
+  );
+}
+
+async function setCatalogMainImage(modelId: number, imageId: number) {
+  "use server";
+
+  if (!modelId || !imageId) {
+    return;
+  }
+
+  const image = await prisma.catalogImage.findUnique({
+    where: {
+      id: imageId,
+    },
+  });
+
+  if (!image || image.catalogModelId !== modelId) {
+    redirect(
+      `/admin/catalogo/${modelId}/editar?error=${encodeURIComponent(
+        "No se pudo identificar la imagen."
+      )}`
+    );
+  }
+
+  await prisma.$transaction([
+    prisma.catalogModel.update({
+      where: {
+        id: modelId,
+      },
+      data: {
+        mainImage: image.url,
+      },
+    }),
+
+    prisma.catalogImage.updateMany({
+      where: {
+        catalogModelId: modelId,
+      },
+      data: {
+        order: 1,
+      },
+    }),
+
+    prisma.catalogImage.update({
+      where: {
+        id: imageId,
+      },
+      data: {
+        order: 0,
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/catalogo");
+  revalidatePath(`/admin/catalogo/${modelId}/editar`);
+  revalidatePath("/admin/inventario/nuevo");
+  revalidatePath("/catalogo");
+
+  redirect(
+    `/admin/catalogo/${modelId}/editar?success=${encodeURIComponent(
+      "Imagen principal actualizada."
+    )}`
+  );
+}
+
+async function deleteCatalogImage(modelId: number, imageId: number) {
+  "use server";
+
+  if (!modelId || !imageId) {
+    return;
+  }
+
+  const image = await prisma.catalogImage.findUnique({
+    where: {
+      id: imageId,
+    },
+    include: {
+      catalogModel: {
+        include: {
+          images: {
+            orderBy: {
+              order: "asc",
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!image || image.catalogModelId !== modelId) {
+    redirect(
+      `/admin/catalogo/${modelId}/editar?error=${encodeURIComponent(
+        "No se pudo identificar la imagen."
+      )}`
+    );
+  }
+
+  const remainingImages = image.catalogModel.images.filter(
+    (item) => item.id !== image.id
+  );
+
+  await prisma.catalogImage.delete({
+    where: {
+      id: imageId,
+    },
+  });
+
+  if (image.catalogModel.mainImage === image.url) {
+    const nextMainImage =
+      remainingImages.find((item) => item.type === VehicleMediaType.IMAGE)
+        ?.url ?? "";
+
+    await prisma.catalogModel.update({
+      where: {
+        id: modelId,
+      },
+      data: {
+        mainImage: nextMainImage,
+      },
+    });
+  }
+
+  if (image.url.startsWith("/uploads/")) {
+    try {
+      await deletePublicFile(image.url);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/catalogo");
+  revalidatePath(`/admin/catalogo/${modelId}/editar`);
+  revalidatePath("/admin/inventario/nuevo");
+  revalidatePath("/catalogo");
+
+  redirect(
+    `/admin/catalogo/${modelId}/editar?success=${encodeURIComponent(
+      "Imagen eliminada correctamente."
+    )}`
+  );
+}
+
+function getCategoryTypeLabel(category: VehicleCategory) {
+  const labels: Record<VehicleCategory, string> = {
+    AUTO: "Auto",
+    MOTO: "Moto",
+    TODOTERRENO: "Todo terreno",
+  };
+
+  return labels[category];
 }
 
 export default async function EditCatalogModelPage({
   params,
+  searchParams,
 }: EditCatalogModelPageProps) {
   const { id } = await params;
+  const query = await searchParams;
+
   const modelId = Number(id);
 
-  if (Number.isNaN(modelId)) {
+  if (!modelId) {
     notFound();
   }
 
-  const [catalogModel, brands, categories] = await Promise.all([
+  const [catalogModel, brands, catalogCategories] = await Promise.all([
     prisma.catalogModel.findUnique({
       where: {
         id: modelId,
@@ -246,6 +428,9 @@ export default async function EditCatalogModelPage({
     }),
 
     prisma.brand.findMany({
+      where: {
+        active: true,
+      },
       orderBy: {
         name: "asc",
       },
@@ -254,17 +439,11 @@ export default async function EditCatalogModelPage({
     prisma.catalogCategory.findMany({
       where: {
         active: true,
-        parentId: null,
       },
       include: {
-        brand: true,
+        parent: true,
       },
       orderBy: [
-        {
-          brand: {
-            name: "asc",
-          },
-        },
         {
           sortOrder: "asc",
         },
@@ -279,68 +458,92 @@ export default async function EditCatalogModelPage({
     notFound();
   }
 
-  const brandSlug = getBrandSlug(catalogModel.brand.name);
+  const mainImage =
+    catalogModel.mainImage ||
+    catalogModel.images.find((image) => image.type === VehicleMediaType.IMAGE)
+      ?.url ||
+    "";
 
   return (
-    <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
-      <Header />
-
-      <section className="py-10">
-        <Container>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <Link
-              href="/admin/catalogo"
-              className="inline-flex items-center gap-2 text-sm font-black text-slate-500 transition hover:text-[var(--rise-blue)]"
-            >
-              <ArrowLeft size={17} />
-              Volver al catálogo
-            </Link>
-
-            {catalogModel.active && (
-              <Link
-                href={`/catalogo/${brandSlug}/${catalogModel.slug}`}
-                target="_blank"
-                className="inline-flex items-center gap-2 rounded-xl border border-[var(--rise-border)] bg-white px-4 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
-              >
-                <Eye size={17} />
-                Ver público
-              </Link>
-            )}
-          </div>
-
-          <div className="mt-6">
-            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-              Catálogo
-            </p>
-
-            <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">
-              Editar modelo
-            </h1>
-
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
-              Actualiza la información comercial, precio, categoría, imágenes y
-              visibilidad pública del modelo.
-            </p>
-          </div>
-
-          <form
-            action={updateCatalogModel.bind(null, catalogModel.id)}
-            className="mt-8 grid gap-6 rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-8"
+    <div>
+      <div className="flex flex-wrap items-start justify-between gap-5">
+        <div>
+          <Link
+            href="/admin/catalogo"
+            className="inline-flex items-center gap-2 text-sm font-black text-slate-500 transition hover:text-[var(--rise-blue)]"
           >
-            <section className="grid gap-5 md:grid-cols-2">
-              <BrandCategorySelects
-                brands={brands}
-                categories={categories.map((category) => ({
-                  id: category.id,
-                  brandId: category.brandId,
-                  name: category.name,
-                  parentId: category.parentId,
-                }))}
-                defaultBrandId={catalogModel.brandId}
-                defaultCategoryId={catalogModel.categoryId}
-              />
+            <ArrowLeft size={18} />
+            Volver al catálogo base
+          </Link>
 
-              <label>
+          <p className="mt-6 text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+            Editar modelo base
+          </p>
+
+          <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">
+            {catalogModel.brand.name} {catalogModel.name}
+          </h1>
+
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+            Actualiza la información comercial del modelo. Estos datos se usan
+            como plantilla al crear unidades reales en inventario.
+          </p>
+        </div>
+
+        <Link
+          href="/admin/inventario/nuevo"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+        >
+          <Plus size={18} />
+          Crear unidad
+        </Link>
+      </div>
+
+      {query.error && (
+        <div className="mt-6 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-700">
+          {query.error}
+        </div>
+      )}
+
+      {query.success && (
+        <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
+          {query.success}
+        </div>
+      )}
+
+      <form action={updateCatalogModel} className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <input type="hidden" name="modelId" value={catalogModel.id} />
+
+        <div className="grid gap-6">
+          <BrandCategorySelects
+            mode="catalog"
+            brands={brands.map((brand) => ({
+              id: brand.id,
+              name: brand.name,
+              category: brand.category,
+            }))}
+            categories={catalogCategories.map((category) => ({
+              id: category.id,
+              brandId: category.brandId,
+              name: category.name,
+              parentId: category.parentId,
+              parentName: category.parent?.name ?? null,
+            }))}
+            defaultBrandId={catalogModel.brandId}
+            defaultCategoryId={catalogModel.categoryId}
+          />
+
+          <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+              Información del modelo
+            </p>
+
+            <h2 className="mt-2 text-2xl font-black">
+              Datos comerciales
+            </h2>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <label className="block md:col-span-2">
                 <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
                   Nombre del modelo
                 </span>
@@ -349,27 +552,26 @@ export default async function EditCatalogModelPage({
                   name="name"
                   required
                   defaultValue={catalogModel.name}
-                  placeholder="Ej. Maverick R"
                   className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
                 />
               </label>
 
-              <label>
+              <label className="block md:col-span-2">
                 <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Slug
+                  Subtítulo comercial
                 </span>
 
                 <input
-                  name="slug"
-                  defaultValue={catalogModel.slug}
-                  placeholder="Ej. maverick-r"
+                  name="subtitle"
+                  defaultValue={catalogModel.subtitle ?? ""}
+                  placeholder="Ej. Side-by-side deportivo para aventura extrema"
                   className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
                 />
               </label>
 
-              <label>
+              <label className="block">
                 <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Tipo general
+                  Tipo
                 </span>
 
                 <select
@@ -377,27 +579,28 @@ export default async function EditCatalogModelPage({
                   defaultValue={catalogModel.categoryType}
                   className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
                 >
-                  <option value="AUTO">Auto</option>
-                  <option value="MOTO">Moto</option>
-                  <option value="TODOTERRENO">Todo terreno</option>
+                  {Object.values(VehicleCategory).map((category) => (
+                    <option key={category} value={category}>
+                      {getCategoryTypeLabel(category)}
+                    </option>
+                  ))}
                 </select>
               </label>
 
-              <label>
+              <label className="block">
                 <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Año
+                  Año modelo
                 </span>
 
                 <input
                   name="year"
                   type="number"
                   defaultValue={catalogModel.year ?? ""}
-                  placeholder="2026"
                   className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
                 />
               </label>
 
-              <label>
+              <label className="block">
                 <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
                   Precio desde
                 </span>
@@ -406,12 +609,11 @@ export default async function EditCatalogModelPage({
                   name="priceFrom"
                   type="number"
                   defaultValue={catalogModel.priceFrom ?? ""}
-                  placeholder="899900"
                   className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
                 />
               </label>
 
-              <label>
+              <label className="block">
                 <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
                   Orden
                 </span>
@@ -423,194 +625,239 @@ export default async function EditCatalogModelPage({
                   className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
                 />
               </label>
-            </section>
+            </div>
+          </section>
 
-            <label>
-              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                Subtítulo
-              </span>
+          <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+              Ficha comercial
+            </p>
 
-              <input
-                name="subtitle"
-                defaultValue={catalogModel.subtitle ?? ""}
-                placeholder="Descripción corta para cards"
-                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-              />
-            </label>
+            <h2 className="mt-2 text-2xl font-black">
+              Textos del modelo
+            </h2>
 
-            <label>
-              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                URL imagen principal
-              </span>
-
-              <input
-                name="mainImage"
-                defaultValue={catalogModel.mainImage ?? ""}
-                placeholder="/uploads/vehicles/imagen.jpg"
-                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-              />
-            </label>
-
-            <label>
-              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                Descripción
-              </span>
-
-              <textarea
-                name="description"
-                rows={5}
-                defaultValue={catalogModel.description}
-                placeholder="Descripción comercial del modelo..."
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-              />
-            </label>
-
-            <section className="grid gap-5 md:grid-cols-2">
-              <label>
+            <div className="mt-6 grid gap-4">
+              <label className="block">
                 <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Características
+                  Descripción
                 </span>
 
                 <textarea
-                  name="features"
+                  name="description"
                   rows={5}
-                  defaultValue={catalogModel.features}
-                  placeholder="Separadas por coma. Ej: Motor Rotax, Suspensión FOX, Modos de manejo"
+                  defaultValue={catalogModel.description ?? ""}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
                 />
               </label>
 
-              <label>
+              <label className="block">
                 <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Especificaciones
+                  Especificaciones rápidas
                 </span>
 
                 <textarea
                   name="specs"
-                  rows={5}
-                  defaultValue={catalogModel.specs}
-                  placeholder="Separadas por coma. Ej: 999 cc, 2 pasajeros, transmisión automática"
+                  rows={4}
+                  defaultValue={catalogModel.specs ?? ""}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
                 />
               </label>
-            </section>
 
-            <section className="rounded-[2rem] border border-slate-100 bg-slate-50 p-5">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-400">
-                    Galería actual
-                  </p>
+              <label className="block">
+                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                  Características principales
+                </span>
 
-                  <h2 className="mt-2 text-2xl font-black">
-                    Imágenes y videos
-                  </h2>
-                </div>
+                <textarea
+                  name="features"
+                  rows={4}
+                  defaultValue={catalogModel.features ?? ""}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
+                />
+              </label>
+            </div>
+          </section>
+        </div>
 
-                <p className="text-sm font-bold text-slate-500">
-                  {catalogModel.images.length} archivo(s)
-                </p>
-              </div>
+        <aside className="grid gap-6 xl:sticky xl:top-6 xl:self-start">
+          <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-xl shadow-slate-900/5 md:p-6">
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+              Publicación
+            </p>
 
-              {catalogModel.images.length > 0 ? (
-                <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {catalogModel.images.map((media) => (
-                    <label
-                      key={media.id}
-                      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white"
-                    >
-                      <div className="h-36 bg-slate-100">
-                        {media.type === "VIDEO" ? (
-                          <video
-                            src={media.url}
-                            className="h-full w-full object-cover"
-                            controls
-                          />
-                        ) : (
-                          <img
-                            src={media.url}
-                            alt={media.alt ?? catalogModel.name}
-                            className="h-full w-full object-cover"
-                          />
-                        )}
-                      </div>
+            <div className="mt-5 grid gap-4">
+              <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <input
+                  type="checkbox"
+                  name="active"
+                  defaultChecked={catalogModel.active}
+                  className="mt-1 h-5 w-5 rounded border-slate-300"
+                />
 
-                      <div className="flex items-center gap-3 p-4">
-                        <input
-                          type="checkbox"
-                          name="deleteMediaIds"
-                          value={media.id}
-                          className="h-5 w-5 rounded border-slate-300"
-                        />
+                <span>
+                  <span className="flex items-center gap-2 text-sm font-black text-slate-700">
+                    {catalogModel.active ? <Eye size={16} /> : <EyeOff size={16} />}
+                    Modelo activo
+                  </span>
 
-                        <span className="inline-flex items-center gap-2 text-sm font-black text-red-600">
-                          <Trash2 size={16} />
-                          Eliminar
-                        </span>
-                      </div>
-                    </label>
-                  ))}
-                </div>
+                  <span className="mt-1 block text-xs leading-5 text-slate-500">
+                    Si está activo, aparecerá disponible para crear unidades.
+                  </span>
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+              >
+                <Save size={18} />
+                Guardar cambios
+              </button>
+            </div>
+          </section>
+
+          <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+              Imagen principal
+            </p>
+
+            <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+              {mainImage ? (
+                <img
+                  src={mainImage}
+                  alt={catalogModel.name}
+                  className="h-56 w-full object-cover"
+                />
               ) : (
-                <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-                  <ImageIcon className="mx-auto text-slate-400" size={46} />
-
-                  <p className="mt-3 text-sm font-black text-slate-500">
-                    Este modelo todavía no tiene archivos.
-                  </p>
+                <div className="flex h-56 items-center justify-center">
+                  <ImageIcon size={42} className="text-slate-400" />
                 </div>
               )}
-            </section>
+            </div>
 
-            <label>
-              <span className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
-                <UploadCloud size={17} />
-                Agregar nuevas imágenes / videos
+            <label className="mt-4 block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                URL manual de imagen principal
+              </span>
+
+              <input
+                name="mainImageUrl"
+                defaultValue={catalogModel.mainImage ?? ""}
+                placeholder="/uploads/vehicles/imagen.webp"
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
+              />
+            </label>
+
+            <label className="mt-4 block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
+                Agregar imágenes o video
               </span>
 
               <input
                 name="mediaFiles"
                 type="file"
                 multiple
-                accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime"
-                className="w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm font-bold text-slate-500"
-              />
-            </label>
-
-            <label className="inline-flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
-              <input
-                name="active"
-                type="checkbox"
-                defaultChecked={catalogModel.active}
-                className="h-5 w-5 rounded border-slate-300"
+                accept="image/*,video/mp4,video/webm,video/quicktime"
+                className="w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-500 file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--rise-navy)] file:px-4 file:py-2 file:text-sm file:font-black file:text-white"
               />
 
-              <span className="text-sm font-black text-slate-600">
-                Mostrar modelo en catálogo público
-              </span>
+              <p className="mt-2 text-xs text-slate-500">
+                Las nuevas imágenes se agregan a la galería actual; no borran
+                las anteriores.
+              </p>
             </label>
+          </section>
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-6 py-4 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-              >
-                <Save size={18} />
-                Guardar cambios
-              </button>
+          <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+                  Galería
+                </p>
 
-              <Link
-                href="/admin/catalogo"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-6 py-4 text-sm font-black text-slate-600 transition hover:bg-slate-50"
-              >
-                Cancelar
-              </Link>
+                <h2 className="mt-2 text-xl font-black">
+                  Imágenes actuales
+                </h2>
+              </div>
+
+              <Tags size={22} className="text-slate-400" />
             </div>
-          </form>
-        </Container>
-      </section>
 
-      <Footer />
-    </main>
+            <div className="mt-5 grid gap-4">
+              {catalogModel.images.length > 0 ? (
+                catalogModel.images.map((image) => {
+                  const isMain = catalogModel.mainImage === image.url;
+
+                  return (
+                    <article
+                      key={image.id}
+                      className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
+                    >
+                      <div className="relative">
+                        {image.type === VehicleMediaType.IMAGE ? (
+                          <img
+                            src={image.url}
+                            alt={image.alt ?? catalogModel.name}
+                            className="h-40 w-full object-cover"
+                          />
+                        ) : (
+                          <video
+                            src={image.url}
+                            controls
+                            className="h-40 w-full bg-black object-cover"
+                          />
+                        )}
+
+                        {isMain && (
+                          <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-black text-amber-600 shadow-sm">
+                            <Star size={14} />
+                            Principal
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="grid gap-2 p-3">
+                        <button
+                          type="submit"
+                          formAction={setCatalogMainImage.bind(null, catalogModel.id, image.id)}
+                          formNoValidate
+                          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 transition hover:bg-slate-100"
+                        >
+                          <Star size={15} />
+                          Usar como principal
+                        </button>
+
+                        <button
+                          type="submit"
+                          formAction={deleteCatalogImage.bind(null, catalogModel.id, image.id)}
+                          formNoValidate
+                          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-red-50 px-4 text-xs font-black text-red-700 transition hover:bg-red-100"
+                        >
+                          <Trash2 size={15} />
+                          Eliminar imagen
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                  <ImageIcon size={40} className="mx-auto text-slate-400" />
+
+                  <p className="mt-3 text-sm font-black text-slate-600">
+                    Este modelo no tiene galería.
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Agrega imágenes desde el campo superior.
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        </aside>
+      </form>
+    </div>
   );
 }
