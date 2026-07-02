@@ -44,6 +44,83 @@ function getLeadStatusLabel(status: string) {
   return labels[status] ?? status;
 }
 
+type LeadBusinessCategory =
+  | "SERVICIO"
+  | "REFACCIONES"
+  | "COTIZACION_VEHICULO"
+  | "COTIZACION_GENERAL"
+  | "PRUEBA_MANEJO"
+  | "FINANCIAMIENTO"
+  | "CONTACTO"
+  | "CITA";
+
+function normalizeText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function getLeadBusinessCategory(lead: {
+  type: LeadType;
+  message: string | null;
+  vehicle?: { id: number } | null;
+}): LeadBusinessCategory {
+  const message = normalizeText(lead.message ?? "");
+
+  if (
+    lead.type === LeadType.SERVICIO ||
+    message.includes("solicitud de servicio") ||
+    message.includes("servicio / mantenimiento")
+  ) {
+    return "SERVICIO";
+  }
+
+  if (
+    message.includes("cotizacion de refacciones") ||
+    message.includes("refaccion solicitada")
+  ) {
+    return "REFACCIONES";
+  }
+
+  if (lead.type === LeadType.COTIZACION && lead.vehicle) {
+    return "COTIZACION_VEHICULO";
+  }
+
+  if (lead.type === LeadType.COTIZACION) {
+    return "COTIZACION_GENERAL";
+  }
+
+  if (lead.type === LeadType.PRUEBA_MANEJO) {
+    return "PRUEBA_MANEJO";
+  }
+
+  if (lead.type === LeadType.FINANCIAMIENTO) {
+    return "FINANCIAMIENTO";
+  }
+
+  if (lead.type === LeadType.CITA) {
+    return "CITA";
+  }
+
+  return "CONTACTO";
+}
+
+function getLeadBusinessLabel(category: LeadBusinessCategory) {
+  const labels: Record<LeadBusinessCategory, string> = {
+    SERVICIO: "Servicio / mantenimiento",
+    REFACCIONES: "Cotización de refacciones",
+    COTIZACION_VEHICULO: "Cotización de vehículo",
+    COTIZACION_GENERAL: "Cotización general",
+    PRUEBA_MANEJO: "Prueba de manejo",
+    FINANCIAMIENTO: "Financiamiento",
+    CONTACTO: "Contacto",
+    CITA: "Cita",
+  };
+
+  return labels[category];
+}
+
 function formatDateTime(value: Date | null) {
   if (!value) {
     return "";
@@ -106,13 +183,13 @@ export async function GET(request: Request) {
   const where: Prisma.LeadWhereInput = {
     ...(typeFilter !== "TODOS"
       ? {
-          type: typeFilter,
-        }
+        type: typeFilter,
+      }
       : {}),
     ...(statusFilter !== "TODOS"
       ? {
-          status: statusFilter,
-        }
+        status: statusFilter,
+      }
       : {}),
   };
 
@@ -149,6 +226,7 @@ export async function GET(request: Request) {
       lead.branch?.city,
       getLeadTypeLabel(lead.type),
       getLeadStatusLabel(lead.status),
+      getLeadBusinessLabel(getLeadBusinessCategory(lead)),
     ]
       .filter(Boolean)
       .join(" ")
@@ -164,6 +242,7 @@ export async function GET(request: Request) {
     "Correo",
     "Tipo de solicitud",
     "Estado",
+    "Categoría comercial",
     "Vehículo",
     "Marca",
     "Modelo",
@@ -177,25 +256,30 @@ export async function GET(request: Request) {
     "Mensaje",
   ];
 
-  const rows = filteredLeads.map((lead) => [
-    formatDateTime(lead.createdAt),
-    lead.name,
-    lead.phone,
-    lead.email,
-    getLeadTypeLabel(lead.type),
-    getLeadStatusLabel(lead.status),
-    lead.vehicle?.name ?? "",
-    lead.vehicle?.brand.name ?? "",
-    lead.vehicle?.model ?? "",
-    lead.vehicle?.year ?? "",
-    lead.vehicle?.price ?? "",
-    lead.branch?.name ?? "",
-    lead.vehicle?.branch.name ?? "",
-    lead.branch?.city ?? lead.vehicle?.branch.city ?? "",
-    formatDate(lead.preferredDate),
-    lead.preferredTime ?? "",
-    lead.message ?? "",
-  ]);
+  const rows = filteredLeads.map((lead) => {
+    const businessCategory = getLeadBusinessCategory(lead);
+
+    return [
+      formatDateTime(lead.createdAt),
+      lead.name,
+      lead.phone,
+      lead.email,
+      getLeadTypeLabel(lead.type),
+      getLeadStatusLabel(lead.status),
+      getLeadBusinessLabel(businessCategory),
+      lead.vehicle?.name ?? "",
+      lead.vehicle?.brand.name ?? "",
+      lead.vehicle?.model ?? "",
+      lead.vehicle?.year ?? "",
+      lead.vehicle?.price ?? "",
+      lead.branch?.name ?? "",
+      lead.vehicle?.branch.name ?? "",
+      lead.branch?.city ?? lead.vehicle?.branch.city ?? "",
+      formatDate(lead.preferredDate),
+      lead.preferredTime ?? "",
+      lead.message ?? "",
+    ];
+  });
 
   const csv = buildCsv([headers, ...rows]);
 

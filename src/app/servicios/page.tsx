@@ -148,11 +148,7 @@ async function submitServiceRequest(formData: FormData) {
     revalidatePath("/admin/leads");
     revalidatePath("/servicios");
 
-    redirect(
-      `/servicios?success=${encodeURIComponent(
-        "Solicitud de servicio enviada correctamente."
-      )}`
-    );
+    redirect("/gracias?tipo=servicio");
   }
 
   if (requestType === "PARTS") {
@@ -205,11 +201,7 @@ async function submitServiceRequest(formData: FormData) {
     revalidatePath("/admin/leads");
     revalidatePath("/servicios");
 
-    redirect(
-      `/servicios?success=${encodeURIComponent(
-        "Cotización de refacciones enviada correctamente."
-      )}`
-    );
+    redirect("/gracias?tipo=refacciones");
   }
 
   redirect(
@@ -311,11 +303,10 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
         <Container>
           {(params.success || params.error) && (
             <div
-              className={`mb-6 rounded-2xl border p-4 text-sm font-black ${
-                params.success
+              className={`mb-6 rounded-2xl border p-4 text-sm font-black ${params.success
                   ? "border-emerald-100 bg-emerald-50 text-emerald-700"
                   : "border-red-100 bg-red-50 text-red-700"
-              }`}
+                }`}
             >
               {params.success || params.error}
             </div>
@@ -671,9 +662,8 @@ function InputField({
           type={type}
           required={required}
           placeholder={placeholder}
-          className={`h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white ${
-            Icon ? "pl-11" : ""
-          }`}
+          className={`h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white ${Icon ? "pl-11" : ""
+            }`}
         />
       </div>
     </label>

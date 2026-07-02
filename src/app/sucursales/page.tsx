@@ -18,6 +18,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { prisma } from "@/lib/prisma";
+import { BranchCoverViewer } from "@/components/branches/BranchCoverViewer";
 
 export const dynamic = "force-dynamic";
 
@@ -272,169 +273,154 @@ export default async function BranchesPage() {
                   return (
                     <article
                       key={branch.id}
-                      className="overflow-hidden rounded-[2rem] border border-slate-100 bg-slate-50 transition hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-slate-900/10"
+                      className="overflow-hidden rounded-[2.25rem] border border-[var(--rise-border)] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
                     >
-                      <div className="grid gap-0 xl:grid-cols-[minmax(0,1fr)_280px]">
-                        <div className="p-5 md:p-6">
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <span className="rounded-full bg-[var(--rise-blue-soft)] px-3 py-1 text-xs font-black uppercase tracking-wider text-[var(--rise-blue)]">
-                                {branch.city}, {branch.state}
-                              </span>
+                      <BranchCoverViewer
+                        coverImageUrl={branch.coverImageUrl}
+                        logoUrl={branch.logoUrl}
+                        branchName={branch.name}
+                        heightClassName="h-64"
+                      />
 
-                              <h3 className="mt-4 text-2xl font-black leading-tight md:text-3xl">
-                                {branch.name}
-                              </h3>
-                            </div>
+                      <div className="flex flex-col p-6 md:p-7">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--rise-blue)]">
+                              {branch.city}, {branch.state}
+                            </p>
 
-                            {branch.logoUrl ? (
-                              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-white p-2 shadow-sm">
-                                <img
-                                  src={branch.logoUrl}
-                                  alt={`Logo ${branch.name}`}
-                                  className="max-h-full max-w-full object-contain"
-                                />
-                              </div>
-                            ) : (
-                              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
-                                <Building2 size={24} />
-                              </div>
-                            )}
+                            <h2 className="mt-3 text-3xl font-black leading-tight text-[var(--rise-navy)]">
+                              {branch.name}
+                            </h2>
                           </div>
 
-                          <div className="mt-6 grid gap-4 text-sm text-slate-600">
+                          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
+                            <Building2 size={22} />
+                          </div>
+                        </div>
+
+                        <div className="mt-6 space-y-4">
+                          <div className="flex gap-3">
+                            <MapPin
+                              size={18}
+                              className="mt-0.5 shrink-0 text-[var(--rise-blue)]"
+                            />
+                            <div>
+                              <p className="text-sm font-bold text-slate-700">{branch.address}</p>
+                              <p className="text-sm text-slate-500">
+                                {branch.city}, {branch.state}
+                              </p>
+                            </div>
+                          </div>
+
+                          {branch.phone && (
                             <div className="flex gap-3">
-                              <MapPin
+                              <Phone
                                 size={18}
                                 className="mt-0.5 shrink-0 text-[var(--rise-blue)]"
                               />
-                              <span className="leading-6">
-                                {branch.address}
-                              </span>
-                            </div>
-
-                            {branch.phone && phone && (
-                              <div className="flex gap-3">
-                                <Phone
-                                  size={18}
-                                  className="mt-0.5 shrink-0 text-[var(--rise-blue)]"
-                                />
-                                <a
-                                  href={`tel:${phone}`}
-                                  className="font-bold hover:text-[var(--rise-blue)]"
-                                >
-                                  {branch.phone}
-                                </a>
+                              <div>
+                                <p className="text-sm font-bold text-slate-700">{branch.phone}</p>
+                                <p className="text-sm text-slate-500">Teléfono de contacto</p>
                               </div>
-                            )}
-
-                            {branch.email && (
-                              <div className="flex gap-3">
-                                <Mail
-                                  size={18}
-                                  className="mt-0.5 shrink-0 text-[var(--rise-blue)]"
-                                />
-                                <a
-                                  href={`mailto:${branch.email}`}
-                                  className="font-bold hover:text-[var(--rise-blue)]"
-                                >
-                                  {branch.email}
-                                </a>
-                              </div>
-                            )}
-
-                            {branch.schedule && (
-                              <div className="flex gap-3">
-                                <Clock
-                                  size={18}
-                                  className="mt-0.5 shrink-0 text-[var(--rise-blue)]"
-                                />
-                                <span className="leading-6">
-                                  {branch.schedule}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          {services.length > 0 && (
-                            <div className="mt-6 flex flex-wrap gap-2">
-                              {services.map((service) => (
-                                <span
-                                  key={service}
-                                  className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600"
-                                >
-                                  <ShieldCheck size={13} />
-                                  {service}
-                                </span>
-                              ))}
                             </div>
                           )}
 
-                          <div className="mt-6 grid grid-cols-3 gap-3">
-                            <div className="rounded-2xl bg-white p-3">
-                              <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                                Total
-                              </p>
-
-                              <p className="mt-1 text-lg font-black text-[var(--rise-navy)]">
-                                {branch.vehicles.length}
-                              </p>
+                          {branch.whatsapp && (
+                            <div className="flex gap-3">
+                              <MessageCircle
+                                size={18}
+                                className="mt-0.5 shrink-0 text-emerald-600"
+                              />
+                              <div>
+                                <p className="text-sm font-bold text-slate-700">{branch.whatsapp}</p>
+                                <p className="text-sm text-slate-500">Atención por WhatsApp</p>
+                              </div>
                             </div>
+                          )}
+                        </div>
 
-                            <div className="rounded-2xl bg-white p-3">
-                              <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                                Nuevos
-                              </p>
+                        {branch.services && (
+                          <div className="mt-6 flex flex-wrap gap-2">
+                            {branch.services
+                              .split(",")
+                              .map((service) => service.trim())
+                              .filter(Boolean)
+                              .slice(0, 4)
+                              .map((service) => (
+                                <span
+                                  key={service}
+                                  className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600"
+                                >
+                                  {service}
+                                </span>
+                              ))}
+                          </div>
+                        )}
 
-                              <p className="mt-1 text-lg font-black text-[var(--rise-navy)]">
-                                {newVehicles}
-                              </p>
-                            </div>
-
-                            <div className="rounded-2xl bg-white p-3">
-                              <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                                Seminuevos
-                              </p>
-
-                              <p className="mt-1 text-lg font-black text-[var(--rise-navy)]">
-                                {usedVehicles}
-                              </p>
-                            </div>
+                        <div className="mt-6 grid grid-cols-3 gap-3 rounded-2xl bg-slate-50 p-4">
+                          <div>
+                            <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                              Total
+                            </p>
+                            <p className="mt-1 text-xl font-black text-[var(--rise-navy)]">
+                              {branch.vehicles.length}
+                            </p>
                           </div>
 
-                          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                              Nuevos
+                            </p>
+                            <p className="mt-1 text-xl font-black text-[var(--rise-navy)]">
+                              {branch.vehicles.filter((vehicle) => vehicle.condition === "NUEVO").length}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                              Seminuevos
+                            </p>
+                            <p className="mt-1 text-xl font-black text-[var(--rise-navy)]">
+                              {branch.vehicles.filter((vehicle) => vehicle.condition === "SEMINUEVO").length}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-6 flex flex-col gap-3">
+                          <Link
+                            href={`/sucursales/${branch.id}`}
+                            className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+                          >
+                            Ver agencia
+                            <ArrowRight size={18} />
+                          </Link>
+
+                          <div className="grid gap-3 sm:grid-cols-2">
                             <a
                               href={mapExternalUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-100"
+                              className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
                             >
                               <MapPin size={18} />
                               Ver ubicación
                             </a>
 
-                            {whatsappHref && (
+                            {whatsappHref ? (
                               <a
                                 href={whatsappHref}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+                                className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
                               >
                                 <MessageCircle size={18} />
                                 WhatsApp
                               </a>
+                            ) : (
+                              <div className="hidden sm:block" />
                             )}
                           </div>
-                        </div>
-
-                        <div className="min-h-[320px] overflow-hidden border-t border-slate-100 bg-slate-100 xl:border-l xl:border-t-0">
-                          <iframe
-                            src={mapEmbedUrl}
-                            title={`Mapa de ${branch.name}`}
-                            className="h-full min-h-[320px] w-full"
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                          />
                         </div>
                       </div>
                     </article>

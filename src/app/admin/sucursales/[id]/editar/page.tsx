@@ -20,6 +20,10 @@ import {
 } from "lucide-react";
 import { VehicleCondition, VehicleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  deleteBranchImageFile,
+  saveBranchImageFile,
+} from "@/lib/branch-uploads";
 
 export const dynamic = "force-dynamic";
 
@@ -115,6 +119,54 @@ async function updateBranch(branchId: number, formData: FormData) {
     );
   }
 
+  const currentBranch = await prisma.branch.findUnique({
+    where: {
+      id: branchId,
+    },
+    select: {
+      logoUrl: true,
+      coverImageUrl: true,
+    },
+  });
+
+  if (!currentBranch) {
+    redirect("/admin/sucursales");
+  }
+
+  let uploadedLogoUrl: string | null = null;
+  let uploadedCoverImageUrl: string | null = null;
+
+  try {
+    uploadedLogoUrl = await saveBranchImageFile(
+      formData.get("logoFile"),
+      "logos"
+    );
+
+    uploadedCoverImageUrl = await saveBranchImageFile(
+      formData.get("coverImageFile"),
+      "fachadas"
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo guardar la imagen.";
+
+    redirect(
+      `/admin/sucursales/${branchId}/editar?error=${encodeURIComponent(message)}`
+    );
+  }
+
+  const finalLogoUrl =
+    uploadedLogoUrl ??
+    getOptionalTextValue(formData, "logoUrl") ??
+    currentBranch.logoUrl;
+
+  const finalCoverImageUrl =
+    uploadedCoverImageUrl ??
+    getOptionalTextValue(formData, "coverImageUrl") ??
+    currentBranch.coverImageUrl;
+
   await prisma.branch.update({
     where: {
       id: branchId,
@@ -130,7 +182,8 @@ async function updateBranch(branchId: number, formData: FormData) {
       schedule: getOptionalTextValue(formData, "schedule"),
       googleMapsUrl: getOptionalTextValue(formData, "googleMapsUrl"),
       services: getOptionalTextValue(formData, "services"),
-      logoUrl: getOptionalTextValue(formData, "logoUrl"),
+      logoUrl: finalLogoUrl,
+      coverImageUrl: finalCoverImageUrl,
       sortOrder: getNumberValue(formData, "sortOrder"),
       active: formData.get("active") === "on",
     },
@@ -362,15 +415,38 @@ export default async function EditBranchPage({ params }: EditBranchPageProps) {
                 Logo de sucursal
               </span>
 
+              {branch.logoUrl && (
+                <div className="mb-3 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl bg-white p-2">
+                    <img
+                      src={branch.logoUrl}
+                      alt={`Logo ${branch.name}`}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-black text-[var(--rise-navy)]">
+                      Logo actual
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Sube un nuevo archivo para reemplazarlo.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <input type="hidden" name="logoUrl" defaultValue={branch.logoUrl ?? ""} />
+
               <input
-                name="logoUrl"
-                defaultValue={branch.logoUrl ?? ""}
-                placeholder="/branches/logos/polaris-cumbres.png"
-                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
+                name="logoFile"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--rise-navy)] file:px-4 file:py-2 file:text-sm file:font-black file:text-white hover:bg-white focus:border-[var(--rise-blue)]"
               />
 
               <p className="mt-2 text-xs leading-5 text-slate-500">
-                Usa una ruta dentro de public, por ejemplo: /branches/logos/polaris-cumbres.png
+                Formatos permitidos: JPG, PNG, WEBP o AVIF. Máximo 6 MB.
               </p>
             </label>
           </section>
@@ -477,6 +553,48 @@ export default async function EditBranchPage({ params }: EditBranchPageProps) {
                 <p className="mt-2 text-xs leading-5 text-slate-500">
                   Puede ser una URL normal de Google Maps. Si está vacío, el
                   sistema intentará generar el mapa usando la dirección.
+                </p>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-slate-700">
+                  Foto de fachada / agencia
+                </span>
+
+                {branch.coverImageUrl && (
+                  <div className="mb-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                    <img
+                      src={branch.coverImageUrl}
+                      alt={`Fachada de ${branch.name}`}
+                      className="h-48 w-full object-cover"
+                    />
+
+                    <div className="p-3">
+                      <p className="text-sm font-black text-[var(--rise-navy)]">
+                        Fachada actual
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Sube una nueva imagen para reemplazarla.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <input
+                  type="hidden"
+                  name="coverImageUrl"
+                  defaultValue={branch.coverImageUrl ?? ""}
+                />
+
+                <input
+                  name="coverImageFile"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--rise-navy)] file:px-4 file:py-2 file:text-sm file:font-black file:text-white hover:bg-white focus:border-[var(--rise-blue)]"
+                />
+
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  Recomendado: imagen horizontal de la fachada o agencia.
                 </p>
               </label>
 

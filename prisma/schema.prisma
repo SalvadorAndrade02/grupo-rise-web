@@ -80,6 +80,7 @@ model Branch {
   googleMapsUrl String?
   services      String?
   logoUrl String?
+  coverImageUrl String?
   sortOrder     Int     @default(0)
 
   active Boolean @default(true)

@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { prisma } from "@/lib/prisma";
+import { saveBranchImageFile } from "@/lib/branch-uploads";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,30 @@ async function createBranch(formData: FormData) {
     throw new Error("Faltan campos obligatorios.");
   }
 
+  let uploadedLogoUrl: string | null = null;
+  let uploadedCoverImageUrl: string | null = null;
+
+  try {
+    uploadedLogoUrl = await saveBranchImageFile(
+      formData.get("logoFile"),
+      "logos"
+    );
+
+    uploadedCoverImageUrl = await saveBranchImageFile(
+      formData.get("coverImageFile"),
+      "fachadas"
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo guardar la imagen.";
+
+    redirect(
+      `/admin/sucursales/nueva?error=${encodeURIComponent(message)}`
+    );
+  }
+
   await prisma.branch.create({
     data: {
       name,
@@ -56,7 +81,8 @@ async function createBranch(formData: FormData) {
       schedule: schedule || null,
       googleMapsUrl: googleMapsUrl || null,
       services: services || null,
-      logoUrl: getOptionalTextValue(formData, "logoUrl"),
+      logoUrl: uploadedLogoUrl,
+      coverImageUrl: uploadedCoverImageUrl,
       sortOrder,
       active,
     },
@@ -247,6 +273,40 @@ export default function NewBranchPage() {
                       placeholder="https://maps.google.com/..."
                       className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
                     />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-bold text-slate-700">
+                      Logo de sucursal
+                    </span>
+
+                    <input
+                      name="logoFile"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--rise-navy)] file:px-4 file:py-2 file:text-sm file:font-black file:text-white hover:bg-white focus:border-[var(--rise-blue)]"
+                    />
+
+                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                      Formatos permitidos: JPG, PNG, WEBP o AVIF. Máximo 6 MB.
+                    </p>
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-bold text-slate-700">
+                      Foto de fachada / agencia
+                    </span>
+
+                    <input
+                      name="coverImageFile"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--rise-navy)] file:px-4 file:py-2 file:text-sm file:font-black file:text-white hover:bg-white focus:border-[var(--rise-blue)]"
+                    />
+
+                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                      Recomendado: imagen horizontal de la fachada o agencia.
+                    </p>
                   </label>
 
                   <label className="block md:col-span-2">

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { LeadType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
@@ -64,6 +65,19 @@ function getPreferredDate(value: string) {
   return date;
 }
 
+function getThanksType(type: LeadType) {
+  const thanksTypes: Record<LeadType, string> = {
+    COTIZACION: "cotizacion",
+    PRUEBA_MANEJO: "prueba",
+    CITA: "cita",
+    SERVICIO: "servicio",
+    FINANCIAMIENTO: "financiamiento",
+    CONTACTO: "contacto",
+  };
+
+  return thanksTypes[type] ?? "contacto";
+}
+
 export async function createLead(
   formData: FormData
 ): Promise<CreateLeadResult> {
@@ -72,9 +86,11 @@ export async function createLead(
   const phone = getStringValue(formData, "phone");
   const email = getStringValue(formData, "email");
   const message = getStringValue(formData, "message");
+
   const preferredDate = getPreferredDate(
     getStringValue(formData, "preferredDate")
   );
+
   const preferredTime = getStringValue(formData, "preferredTime");
 
   const vehicleId = getOptionalNumber(formData, "vehicleId");
@@ -108,10 +124,8 @@ export async function createLead(
     },
   });
 
+  revalidatePath("/admin");
   revalidatePath("/admin/leads");
 
-  return {
-    ok: true,
-    message: "Solicitud enviada correctamente.",
-  };
+  redirect(`/gracias?tipo=${getThanksType(type)}`);
 }
