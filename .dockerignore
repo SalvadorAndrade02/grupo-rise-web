@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.local
+.env.production
+npm-debug.log
+.DS_Store
+
+prisma/dev.db
+dev.db
+docker-data
+public/uploads

@@ -127,7 +127,7 @@ export default function NewBranchPage() {
       <section className="py-8 md:py-12">
         <Container>
           <form
-            action={createBranch}
+            action={createBranch} encType="multipart/form-data"
             className="grid gap-8 lg:grid-cols-[1fr_360px]"
           >
             <div className="space-y-8">

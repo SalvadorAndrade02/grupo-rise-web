@@ -1,0 +1,15 @@
+services:
+  grupo-rise-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grupo-rise-web
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "file:/app/data/prod.db"
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+    volumes:
+      - ./docker-data/sqlite:/app/data
+      - ./docker-data/uploads:/app/public/uploads
+    restart: unless-stopped

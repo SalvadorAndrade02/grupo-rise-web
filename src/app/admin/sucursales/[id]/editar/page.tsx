@@ -334,7 +334,7 @@ export default async function EditBranchPage({ params }: EditBranchPageProps) {
       </div>
 
       <form
-        action={updateBranch.bind(null, branch.id)}
+        action={updateBranch.bind(null, branch.id)} encType="multipart/form-data"
         className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]"
       >
         <div className="space-y-8">
