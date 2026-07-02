@@ -16,7 +16,9 @@ import {
   Search,
   User,
   XCircle,
-  Download
+  Download,
+  PackageSearch,
+  Wrench,
 } from "lucide-react";
 import {
   LeadStatus,
@@ -159,6 +161,139 @@ function getTypeClasses(type: string) {
   };
 
   return classes[type] ?? "bg-slate-100 text-slate-600";
+}
+
+type LeadBusinessCategory =
+  | "SERVICIO"
+  | "REFACCIONES"
+  | "COTIZACION_VEHICULO"
+  | "COTIZACION_GENERAL"
+  | "PRUEBA_MANEJO"
+  | "FINANCIAMIENTO"
+  | "CONTACTO"
+  | "CITA";
+
+function normalizeText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function getLeadBusinessCategory(lead: {
+  type: LeadType;
+  message: string | null;
+  vehicle?: { id: number } | null;
+}): LeadBusinessCategory {
+  const message = normalizeText(lead.message ?? "");
+
+  if (
+    lead.type === LeadType.SERVICIO ||
+    message.includes("solicitud de servicio") ||
+    message.includes("servicio / mantenimiento")
+  ) {
+    return "SERVICIO";
+  }
+
+  if (
+    message.includes("cotizacion de refacciones") ||
+    message.includes("refaccion solicitada")
+  ) {
+    return "REFACCIONES";
+  }
+
+  if (lead.type === LeadType.COTIZACION && lead.vehicle) {
+    return "COTIZACION_VEHICULO";
+  }
+
+  if (lead.type === LeadType.COTIZACION) {
+    return "COTIZACION_GENERAL";
+  }
+
+  if (lead.type === LeadType.PRUEBA_MANEJO) {
+    return "PRUEBA_MANEJO";
+  }
+
+  if (lead.type === LeadType.FINANCIAMIENTO) {
+    return "FINANCIAMIENTO";
+  }
+
+  if (lead.type === LeadType.CITA) {
+    return "CITA";
+  }
+
+  return "CONTACTO";
+}
+
+function getLeadBusinessLabel(category: LeadBusinessCategory) {
+  const labels: Record<LeadBusinessCategory, string> = {
+    SERVICIO: "Servicio / mantenimiento",
+    REFACCIONES: "Cotización de refacciones",
+    COTIZACION_VEHICULO: "Cotización de vehículo",
+    COTIZACION_GENERAL: "Cotización general",
+    PRUEBA_MANEJO: "Prueba de manejo",
+    FINANCIAMIENTO: "Financiamiento",
+    CONTACTO: "Contacto",
+    CITA: "Cita",
+  };
+
+  return labels[category];
+}
+
+function getLeadBusinessClasses(category: LeadBusinessCategory) {
+  const classes: Record<LeadBusinessCategory, string> = {
+    SERVICIO: "bg-slate-900 text-white",
+    REFACCIONES: "bg-amber-50 text-amber-700",
+    COTIZACION_VEHICULO: "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]",
+    COTIZACION_GENERAL: "bg-blue-50 text-blue-700",
+    PRUEBA_MANEJO: "bg-violet-50 text-violet-700",
+    FINANCIAMIENTO: "bg-emerald-50 text-emerald-700",
+    CONTACTO: "bg-orange-50 text-orange-700",
+    CITA: "bg-cyan-50 text-cyan-700",
+  };
+
+  return classes[category];
+}
+
+function getLeadBusinessIcon(category: LeadBusinessCategory) {
+  const icons = {
+    SERVICIO: Wrench,
+    REFACCIONES: PackageSearch,
+    COTIZACION_VEHICULO: Car,
+    COTIZACION_GENERAL: MessageSquare,
+    PRUEBA_MANEJO: Car,
+    FINANCIAMIENTO: BadgeCheck,
+    CONTACTO: MessageCircle,
+    CITA: CalendarDays,
+  };
+
+  return icons[category];
+}
+
+function getLeadWhatsAppMessage({
+  leadName,
+  businessCategory,
+  vehicleTitle,
+  hasVehicle,
+}: {
+  leadName: string;
+  businessCategory: LeadBusinessCategory;
+  vehicleTitle: string;
+  hasVehicle: boolean;
+}) {
+  if (businessCategory === "SERVICIO") {
+    return `Hola ${leadName}, te contacto de Grupo Rise por tu solicitud de servicio/mantenimiento.`;
+  }
+
+  if (businessCategory === "REFACCIONES") {
+    return `Hola ${leadName}, te contacto de Grupo Rise por tu cotización de refacciones.`;
+  }
+
+  if (businessCategory === "COTIZACION_VEHICULO" && hasVehicle) {
+    return `Hola ${leadName}, te contacto de Grupo Rise por tu cotización para ${vehicleTitle}.`;
+  }
+
+  return `Hola ${leadName}, te contacto de Grupo Rise por tu solicitud.`;
 }
 
 function formatDate(value: Date | null) {
@@ -393,6 +528,7 @@ export default async function AdminLeadsPage({
       lead.branch?.city,
       getLeadTypeLabel(lead.type),
       getLeadStatusLabel(lead.status),
+      getLeadBusinessLabel(getLeadBusinessCategory(lead)),
     ]
       .filter(Boolean)
       .join(" ")
@@ -571,7 +707,7 @@ export default async function AdminLeadsPage({
           </Link>
         </div>
 
-        <div className="mt-6 grid gap-5 xl:grid-cols-2">
+        <div className="mt-6 grid gap-5 xl:grid-cols-3">
           <div>
             <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
               Tipo
@@ -613,6 +749,49 @@ export default async function AdminLeadsPage({
               ))}
             </div>
           </div>
+
+          <div>
+            <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
+              Área
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={buildFilterHref("SERVICIO", statusFilter, search)}
+                className={`rounded-full px-4 py-2 text-xs font-black transition ${typeFilter === "SERVICIO"
+                  ? "bg-[var(--rise-navy)] text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
+                  }`}
+              >
+                Servicio
+              </Link>
+
+              <Link
+                href={buildFilterHref(
+                  "COTIZACION",
+                  statusFilter,
+                  "Cotización de refacciones"
+                )}
+                className={`rounded-full px-4 py-2 text-xs font-black transition ${typeFilter === "COTIZACION" &&
+                  normalizeText(search).includes("refacciones")
+                  ? "bg-[var(--rise-navy)] text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-700"
+                  }`}
+              >
+                Refacciones
+              </Link>
+
+              <Link
+                href={buildFilterHref("COTIZACION", statusFilter, "")}
+                className={`rounded-full px-4 py-2 text-xs font-black transition ${typeFilter === "COTIZACION" && !normalizeText(search).includes("refacciones")
+                  ? "bg-[var(--rise-navy)] text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
+                  }`}
+              >
+                Cotizaciones
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -644,15 +823,23 @@ export default async function AdminLeadsPage({
             ? `${lead.vehicle.brand.name} ${lead.vehicle.name}`
             : "Sin vehículo asociado";
 
-          const whatsappMessage = `Hola ${lead.name}, te contacto de Grupo Rise por tu solicitud de ${getLeadTypeLabel(
-            lead.type
-          )}${lead.vehicle ? ` para ${vehicleTitle}` : ""}.`;
+          const businessCategory = getLeadBusinessCategory(lead);
+          const businessLabel = getLeadBusinessLabel(businessCategory);
+          const businessClasses = getLeadBusinessClasses(businessCategory);
+          const BusinessIcon = getLeadBusinessIcon(businessCategory);
+
+          const whatsappMessage = getLeadWhatsAppMessage({
+            leadName: lead.name,
+            businessCategory,
+            vehicleTitle,
+            hasVehicle: Boolean(lead.vehicle),
+          });
 
           const whatsappHref = getWhatsAppHref(lead.phone, whatsappMessage);
 
           const mailHref = getMailHref(
             lead.email,
-            `Grupo Rise - ${getLeadTypeLabel(lead.type)}`,
+            `Grupo Rise - ${businessLabel}`,
             whatsappMessage
           );
 
@@ -685,6 +872,13 @@ export default async function AdminLeadsPage({
                       )}`}
                     >
                       {getLeadStatusLabel(lead.status)}
+                    </span>
+
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${businessClasses}`}
+                    >
+                      <BusinessIcon size={14} />
+                      {businessLabel}
                     </span>
                   </div>
 
@@ -803,7 +997,11 @@ export default async function AdminLeadsPage({
                       </p>
 
                       <p className="mt-3 text-sm font-bold text-slate-500">
-                        Esta solicitud no tiene vehículo relacionado.
+                        {businessCategory === "REFACCIONES"
+                          ? "Solicitud de cotización de refacciones."
+                          : businessCategory === "SERVICIO"
+                            ? "Solicitud de servicio o mantenimiento."
+                            : "Esta solicitud no tiene vehículo relacionado."}
                       </p>
                     </div>
                   )}
