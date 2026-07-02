@@ -8,6 +8,22 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+function getTextValue(formData: FormData, fieldName: string) {
+  return String(formData.get(fieldName) ?? "").trim();
+}
+
+function getOptionalTextValue(formData: FormData, fieldName: string) {
+  const value = getTextValue(formData, fieldName);
+
+  return value || null;
+}
+
+function getNumberValue(formData: FormData, fieldName: string) {
+  const value = Number(formData.get(fieldName));
+
+  return Number.isFinite(value) ? value : 0;
+}
+
 async function createBranch(formData: FormData) {
   "use server";
 
@@ -40,6 +56,7 @@ async function createBranch(formData: FormData) {
       schedule: schedule || null,
       googleMapsUrl: googleMapsUrl || null,
       services: services || null,
+      logoUrl: getOptionalTextValue(formData, "logoUrl"),
       sortOrder,
       active,
     },
@@ -103,6 +120,11 @@ export default function NewBranchPage() {
                     </p>
                   </div>
                 </div>
+
+                <input
+                  name="logoUrl"
+                  placeholder="/branches/logos/nombre-sucursal.png"
+                />
 
                 <div className="grid gap-5 md:grid-cols-2">
                   <label className="block md:col-span-2">

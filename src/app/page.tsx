@@ -109,12 +109,11 @@ function getBrandSortOrder(brandName: string) {
 }
 
 export default async function HomePage() {
-  const [vehicles, branches, catalogBrands, allActiveVehicles] =
+  const [featuredVehicleCandidates, branches, catalogBrands, allActiveVehicles] =
     await Promise.all([
       prisma.vehicle.findMany({
         where: {
           active: true,
-          isFeatured: true,
           status: VehicleStatus.DISPONIBLE,
           brand: {
             active: true,
@@ -138,7 +137,7 @@ export default async function HomePage() {
         orderBy: {
           createdAt: "desc",
         },
-        take: 8,
+        take: 80,
       }),
 
       prisma.branch.findMany({
@@ -203,6 +202,42 @@ export default async function HomePage() {
         },
       }),
     ]);
+
+  const featuredVehiclesByBrand = new Map<
+    string,
+    (typeof featuredVehicleCandidates)[number]
+  >();
+
+  const orderedFeaturedCandidates = [...featuredVehicleCandidates].sort((a, b) => {
+    const brandOrder =
+      getBrandSortOrder(a.brand.name) - getBrandSortOrder(b.brand.name);
+
+    if (brandOrder !== 0) {
+      return brandOrder;
+    }
+
+    if (a.isFeatured !== b.isFeatured) {
+      return Number(b.isFeatured) - Number(a.isFeatured);
+    }
+
+    return b.createdAt.getTime() - a.createdAt.getTime();
+  });
+
+  orderedFeaturedCandidates.forEach((vehicle) => {
+    const brandSlug = getBrandSlug(vehicle.brand.name);
+
+    if (!brandSlugOrder.includes(brandSlug)) {
+      return;
+    }
+
+    if (!featuredVehiclesByBrand.has(brandSlug)) {
+      featuredVehiclesByBrand.set(brandSlug, vehicle);
+    }
+  });
+
+  const vehicles = Array.from(featuredVehiclesByBrand.values()).sort(
+    (a, b) => getBrandSortOrder(a.brand.name) - getBrandSortOrder(b.brand.name)
+  );
 
   const formattedVehicles = vehicles.map((vehicle) => ({
     id: vehicle.id,

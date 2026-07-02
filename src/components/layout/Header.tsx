@@ -28,7 +28,7 @@ const mainLinks = [
 
 const catalogLinks = [
   {
-    label: "Ver nuevos",
+    label: "Ver todas las marcas",
     href: "/catalogo",
   },
   {
@@ -96,23 +96,16 @@ export function Header() {
             />
           </Link>
 
-          <nav className="hidden items-center gap-1 lg:flex">
-            {mainLinks.map((item) => {
-              const active = isActivePath(pathname, item.href);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`rounded-xl px-4 py-2 text-sm font-bold transition ${active
-                      ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
-                    }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+          <nav className="hidden items-center gap-2 lg:flex">
+            <Link
+              href="/"
+              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${pathname === "/"
+                  ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
+                }`}
+            >
+              Inicio
+            </Link>
 
             <div className="group relative">
               <button
@@ -122,7 +115,7 @@ export function Header() {
                     : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
                   }`}
               >
-                Catálogo
+                Nuestras Marcas
                 <ChevronDown
                   size={16}
                   className="transition group-hover:rotate-180"
@@ -143,6 +136,36 @@ export function Header() {
                 </div>
               </div>
             </div>
+
+            <Link
+              href="/inventario"
+              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${pathname.startsWith("/inventario")
+                  ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
+                }`}
+            >
+              Seminuevos
+            </Link>
+
+            <Link
+              href="/sucursales"
+              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${pathname.startsWith("/sucursales")
+                  ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
+                }`}
+            >
+              Sucursales
+            </Link>
+
+            <Link
+              href="/servicios"
+              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${pathname.startsWith("/servicios")
+                  ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
+                }`}
+            >
+              Servicios
+            </Link>
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
@@ -177,8 +200,8 @@ export function Header() {
                     href={item.href}
                     onClick={closeMobileMenu}
                     className={`rounded-xl px-4 py-3 text-sm font-black transition ${active
-                        ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
-                        : "text-slate-700 hover:bg-slate-100"
+                      ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
+                      : "text-slate-700 hover:bg-slate-100"
                       }`}
                   >
                     {item.label}

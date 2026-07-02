@@ -287,9 +287,19 @@ export default async function BranchesPage() {
                               </h3>
                             </div>
 
-                            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
-                              <Building2 size={24} />
-                            </div>
+                            {branch.logoUrl ? (
+                              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-white p-2 shadow-sm">
+                                <img
+                                  src={branch.logoUrl}
+                                  alt={`Logo ${branch.name}`}
+                                  className="max-h-full max-w-full object-contain"
+                                />
+                              </div>
+                            ) : (
+                              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
+                                <Building2 size={24} />
+                              </div>
+                            )}
                           </div>
 
                           <div className="mt-6 grid gap-4 text-sm text-slate-600">

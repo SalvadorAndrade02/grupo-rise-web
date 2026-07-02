@@ -16,6 +16,7 @@ import {
   Search,
   User,
   XCircle,
+  Download
 } from "lucide-react";
 import {
   LeadStatus,
@@ -242,6 +243,26 @@ function buildFilterHref(type: string, status: string, search = "") {
   return query ? `/admin/leads?${query}` : "/admin/leads";
 }
 
+function buildExportHref(type: string, status: string, search = "") {
+  const params = new URLSearchParams();
+
+  if (type !== "TODOS") {
+    params.set("tipo", type);
+  }
+
+  if (status !== "TODOS") {
+    params.set("estado", status);
+  }
+
+  if (search.trim()) {
+    params.set("q", search.trim());
+  }
+
+  const query = params.toString();
+
+  return query ? `/admin/leads/export?${query}` : "/admin/leads/export";
+}
+
 async function updateLeadStatus(leadId: number, formData: FormData) {
   "use server";
 
@@ -278,13 +299,13 @@ export default async function AdminLeadsPage({
   const where: Prisma.LeadWhereInput = {
     ...(typeFilter !== "TODOS"
       ? {
-          type: typeFilter,
-        }
+        type: typeFilter,
+      }
       : {}),
     ...(statusFilter !== "TODOS"
       ? {
-          status: statusFilter,
-        }
+        status: statusFilter,
+      }
       : {}),
   };
 
@@ -444,6 +465,14 @@ export default async function AdminLeadsPage({
         </div>
 
         <div className="flex flex-wrap gap-3">
+          <a
+            href={buildExportHref(typeFilter, statusFilter, search)}
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--rise-border)] bg-white px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
+          >
+            <Download size={17} />
+            Exportar CSV
+          </a>
+
           <Link
             href="/admin"
             className="rounded-xl border border-[var(--rise-border)] bg-white px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
@@ -553,11 +582,10 @@ export default async function AdminLeadsPage({
                 <Link
                   key={filter.value}
                   href={buildFilterHref(filter.value, statusFilter, search)}
-                  className={`rounded-full px-4 py-2 text-xs font-black transition ${
-                    typeFilter === filter.value
-                      ? "bg-[var(--rise-navy)] text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
-                  }`}
+                  className={`rounded-full px-4 py-2 text-xs font-black transition ${typeFilter === filter.value
+                    ? "bg-[var(--rise-navy)] text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
+                    }`}
                 >
                   {filter.label}
                 </Link>
@@ -575,11 +603,10 @@ export default async function AdminLeadsPage({
                 <Link
                   key={filter.value}
                   href={buildFilterHref(typeFilter, filter.value, search)}
-                  className={`rounded-full px-4 py-2 text-xs font-black transition ${
-                    statusFilter === filter.value
-                      ? "bg-[var(--rise-navy)] text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
-                  }`}
+                  className={`rounded-full px-4 py-2 text-xs font-black transition ${statusFilter === filter.value
+                    ? "bg-[var(--rise-navy)] text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
+                    }`}
                 >
                   {filter.label}
                 </Link>

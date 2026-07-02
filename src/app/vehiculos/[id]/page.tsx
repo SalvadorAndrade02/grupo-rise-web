@@ -27,6 +27,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
 import { VehicleMediaGallery } from "@/components/vehicles/VehicleMediaGallery";
 import { VehicleDetailActions } from "@/components/vehicles/VehicleDetailActions";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
@@ -125,6 +126,134 @@ function getWhatsAppHref(phone?: string | null, message?: string) {
   const text = message ? `?text=${encodeURIComponent(message)}` : "";
 
   return `https://wa.me/${finalPhone}${text}`;
+}
+
+function getSiteUrl() {
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+    "http://localhost:3000"
+  );
+}
+
+function getAbsoluteUrl(path: string) {
+  if (!path) {
+    return `${getSiteUrl()}/brand/logo-rise.jpeg`;
+  }
+
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  return `${getSiteUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function getSeoDescription(value: string) {
+  return value.length > 155 ? `${value.slice(0, 152)}...` : value;
+}
+
+export async function generateMetadata({
+  params,
+}: VehicleDetailPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const vehicleId = Number(id);
+
+  if (!vehicleId) {
+    return {
+      title: "Vehículo no encontrado | Grupo Rise",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const vehicle = await prisma.vehicle.findFirst({
+    where: {
+      id: vehicleId,
+      active: true,
+      status: VehicleStatus.DISPONIBLE,
+      branch: {
+        active: true,
+      },
+      brand: {
+        active: true,
+      },
+    },
+    include: {
+      brand: true,
+      branch: true,
+      images: {
+        where: {
+          type: VehicleMediaType.IMAGE,
+        },
+        orderBy: {
+          order: "asc",
+        },
+        take: 1,
+      },
+    },
+  });
+
+  if (!vehicle) {
+    return {
+      title: "Vehículo no encontrado | Grupo Rise",
+      description:
+        "La unidad que buscas no está disponible actualmente en Grupo Rise.",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const title = `${vehicle.brand.name} ${vehicle.name} ${vehicle.year} | Grupo Rise`;
+
+  const price = formatCurrency(vehicle.price);
+
+  const description = getSeoDescription(
+    vehicle.description?.trim() ||
+    `${vehicle.brand.name} ${vehicle.name} ${vehicle.year} disponible en ${vehicle.branch.name}. Precio ${price}. Solicita información en Grupo Rise.`
+  );
+
+  const image =
+    vehicle.mainImage || vehicle.images[0]?.url || "/brand/logo-rise.jpeg";
+
+  const absoluteImage = getAbsoluteUrl(image);
+  const canonicalUrl = getAbsoluteUrl(`/vehiculos/${vehicle.id}`);
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: "Grupo Rise",
+      type: "website",
+      locale: "es_MX",
+      images: [
+        {
+          url: absoluteImage,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [absoluteImage],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
 }
 
 export default async function VehicleDetailPage({
@@ -339,8 +468,8 @@ export default async function VehicleDetailPage({
 
                     <span
                       className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider ${isUsed
-                          ? "bg-amber-50 text-amber-700"
-                          : "bg-blue-50 text-blue-700"
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-blue-50 text-blue-700"
                         }`}
                     >
                       {isUsed ? "Seminuevo disponible" : "Nuevo disponible"}
@@ -506,8 +635,8 @@ export default async function VehicleDetailPage({
                 <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-xl shadow-slate-900/10 md:p-6">
                   <span
                     className={`inline-flex rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider ${isUsed
-                        ? "bg-amber-50 text-amber-700"
-                        : "bg-blue-50 text-blue-700"
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-blue-50 text-blue-700"
                       }`}
                   >
                     {isUsed ? "Unidad seminueva" : "Unidad nueva"}
