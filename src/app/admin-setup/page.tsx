@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LockKeyhole, ShieldCheck, UserPlus } from "lucide-react";
-import { createAdminSession, hasAdminUsers } from "@/lib/admin-auth";
-import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/security";
+import {hasAdminUsers } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +19,7 @@ function isStrongPassword(password: string) {
   return password.length >= 10 && /[A-Za-z]/.test(password) && /\d/.test(password);
 }
 
-async function createFirstAdmin(formData: FormData) {
+/* async function createFirstAdmin(formData: FormData) {
   "use server";
 
   const alreadyHasAdmins = await hasAdminUsers();
@@ -79,7 +77,7 @@ async function createFirstAdmin(formData: FormData) {
   await createAdminSession(admin.id);
 
   redirect("/admin");
-}
+} */
 
 export default async function AdminSetupPage({
   searchParams,
@@ -160,7 +158,7 @@ export default async function AdminSetupPage({
                 </div>
               )}
 
-              <form action={createFirstAdmin} className="mt-6 space-y-4">
+              <form action="/api/admin/setup" method="post" className="mt-6 space-y-4">
                 <label className="block">
                   <span className="mb-2 block text-sm font-bold text-slate-700">
                     Nombre

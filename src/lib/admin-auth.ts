@@ -9,16 +9,25 @@ import {
 
 const ADMIN_SESSION_COOKIE = "grupo_rise_admin_session";
 const SESSION_DAYS = 7;
+const SESSION_MAX_AGE = SESSION_DAYS * 24 * 60 * 60;
 
 function getSessionExpiresAt() {
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + SESSION_DAYS);
+  expiresAt.setSeconds(expiresAt.getSeconds() + SESSION_MAX_AGE);
 
   return expiresAt;
 }
 
-function isProduction() {
-  return process.env.NODE_ENV === "production";
+function shouldUseSecureCookies() {
+  if (process.env.ADMIN_COOKIE_SECURE === "true") {
+    return true;
+  }
+
+  if (process.env.ADMIN_COOKIE_SECURE === "false") {
+    return false;
+  }
+
+  return process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://") ?? false;
 }
 
 export async function hasAdminUsers() {
@@ -75,9 +84,9 @@ export async function createAdminSession(adminUserId: number) {
   cookieStore.set(ADMIN_SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: isProduction(),
+    secure: shouldUseSecureCookies(),
     path: "/",
-    expires: expiresAt,
+    maxAge: SESSION_MAX_AGE,
   });
 }
 
@@ -155,9 +164,8 @@ export async function clearAdminSession() {
   cookieStore.set(ADMIN_SESSION_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
-    secure: isProduction(),
+    secure: shouldUseSecureCookies(),
     path: "/",
-    expires: new Date(0),
     maxAge: 0,
   });
 }

@@ -9,6 +9,7 @@ services:
     environment:
       DATABASE_URL: "file:/app/data/prod.db"
       NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+      ADMIN_COOKIE_SECURE: "false"
     volumes:
       - ./docker-data/sqlite:/app/data
       - ./docker-data/uploads:/app/public/uploads

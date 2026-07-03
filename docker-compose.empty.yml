@@ -1,0 +1,16 @@
+services:
+  grupo-rise-web-empty:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grupo-rise-web-empty
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: "file:/app/data/prod.db"
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3001"
+      ADMIN_COOKIE_SECURE: "false"
+    volumes:
+      - ./docker-data-empty/sqlite:/app/data
+      - ./docker-data-empty/uploads:/app/public/uploads
+    restart: unless-stopped

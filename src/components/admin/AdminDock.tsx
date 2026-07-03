@@ -51,6 +51,11 @@ const mainLinks = [
     icon: FolderTree,
   },
   {
+    label: "Marcas",
+    href: "/admin/marcas",
+    icon: Tags,
+  },
+  {
     label: "Solicitudes",
     href: "/admin/leads",
     icon: MessageSquare,
@@ -65,11 +70,6 @@ const mainLinks = [
     href: "/admin/ayuda",
     icon: BookOpen,
   },
-  {
-    label: "Salir",
-    href: "/admin/logout",
-    icon: LogOut,
-  }
 ];
 
 const quickLinks = [
@@ -223,6 +223,19 @@ export function AdminDock({ collapsed = false, onToggle }: AdminDockProps) {
 
                 {!collapsed && <span>Ver sitio</span>}
               </Link>
+
+              <form action="/admin/logout" method="post">
+                <button
+                  type="submit"
+                  title={collapsed ? "Salir" : undefined}
+                  className={`flex w-full items-center rounded-2xl text-sm font-black text-red-600 transition hover:bg-red-50 ${collapsed ? "justify-center px-3 py-3" : "gap-3 px-4 py-3"
+                    }`}
+                >
+                  <LogOut size={18} />
+
+                  {!collapsed && <span>Salir</span>}
+                </button>
+              </form>
             </div>
           </div>
         </div>
@@ -263,6 +276,15 @@ export function AdminDock({ collapsed = false, onToggle }: AdminDockProps) {
               </Link>
             );
           })}
+          <form action="/admin/logout" method="post">
+            <button
+              type="submit"
+              className="flex min-w-[92px] flex-col items-center justify-center gap-1 rounded-2xl bg-red-50 px-3 py-3 text-[11px] font-black text-red-600"
+            >
+              <LogOut size={18} />
+              Salir
+            </button>
+          </form>
         </div>
       </nav>
     </>

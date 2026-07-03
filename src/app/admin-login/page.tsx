@@ -12,8 +12,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import {
-  authenticateAdmin,
-  createAdminSession,
+  //authenticateAdmin,
+  //createAdminSession,
   getAdminSession,
   hasAdminUsers,
 } from "@/lib/admin-auth";
@@ -30,7 +30,7 @@ function getTextValue(formData: FormData, fieldName: string) {
   return String(formData.get(fieldName) ?? "").trim();
 }
 
-async function loginAdmin(formData: FormData) {
+/* async function loginAdmin(formData: FormData) {
   "use server";
 
   const email = getTextValue(formData, "email");
@@ -57,7 +57,7 @@ async function loginAdmin(formData: FormData) {
   await createAdminSession(admin.id);
 
   redirect("/admin");
-}
+} */
 
 export default async function AdminLoginPage({
   searchParams,
@@ -218,7 +218,8 @@ export default async function AdminLoginPage({
               </div>
 
               <form
-                action={loginAdmin}
+                action="/api/admin/login"
+                method="post"
                 className="space-y-5 border-t border-slate-100 p-7"
               >
                 <label className="block">
