@@ -15,7 +15,8 @@ import {
   Plus,
   Tags,
   FolderTree,
-  BookOpen
+  BookOpen,
+  LogOut
 } from "lucide-react";
 
 type AdminDockProps = {
@@ -64,6 +65,11 @@ const mainLinks = [
     href: "/admin/ayuda",
     icon: BookOpen,
   },
+  {
+    label: "Salir",
+    href: "/admin/logout",
+    icon: LogOut,
+  }
 ];
 
 const quickLinks = [

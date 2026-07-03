@@ -54,16 +54,16 @@ enum VehicleMediaType {
 }
 
 model Brand {
-  id        Int             @id @default(autoincrement())
-  name      String
-  category  VehicleCategory
-  active    Boolean         @default(true)
-  vehicles  Vehicle[]
+  id       Int             @id @default(autoincrement())
+  name     String
+  category VehicleCategory
+  active   Boolean         @default(true)
+  vehicles Vehicle[]
 
   catalogCategories CatalogCategory[]
-  catalogModels      CatalogModel[]
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  catalogModels     CatalogModel[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 }
 
 model Branch {
@@ -79,7 +79,7 @@ model Branch {
   schedule      String?
   googleMapsUrl String?
   services      String?
-  logoUrl String?
+  logoUrl       String?
   coverImageUrl String?
   sortOrder     Int     @default(0)
 
@@ -194,22 +194,22 @@ model VehicleBranch {
 }
 
 model CatalogCategory {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  brandId   Int
-  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId Int
+  brand   Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
-  name      String
-  slug      String
+  name String
+  slug String
 
-  parentId  Int?
-  parent    CatalogCategory?  @relation("CatalogCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children  CatalogCategory[] @relation("CatalogCategoryHierarchy")
+  parentId Int?
+  parent   CatalogCategory?  @relation("CatalogCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children CatalogCategory[] @relation("CatalogCategoryHierarchy")
 
-  models    CatalogModel[]
+  models CatalogModel[]
 
-  active    Boolean  @default(true)
-  sortOrder Int      @default(0)
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -218,50 +218,74 @@ model CatalogCategory {
 }
 
 model CatalogModel {
-  id          Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  brandId     Int
-  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId Int
+  brand   Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
-  categoryId  Int?
-  category    CatalogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId Int?
+  category   CatalogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  name        String
-  slug        String
+  name String
+  slug String
 
   categoryType VehicleCategory @default(TODOTERRENO)
 
-  year        Int?
-  priceFrom   Int?
+  year      Int?
+  priceFrom Int?
 
   subtitle    String?
   description String  @default("")
   specs       String  @default("")
   features    String  @default("")
 
-  mainImage   String?
+  mainImage String?
 
-  active      Boolean @default(true)
-  sortOrder   Int     @default(0)
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
 
-  images      CatalogImage[]
+  images CatalogImage[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([brandId, slug])
 }
 
 model CatalogImage {
-  id             Int          @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   catalogModelId Int
   catalogModel   CatalogModel @relation(fields: [catalogModelId], references: [id], onDelete: Cascade)
 
-  url            String
-  alt            String?
-  type           VehicleMediaType @default(IMAGE)
-  order          Int              @default(0)
+  url   String
+  alt   String?
+  type  VehicleMediaType @default(IMAGE)
+  order Int              @default(0)
 
-  createdAt      DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+model AdminUser {
+  id           Int            @id @default(autoincrement())
+  name         String?
+  email        String         @unique
+  passwordHash String
+  active       Boolean        @default(true)
+  sessions     AdminSession[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model AdminSession {
+  id          Int       @id @default(autoincrement())
+  adminUserId Int
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([adminUserId])
+  @@index([expiresAt])
 }
