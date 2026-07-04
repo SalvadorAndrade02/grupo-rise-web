@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import {
@@ -5,7 +6,9 @@ import {
   Car,
   Eye,
   EyeOff,
+  Layers3,
   Plus,
+  Save,
   ShieldAlert,
   Tags,
   Trash2,
@@ -28,7 +31,6 @@ function getTextValue(formData: FormData, fieldName: string) {
 }
 
 function getBrandCategory(value: FormDataEntryValue | null) {
-  
   const categoryValue = String(value || VehicleCategory.TODOTERRENO);
 
   const validCategories: VehicleCategory[] = [
@@ -50,6 +52,18 @@ function getCategoryLabel(category: VehicleCategory) {
   };
 
   return labels[category];
+}
+
+function revalidateBrandPaths() {
+  revalidatePath("/admin");
+  revalidatePath("/admin/marcas");
+  revalidatePath("/admin/catalogo");
+  revalidatePath("/admin/catalogo/nuevo");
+  revalidatePath("/admin/catalogo/categorias");
+  revalidatePath("/admin/inventario");
+  revalidatePath("/admin/inventario/nuevo");
+  revalidatePath("/catalogo");
+  revalidatePath("/inventario");
 }
 
 async function createBrand(formData: FormData) {
@@ -91,13 +105,7 @@ async function createBrand(formData: FormData) {
     },
   });
 
-  revalidatePath("/admin/marcas");
-  revalidatePath("/admin/catalogo");
-  revalidatePath("/admin/catalogo/nuevo");
-  revalidatePath("/admin/catalogo/categorias");
-  revalidatePath("/admin/inventario/nuevo");
-  revalidatePath("/catalogo");
-  revalidatePath("/inventario");
+  revalidateBrandPaths();
 
   redirect(
     `/admin/marcas?success=${encodeURIComponent(
@@ -151,13 +159,7 @@ async function updateBrand(brandId: number, formData: FormData) {
     },
   });
 
-  revalidatePath("/admin/marcas");
-  revalidatePath("/admin/catalogo");
-  revalidatePath("/admin/catalogo/nuevo");
-  revalidatePath("/admin/catalogo/categorias");
-  revalidatePath("/admin/inventario/nuevo");
-  revalidatePath("/catalogo");
-  revalidatePath("/inventario");
+  revalidateBrandPaths();
 
   redirect(
     `/admin/marcas?success=${encodeURIComponent(
@@ -197,11 +199,7 @@ async function toggleBrandActive(brandId: number) {
     },
   });
 
-  revalidatePath("/admin/marcas");
-  revalidatePath("/admin/catalogo");
-  revalidatePath("/admin/inventario");
-  revalidatePath("/catalogo");
-  revalidatePath("/inventario");
+  revalidateBrandPaths();
 }
 
 async function deleteBrand(formData: FormData) {
@@ -241,9 +239,7 @@ async function deleteBrand(formData: FormData) {
 
   if (!brand) {
     redirect(
-      `/admin/marcas?error=${encodeURIComponent(
-        "La marca ya no existe."
-      )}`
+      `/admin/marcas?error=${encodeURIComponent("La marca ya no existe.")}`
     );
   }
 
@@ -277,13 +273,7 @@ async function deleteBrand(formData: FormData) {
     },
   });
 
-  revalidatePath("/admin/marcas");
-  revalidatePath("/admin/catalogo");
-  revalidatePath("/admin/catalogo/nuevo");
-  revalidatePath("/admin/catalogo/categorias");
-  revalidatePath("/admin/inventario/nuevo");
-  revalidatePath("/catalogo");
-  revalidatePath("/inventario");
+  revalidateBrandPaths();
 
   redirect(
     `/admin/marcas?success=${encodeURIComponent(
@@ -296,6 +286,7 @@ export default async function AdminBrandsPage({
   searchParams,
 }: AdminBrandsPageProps) {
   await requireAdmin();
+
   const params = await searchParams;
 
   const brands = await prisma.brand.findMany({
@@ -326,43 +317,52 @@ export default async function AdminBrandsPage({
   ).length;
 
   return (
-    <main className="space-y-8">
-      <section className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-5">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-              Administración
-            </p>
+    <main className="space-y-8 pb-10">
+      <section className="overflow-hidden rounded-[2.5rem] border border-[var(--rise-border)] bg-white shadow-sm">
+        <div className="relative bg-[var(--rise-navy)] p-7 text-white md:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.35),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(15,23,42,0.9),transparent_42%)]" />
 
-            <h1 className="mt-3 text-3xl font-black text-[var(--rise-navy)] md:text-4xl">
-              Marcas
-            </h1>
+          <div className="relative flex flex-wrap items-start justify-between gap-6">
+            <div>
+              <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-blue-100 backdrop-blur">
+                <Tags size={15} />
+                Administración
+              </p>
 
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
-              Crea y administra las marcas que se usan en catálogo base,
-              inventario, vehículos y páginas públicas.
-            </p>
-          </div>
+              <h1 className="mt-5 text-4xl font-black tracking-tight md:text-5xl">
+                Marcas
+              </h1>
 
-          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
-            <Tags size={28} />
+              <p className="mt-4 max-w-3xl text-sm font-semibold leading-7 text-blue-100 md:text-base">
+                Administra las marcas utilizadas en catálogo base, categorías,
+                inventario y páginas públicas del sitio.
+              </p>
+            </div>
+
+            <div className="grid h-16 w-16 place-items-center rounded-[1.5rem] border border-white/15 bg-white/10 text-blue-100 backdrop-blur">
+              <Layers3 size={32} />
+            </div>
           </div>
         </div>
 
-        {params.error && (
-          <div className="mt-6 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
-            {params.error}
-          </div>
-        )}
+        {(params.error || params.success) && (
+          <div className="p-6">
+            {params.error && (
+              <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                {params.error}
+              </div>
+            )}
 
-        {params.success && (
-          <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
-            {params.success}
+            {params.success && (
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
+                {params.success}
+              </div>
+            )}
           </div>
         )}
       </section>
 
-      <section className="grid gap-4 md:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard title="Marcas" value={totalBrands} icon={<Tags />} />
         <MetricCard title="Activas" value={activeBrands} icon={<Eye />} />
         <MetricCard title="Ocultas" value={hiddenBrands} icon={<EyeOff />} />
@@ -373,58 +373,67 @@ export default async function AdminBrandsPage({
         />
       </section>
 
-      <section className="grid gap-8 xl:grid-cols-[420px_minmax(0,1fr)]">
-        <aside className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm xl:sticky xl:top-6 xl:self-start">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-black text-[var(--rise-navy)]">
-                Nueva marca
-              </h2>
+      <section className="rounded-[2.5rem] border border-[var(--rise-border)] bg-white p-6 shadow-sm md:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+              Alta rápida
+            </p>
 
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Agrega una marca para usarla en categorías, modelos base e
-                inventario.
-              </p>
-            </div>
+            <h2 className="mt-3 text-3xl font-black text-[var(--rise-navy)]">
+              Nueva marca
+            </h2>
 
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
-              <Plus size={24} />
-            </div>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+              Crea una marca para comenzar a cargar categorías, modelos base y
+              unidades reales.
+            </p>
           </div>
 
-          <form action={createBrand} className="mt-6 space-y-5">
-            <label className="block">
-              <span className="mb-2 block text-sm font-black text-slate-700">
-                Nombre de marca
-              </span>
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
+            <Plus size={27} />
+          </div>
+        </div>
 
-              <input
-                name="name"
-                required
-                placeholder="Ej. Can-Am, Polaris, Zeekr"
-                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-              />
-            </label>
+        <form
+          action={createBrand}
+          className="mt-7 grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_260px_220px_180px]"
+        >
+          <label className="block">
+            <span className="mb-2 block text-sm font-black text-slate-700">
+              Nombre de marca
+            </span>
 
-            <label className="block">
-              <span className="mb-2 block text-sm font-black text-slate-700">
-                Tipo comercial
-              </span>
+            <input
+              name="name"
+              required
+              placeholder="Ej. Can-Am, Polaris, Zeekr"
+              className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-[var(--rise-navy)] outline-none transition placeholder:text-slate-400 focus:border-[var(--rise-blue)] focus:bg-white focus:ring-4 focus:ring-blue-100"
+            />
+          </label>
 
-              <select
-                name="category"
-                defaultValue={VehicleCategory.TODOTERRENO}
-                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-              >
-                <option value={VehicleCategory.TODOTERRENO}>
-                  Todo terreno
-                </option>
-                <option value={VehicleCategory.MOTO}>Moto</option>
-                <option value={VehicleCategory.AUTO}>Auto</option>
-              </select>
-            </label>
+          <label className="block">
+            <span className="mb-2 block text-sm font-black text-slate-700">
+              Tipo comercial
+            </span>
 
-            <label className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
+            <select
+              name="category"
+              defaultValue={VehicleCategory.TODOTERRENO}
+              className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-[var(--rise-navy)] outline-none transition focus:border-[var(--rise-blue)] focus:bg-white focus:ring-4 focus:ring-blue-100"
+            >
+              <option value={VehicleCategory.TODOTERRENO}>Todo terreno</option>
+              <option value={VehicleCategory.MOTO}>Moto</option>
+              <option value={VehicleCategory.AUTO}>Auto</option>
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-black text-slate-700">
+              Estado
+            </span>
+
+            <div className="flex h-14 items-center gap-3 rounded-2xl bg-slate-50 px-4">
               <input
                 name="active"
                 type="checkbox"
@@ -433,23 +442,43 @@ export default async function AdminBrandsPage({
               />
 
               <span className="text-sm font-black text-slate-700">
-                Marca activa / visible
+                Marca activa
               </span>
-            </label>
+            </div>
+          </label>
 
+          <div className="flex items-end">
             <button
               type="submit"
-              className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-[var(--rise-blue)]"
             >
               <Plus size={18} />
-              Crear marca
+              Crear
             </button>
-          </form>
-        </aside>
+          </div>
+        </form>
+      </section>
 
-        <section className="space-y-5">
-          {brands.length > 0 ? (
-            brands.map((brand) => {
+      <section className="space-y-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+              Registro
+            </p>
+
+            <h2 className="mt-2 text-3xl font-black text-[var(--rise-navy)]">
+              Marcas registradas
+            </h2>
+          </div>
+
+          <p className="rounded-full bg-white px-4 py-2 text-sm font-black text-slate-500 shadow-sm">
+            {brands.length} marca(s)
+          </p>
+        </div>
+
+        {brands.length > 0 ? (
+          <div className="grid gap-5">
+            {brands.map((brand) => {
               const hasRelations =
                 brand._count.vehicles > 0 ||
                 brand._count.catalogModels > 0 ||
@@ -458,175 +487,198 @@ export default async function AdminBrandsPage({
               return (
                 <article
                   key={brand.id}
-                  className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm"
+                  className="overflow-hidden rounded-[2.25rem] border border-[var(--rise-border)] bg-white shadow-sm transition hover:shadow-xl hover:shadow-slate-900/5"
                 >
-                  <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-                    <form
-                      action={updateBrand.bind(null, brand.id)}
-                      className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px_160px]"
-                    >
-                      <label className="block">
-                        <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-400">
-                          Marca
-                        </span>
-
-                        <input
-                          name="name"
-                          defaultValue={brand.name}
-                          className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black text-[var(--rise-navy)] outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                        />
-                      </label>
-
-                      <label className="block">
-                        <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-400">
-                          Tipo
-                        </span>
-
-                        <select
-                          name="category"
-                          defaultValue={brand.category}
-                          className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black text-[var(--rise-navy)] outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                        >
-                          <option value={VehicleCategory.TODOTERRENO}>
-                            Todo terreno
-                          </option>
-                          <option value={VehicleCategory.MOTO}>Moto</option>
-                          <option value={VehicleCategory.AUTO}>Auto</option>
-                        </select>
-                      </label>
-
-                      <div>
-                        <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-400">
-                          Estado
-                        </span>
-
-                        <label className="flex h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4">
-                          <input
-                            name="active"
-                            type="checkbox"
-                            defaultChecked={brand.active}
-                            className="h-5 w-5 rounded border-slate-300"
-                          />
-
-                          <span className="text-sm font-black text-slate-700">
-                            Activa
-                          </span>
-                        </label>
-                      </div>
-
-                      <div className="md:col-span-3">
-                        <button
-                          type="submit"
-                          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--rise-navy)] px-5 text-xs font-black text-white transition hover:bg-[var(--rise-blue)]"
-                        >
-                          Guardar cambios
-                        </button>
-                      </div>
-                    </form>
-
-                    <div className="space-y-3 rounded-[1.5rem] bg-slate-50 p-4">
-                      <div className="grid grid-cols-3 gap-3 text-center">
-                        <MiniStat
-                          title="Vehículos"
-                          value={brand._count.vehicles}
-                        />
-                        <MiniStat
-                          title="Modelos"
-                          value={brand._count.catalogModels}
-                        />
-                        <MiniStat
-                          title="Categorías"
-                          value={brand._count.catalogCategories}
-                        />
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${brand.active
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-slate-200 text-slate-500"
-                            }`}
-                        >
-                          {brand.active ? "Activa" : "Oculta"}
-                        </span>
-
-                        <span className="inline-flex rounded-full bg-[var(--rise-blue-soft)] px-3 py-1 text-xs font-black text-[var(--rise-blue)]">
-                          {getCategoryLabel(brand.category)}
-                        </span>
-                      </div>
-
-                      <form action={toggleBrandActive.bind(null, brand.id)}>
-                        <button
-                          type="submit"
-                          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 transition hover:bg-slate-100"
-                        >
-                          {brand.active ? (
-                            <>
-                              <EyeOff size={15} />
-                              Ocultar
-                            </>
-                          ) : (
-                            <>
-                              <Eye size={15} />
-                              Activar
-                            </>
-                          )}
-                        </button>
-                      </form>
-
-                      <form action={deleteBrand} className="space-y-2">
-                        <input
-                          type="hidden"
-                          name="brandId"
-                          value={brand.id}
-                        />
-
-                        <input
-                          name="confirmText"
-                          placeholder="Escribe ELIMINAR"
-                          disabled={hasRelations}
-                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold outline-none transition focus:border-red-400 disabled:cursor-not-allowed disabled:bg-slate-100"
-                        />
-
-                        <button
-                          type="submit"
-                          disabled={hasRelations}
-                          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-4 text-xs font-black text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <Trash2 size={15} />
-                          Eliminar
-                        </button>
-
-                        {hasRelations && (
-                          <p className="flex gap-2 text-xs leading-5 text-slate-500">
-                            <ShieldAlert
-                              size={15}
-                              className="mt-0.5 shrink-0 text-amber-500"
-                            />
-                            No se puede eliminar porque tiene datos asociados.
+                  <div className="grid gap-0 2xl:grid-cols-[minmax(0,1fr)_340px]">
+                    <div className="p-6 md:p-7">
+                      <div className="flex flex-wrap items-start justify-between gap-5">
+                        <div>
+                          <p className="text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+                            Marca
                           </p>
-                        )}
+
+                          <h3 className="mt-2 text-3xl font-black leading-tight text-[var(--rise-navy)]">
+                            {brand.name}
+                          </h3>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <span
+                              className={`inline-flex rounded-full px-3 py-1.5 text-xs font-black ${brand.active
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-slate-200 text-slate-500"
+                                }`}
+                            >
+                              {brand.active ? "Activa" : "Oculta"}
+                            </span>
+
+                            <span className="inline-flex rounded-full bg-[var(--rise-blue-soft)] px-3 py-1.5 text-xs font-black text-[var(--rise-blue)]">
+                              {getCategoryLabel(brand.category)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3 rounded-[1.5rem] bg-slate-50 p-4 text-center">
+                          <MiniStat
+                            title="Vehículos"
+                            value={brand._count.vehicles}
+                          />
+                          <MiniStat
+                            title="Modelos"
+                            value={brand._count.catalogModels}
+                          />
+                          <MiniStat
+                            title="Categorías"
+                            value={brand._count.catalogCategories}
+                          />
+                        </div>
+                      </div>
+
+                      <form
+                        action={updateBrand.bind(null, brand.id)}
+                        className="mt-7 grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_240px_180px]"
+                      >
+                        <label className="block">
+                          <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-400">
+                            Nombre de marca
+                          </span>
+
+                          <input
+                            name="name"
+                            defaultValue={brand.name}
+                            className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black text-[var(--rise-navy)] outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
+                          />
+                        </label>
+
+                        <label className="block">
+                          <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-400">
+                            Tipo comercial
+                          </span>
+
+                          <select
+                            name="category"
+                            defaultValue={brand.category}
+                            className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black text-[var(--rise-navy)] outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
+                          >
+                            <option value={VehicleCategory.TODOTERRENO}>
+                              Todo terreno
+                            </option>
+                            <option value={VehicleCategory.MOTO}>Moto</option>
+                            <option value={VehicleCategory.AUTO}>Auto</option>
+                          </select>
+                        </label>
+
+                        <label className="block">
+                          <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-400">
+                            Estado
+                          </span>
+
+                          <div className="flex h-13 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4">
+                            <input
+                              name="active"
+                              type="checkbox"
+                              defaultChecked={brand.active}
+                              className="h-5 w-5 rounded border-slate-300"
+                            />
+
+                            <span className="text-sm font-black text-slate-700">
+                              Activa
+                            </span>
+                          </div>
+                        </label>
+
+                        <div className="lg:col-span-3">
+                          <button
+                            type="submit"
+                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+                          >
+                            <Save size={17} />
+                            Guardar cambios
+                          </button>
+                        </div>
                       </form>
                     </div>
+
+                    <aside className="border-t border-slate-100 bg-slate-50 p-6 2xl:border-l 2xl:border-t-0">
+                      <div className="space-y-3">
+                        <form action={toggleBrandActive.bind(null, brand.id)}>
+                          <button
+                            type="submit"
+                            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 transition hover:bg-slate-100"
+                          >
+                            {brand.active ? (
+                              <>
+                                <EyeOff size={17} />
+                                Ocultar marca
+                              </>
+                            ) : (
+                              <>
+                                <Eye size={17} />
+                                Activar marca
+                              </>
+                            )}
+                          </button>
+                        </form>
+
+                        <div className="rounded-2xl bg-white p-4 text-sm font-bold leading-6 text-slate-500">
+                          {hasRelations ? (
+                            <span className="flex gap-3">
+                              <ShieldAlert
+                                size={18}
+                                className="mt-0.5 shrink-0 text-amber-500"
+                              />
+                              Esta marca tiene datos asociados. Para eliminarla,
+                              primero elimina o reasigna sus vehículos, modelos y
+                              categorías.
+                            </span>
+                          ) : (
+                            "Esta marca no tiene datos asociados. Puedes eliminarla si es necesario."
+                          )}
+                        </div>
+
+                        <form action={deleteBrand} className="space-y-3">
+                          <input
+                            type="hidden"
+                            name="brandId"
+                            value={brand.id}
+                          />
+
+                          <input
+                            name="confirmText"
+                            placeholder="Escribe ELIMINAR"
+                            disabled={hasRelations}
+                            className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold outline-none transition focus:border-red-400 disabled:cursor-not-allowed disabled:bg-slate-100"
+                          />
+
+                          <button
+                            type="submit"
+                            disabled={hasRelations}
+                            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-red-50 px-4 text-sm font-black text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <Trash2 size={17} />
+                            Eliminar marca
+                          </button>
+                        </form>
+                      </div>
+                    </aside>
                   </div>
                 </article>
               );
-            })
-          ) : (
-            <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center">
-              <Car size={48} className="mx-auto text-slate-400" />
+            })}
+          </div>
+        ) : (
+          <div className="rounded-[2.5rem] border border-dashed border-slate-300 bg-white p-12 text-center">
+            <Car size={54} className="mx-auto text-slate-400" />
 
-              <h2 className="mt-4 text-2xl font-black text-[var(--rise-navy)]">
-                Sin marcas registradas
-              </h2>
+            <h2 className="mt-5 text-2xl font-black text-[var(--rise-navy)]">
+              Sin marcas registradas
+            </h2>
 
-              <p className="mt-2 text-sm text-slate-500">
-                Crea la primera marca para comenzar a cargar catálogo e
-                inventario.
-              </p>
-            </div>
-          )}
-        </section>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+              Crea la primera marca para comenzar a cargar catálogo, categorías
+              e inventario.
+            </p>
+          </div>
+        )}
       </section>
     </main>
   );
@@ -639,7 +691,7 @@ function MetricCard({
 }: {
   title: string;
   value: number;
-  icon: React.ReactNode;
+  icon: ReactNode;
 }) {
   return (
     <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm">
@@ -648,6 +700,7 @@ function MetricCard({
           <p className="text-sm font-black uppercase tracking-wider text-slate-400">
             {title}
           </p>
+
           <p className="mt-2 text-3xl font-black text-[var(--rise-navy)]">
             {value}
           </p>
@@ -668,7 +721,7 @@ function MiniStat({ title, value }: { title: string; value: number }) {
         {title}
       </p>
 
-      <p className="mt-1 text-lg font-black text-[var(--rise-navy)]">
+      <p className="mt-1 text-xl font-black text-[var(--rise-navy)]">
         {value}
       </p>
     </div>
