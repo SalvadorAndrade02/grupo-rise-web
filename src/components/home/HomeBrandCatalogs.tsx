@@ -95,8 +95,7 @@ function BrandLogoCard({
             alt={`Logo ${brand.name}`}
             fill
             sizes="(max-width: 640px) 45vw, (max-width: 1024px) 28vw, 12vw"
-            className="object-contain grayscale transition duration-300 group-hover:scale-105 group-hover:grayscale-0"
-            onError={() => setImageError(true)}
+            className="object-contain grayscale transition duration-300 group-hover:scale-105 group-hover:grayscale-0 group-active:scale-105 group-active:grayscale-0" onError={() => setImageError(true)}
           />
         ) : (
           <span className="text-center text-lg font-black tracking-[-0.025em] text-slate-700 transition group-hover:text-[#9b682a]">
