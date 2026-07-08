@@ -1,16 +1,22 @@
 import { NextResponse } from "next/server";
 import { clearAdminSession } from "@/lib/admin-auth";
 
-export async function POST(request: Request) {
+export async function POST() {
   await clearAdminSession();
 
-  return NextResponse.redirect(new URL("/admin-login", request.url), {
+  return new NextResponse(null, {
     status: 303,
+    headers: {
+      Location: "/admin-login",
+    },
   });
 }
 
-export async function GET(request: Request) {
-  return NextResponse.redirect(new URL("/admin", request.url), {
+export async function GET() {
+  return new NextResponse(null, {
     status: 303,
+    headers: {
+      Location: "/admin",
+    },
   });
 }

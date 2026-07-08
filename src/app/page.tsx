@@ -1,8 +1,14 @@
-import { VehicleCondition, VehicleMediaType, VehicleStatus } from "@prisma/client";
+import {
+  VehicleCategory,
+  VehicleCondition,
+  VehicleMediaType,
+  VehicleStatus,
+} from "@prisma/client";
+
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/home/Hero";
-import { VehicleSearch } from "@/components/home/VehicleSearch";
+import { VehicleCategoryShowcase } from "@/components/home/VehicleCategoryShowcase";
 import { QuickActions } from "@/components/home/QuickActions";
 import { FeaturedVehicles } from "@/components/home/FeaturedVehicles";
 import { MotorcycleBanner } from "@/components/home/MotorcycleBanner";
@@ -10,8 +16,8 @@ import { InfoCards } from "@/components/home/InfoCards";
 import { FinalCTA } from "@/components/home/FinalCTA";
 import { HomeStats } from "@/components/home/HomeStats";
 import { HomeBrandCatalogs } from "@/components/home/HomeBrandCatalogs";
-import { prisma } from "@/lib/prisma";
 import { BranchesCarousel } from "@/components/home/BranchesCarousel";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -101,6 +107,31 @@ function getBrandCover(brandName: string) {
   return covers[brandName] ?? "";
 }
 
+function getBrandLogo(brandName: string) {
+  const logos: Record<string, string> = {
+    "Can-Am": "/catalog/brands/can-am.jpg",
+    Polaris: "/catalog/brands/polaris.jpg",
+    "Sea-Doo": "/catalog/brands/sea-doo.jpg",
+    "Sea Doo": "/catalog/brands/sea-doo.jpg",
+    SeaDoo: "/catalog/brands/sea-doo.jpg",
+
+    Triumph: "/catalog/brands/triumph.jpg",
+    "Triumph Motorcycles": "/catalog/brands/triumph.jpg",
+
+    "Royal Enfield": "/catalog/brands/royal-enfield.jpg",
+
+    Indian: "/catalog/brands/indian.jpg",
+    "Indian Motorcycle": "/catalog/brands/indian.jpg",
+
+    Zeekr: "/catalog/brands/zeekr.jpg",
+    Zeekrlife: "/catalog/brands/zeekr.jpg",
+
+    "Lynk & Co": "/catalog/brands/lynkco.jpg",
+  };
+
+  return logos[brandName] ?? null;
+}
+
 function getBrandSortOrder(brandName: string) {
   const slug = getBrandSlug(brandName);
   const index = brandSlugOrder.indexOf(slug);
@@ -109,119 +140,125 @@ function getBrandSortOrder(brandName: string) {
 }
 
 export default async function HomePage() {
-  const [featuredVehicleCandidates, branches, catalogBrands, allActiveVehicles] =
-    await Promise.all([
-      prisma.vehicle.findMany({
-        where: {
+  const [
+    featuredVehicleCandidates,
+    branches,
+    catalogBrands,
+    allActiveVehicles,
+  ] = await Promise.all([
+    prisma.vehicle.findMany({
+      where: {
+        active: true,
+        status: VehicleStatus.DISPONIBLE,
+        brand: {
           active: true,
-          status: VehicleStatus.DISPONIBLE,
-          brand: {
-            active: true,
-          },
-          branch: {
-            active: true,
-          },
         },
-        include: {
-          brand: true,
-          branch: true,
-          images: {
-            where: {
-              type: VehicleMediaType.IMAGE,
-            },
-            orderBy: {
-              order: "asc",
-            },
+        branch: {
+          active: true,
+        },
+      },
+      include: {
+        brand: true,
+        branch: true,
+        images: {
+          where: {
+            type: VehicleMediaType.IMAGE,
+          },
+          orderBy: {
+            order: "asc",
           },
         },
-        orderBy: {
-          createdAt: "desc",
-        },
-        take: 80,
-      }),
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 80,
+    }),
 
-      prisma.branch.findMany({
-        where: {
-          active: true,
+    prisma.branch.findMany({
+      where: {
+        active: true,
+      },
+      orderBy: [
+        {
+          sortOrder: "asc",
         },
-        orderBy: [
-          {
-            sortOrder: "asc",
-          },
-          {
-            city: "asc",
-          },
-        ],
-      }),
+        {
+          city: "asc",
+        },
+      ],
+    }),
 
-      prisma.brand.findMany({
-        where: {
-          active: true,
-          name: {
-            in: catalogBrandNames,
-          },
+    prisma.brand.findMany({
+      where: {
+        active: true,
+        name: {
+          in: catalogBrandNames,
         },
-        include: {
-          vehicles: {
-            where: {
+      },
+      include: {
+        vehicles: {
+          where: {
+            active: true,
+            condition: VehicleCondition.NUEVO,
+            status: VehicleStatus.DISPONIBLE,
+            branch: {
               active: true,
-              condition: VehicleCondition.NUEVO,
-              status: VehicleStatus.DISPONIBLE,
-              branch: {
-                active: true,
-              },
             },
-            include: {
-              images: {
-                where: {
-                  type: VehicleMediaType.IMAGE,
-                },
-                orderBy: {
-                  order: "asc",
-                },
-                take: 1,
+          },
+          include: {
+            images: {
+              where: {
+                type: VehicleMediaType.IMAGE,
               },
+              orderBy: {
+                order: "asc",
+              },
+              take: 1,
             },
           },
         },
-      }),
+      },
+    }),
 
-      prisma.vehicle.findMany({
-        where: {
+    prisma.vehicle.findMany({
+      where: {
+        active: true,
+        status: VehicleStatus.DISPONIBLE,
+        brand: {
           active: true,
-          status: VehicleStatus.DISPONIBLE,
-          brand: {
-            active: true,
-          },
-          branch: {
-            active: true,
-          },
         },
-        select: {
-          category: true,
+        branch: {
+          active: true,
         },
-      }),
-    ]);
+      },
+      select: {
+        category: true,
+      },
+    }),
+  ]);
 
   const featuredVehiclesByBrand = new Map<
     string,
     (typeof featuredVehicleCandidates)[number]
   >();
 
-  const orderedFeaturedCandidates = [...featuredVehicleCandidates].sort((a, b) => {
-    const brandOrder =
-      getBrandSortOrder(a.brand.name) - getBrandSortOrder(b.brand.name);
+  const orderedFeaturedCandidates = [...featuredVehicleCandidates].sort(
+    (a, b) => {
+      const brandOrder =
+        getBrandSortOrder(a.brand.name) - getBrandSortOrder(b.brand.name);
 
-    if (brandOrder !== 0) {
-      return brandOrder;
+      if (brandOrder !== 0) {
+        return brandOrder;
+      }
+
+      if (a.isFeatured !== b.isFeatured) {
+        return Number(b.isFeatured) - Number(a.isFeatured);
+      }
+
+      return b.createdAt.getTime() - a.createdAt.getTime();
     }
-
-    if (a.isFeatured !== b.isFeatured) {
-      return Number(b.isFeatured) - Number(a.isFeatured);
-    }
-
-    return b.createdAt.getTime() - a.createdAt.getTime();
-  });
+  );
 
   orderedFeaturedCandidates.forEach((vehicle) => {
     const brandSlug = getBrandSlug(vehicle.brand.name);
@@ -236,7 +273,8 @@ export default async function HomePage() {
   });
 
   const vehicles = Array.from(featuredVehiclesByBrand.values()).sort(
-    (a, b) => getBrandSortOrder(a.brand.name) - getBrandSortOrder(b.brand.name)
+    (a, b) =>
+      getBrandSortOrder(a.brand.name) - getBrandSortOrder(b.brand.name)
   );
 
   const formattedVehicles = vehicles.map((vehicle) => ({
@@ -260,63 +298,78 @@ export default async function HomePage() {
     mainImage: vehicle.mainImage || vehicle.images[0]?.url || "",
   }));
 
+  /*
+   * Seleccionamos una imagen representativa de cada categoría.
+   * Se priorizan las unidades marcadas como destacadas y después las más nuevas.
+   */
+  const categoryVehicleCandidates = [...featuredVehicleCandidates].sort(
+    (a, b) => {
+      if (a.isFeatured !== b.isFeatured) {
+        return Number(b.isFeatured) - Number(a.isFeatured);
+      }
+
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    }
+  );
+
+  function getCategoryImage(category: VehicleCategory) {
+    const vehicle = categoryVehicleCandidates.find(
+      (candidate) =>
+        candidate.category === category &&
+        Boolean(candidate.mainImage || candidate.images[0]?.url)
+    );
+
+    return vehicle?.mainImage || vehicle?.images[0]?.url || null;
+  }
+
+  const autoImage = getCategoryImage(VehicleCategory.AUTO);
+  const motorcycleImage = getCategoryImage(VehicleCategory.MOTO);
+  const offRoadImage = getCategoryImage(VehicleCategory.TODOTERRENO);
+
   const formattedBrandCards = catalogBrands
     .map((brand) => {
-      const brandVehicles = brand.vehicles;
-
-      const minPrice =
-        brandVehicles.length > 0
-          ? Math.min(...brandVehicles.map((vehicle) => vehicle.price))
-          : 0;
-
       return {
         id: brand.id,
         name: brand.name,
         slug: getBrandSlug(brand.name),
-        cover: getBrandCover(brand.name),
-        count: brandVehicles.length,
-        minPrice,
+        logo: getBrandLogo(brand.name),
       };
     })
-    .sort((a, b) => getBrandSortOrder(a.name) - getBrandSortOrder(b.name));
+    .sort(
+      (a, b) => getBrandSortOrder(a.name) - getBrandSortOrder(b.name)
+    );
 
   const stats = {
     totalVehicles: allActiveVehicles.length,
-    autos: allActiveVehicles.filter((vehicle) => vehicle.category === "AUTO")
-      .length,
-    motos: allActiveVehicles.filter((vehicle) => vehicle.category === "MOTO")
-      .length,
+    autos: allActiveVehicles.filter(
+      (vehicle) => vehicle.category === VehicleCategory.AUTO
+    ).length,
+    motos: allActiveVehicles.filter(
+      (vehicle) => vehicle.category === VehicleCategory.MOTO
+    ).length,
     todoTerreno: allActiveVehicles.filter(
-      (vehicle) => vehicle.category === "TODOTERRENO"
+      (vehicle) => vehicle.category === VehicleCategory.TODOTERRENO
     ).length,
     branches: branches.length,
   };
 
   return (
-    <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
+    <main className="min-h-screen bg-[#f4f3ef] text-[#0a0f14]">
       <Header />
 
       <Hero vehicles={formattedVehicles} />
 
-      <section className="relative z-20 -mt-6 md:-mt-10">
-        <VehicleSearch />
-      </section>
-
-      <HomeStats stats={stats} />
+      <VehicleCategoryShowcase
+        autoImage={autoImage}
+        motorcycleImage={motorcycleImage}
+        offRoadImage={offRoadImage}
+      />
 
       <HomeBrandCatalogs brands={formattedBrandCards} />
 
-      <QuickActions />
-
       <FeaturedVehicles vehicles={formattedVehicles} />
 
-      <MotorcycleBanner />
-
       <BranchesCarousel branches={branches} />
-
-      <InfoCards />
-
-      <FinalCTA />
 
       <Footer />
     </main>

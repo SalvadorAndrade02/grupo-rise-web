@@ -1,28 +1,18 @@
-"use client";
-
+import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ChevronRight, Heart, MapPin } from "lucide-react";
-import { Container } from "@/components/ui/Container";
-import { RequestModal } from "@/components/ui/RequestModal";
-import { SectionTitle } from "@/components/ui/SectionTitle";
-import { VehicleLeadActions } from "@/components/vehicles/VehicleLeadActions";
+import {
+  ArrowRight,
+  CalendarDays,
+  MapPin,
+  Sparkles,
+} from "lucide-react";
+import { formatCurrency } from "@/lib/formatters";
 
-type DbVehicleCategory = "AUTO" | "MOTO" | "TODOTERRENO";
-type DbVehicleCondition = "NUEVO" | "SEMINUEVO";
-type DbVehicleStatus =
-  | "DISPONIBLE"
-  | "APARTADO"
-  | "VENDIDO"
-  | "EN_TRANSITO"
-  | "PROXIMAMENTE"
-  | "INACTIVO";
-
-type HomeVehicle = {
+type FeaturedVehicle = {
   id: number;
-  category: DbVehicleCategory;
-  condition: DbVehicleCondition;
-  status: DbVehicleStatus;
+  category: string;
+  condition: string;
+  status: string;
   brandName: string;
   branchId: number;
   branchCity: string;
@@ -33,213 +23,192 @@ type HomeVehicle = {
   price: number;
   type: string;
   specs: string[];
-  mainImage: string | null;
+  mainImage?: string | null;
 };
 
 type FeaturedVehiclesProps = {
-  vehicles: HomeVehicle[];
+  vehicles: FeaturedVehicle[];
 };
 
-type FilterTab = "TODOS" | DbVehicleCategory;
+function getCategoryLabel(category: string) {
+  const labels: Record<string, string> = {
+    AUTO: "Auto",
+    MOTO: "Motocicleta",
+    TODOTERRENO: "Todoterreno",
+  };
 
-const tabs: { label: string; value: FilterTab }[] = [
-  { label: "Todos", value: "TODOS" },
-  { label: "Autos", value: "AUTO" },
-  { label: "Motos", value: "MOTO" },
-  { label: "Todo terreno", value: "TODOTERRENO" },
-];
-
-const conditionLabels: Record<DbVehicleCondition, string> = {
-  NUEVO: "Nuevo",
-  SEMINUEVO: "Seminuevo",
-};
-
-const statusLabels: Record<DbVehicleStatus, string> = {
-  DISPONIBLE: "Disponible",
-  APARTADO: "Apartado",
-  VENDIDO: "Vendido",
-  EN_TRANSITO: "En tránsito",
-  PROXIMAMENTE: "Próximamente",
-  INACTIVO: "Inactivo",
-};
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    maximumFractionDigits: 0,
-  }).format(value);
+  return labels[category] ?? category;
 }
 
-export function FeaturedVehicles({ vehicles }: FeaturedVehiclesProps) {
-  const [activeTab, setActiveTab] = useState<FilterTab>("TODOS");
-  const [selectedVehicle, setSelectedVehicle] = useState<HomeVehicle | null>(
-    null
-  );
+function getConditionLabel(condition: string) {
+  const labels: Record<string, string> = {
+    NUEVO: "Nuevo",
+    SEMINUEVO: "Seminuevo",
+  };
 
-  const filteredVehicles = useMemo(() => {
-    if (activeTab === "TODOS") {
-      return vehicles;
-    }
+  return labels[condition] ?? condition;
+}
 
-    return vehicles.filter((vehicle) => vehicle.category === activeTab);
-  }, [activeTab, vehicles]);
+export function FeaturedVehicles({
+  vehicles,
+}: FeaturedVehiclesProps) {
+  const featuredVehicles = vehicles.slice(0, 3);
+
+  if (featuredVehicles.length === 0) {
+    return null;
+  }
 
   return (
-    <section id="vehiculos-destacados" className="py-12 md:py-16">
-      <Container>
-        <SectionTitle
-          eyebrow="Inventario destacado"
-          title="Unidades seleccionadas por Grupo Rise"
-          description="Vehículos activos marcados como destacados desde el módulo administrativo."
-          action={
-            <Link
-              href="/inventario"
-              className="inline-flex items-center gap-2 text-sm font-bold text-[var(--rise-blue)] hover:text-[var(--rise-navy)]"
-            >
-              Ver todo el inventario
-              <ChevronRight size={18} />
-            </Link>
-          }
-        />
+    <section className="bg-[#f4f3ef] py-16 md:py-20 lg:py-24">
+      <div className="mx-auto w-full max-w-[1440px] px-5 md:px-8 lg:px-10">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="h-px w-8 bg-[#bd8540]" />
 
-        <div className="mb-8 flex flex-wrap gap-3">
-          {tabs.map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              onClick={() => setActiveTab(tab.value)}
-              className={`rounded-full px-5 py-2 text-sm font-black transition ${activeTab === tab.value
-                  ? "bg-[var(--rise-navy)] text-white"
-                  : "bg-white text-slate-600 hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
-                }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9b682a]">
+                Selección Grupo Rise
+              </p>
+            </div>
+
+            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#0a0f14] md:text-4xl lg:text-5xl">
+              Vehículos destacados
+            </h2>
+
+            <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-slate-500">
+              Una selección de unidades disponibles para comenzar a explorar
+              nuestro catálogo.
+            </p>
+          </div>
+
+          <Link
+            href="/catalogo"
+            className="group inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.15em] text-[#0a0f14]"
+          >
+            Ver todos los vehículos
+
+            <span className="grid h-10 w-10 place-items-center rounded-full border border-black/15 bg-white transition group-hover:border-[#c9954d] group-hover:bg-[#c9954d]">
+              <ArrowRight
+                size={16}
+                className="transition-transform group-hover:translate-x-0.5"
+              />
+            </span>
+          </Link>
         </div>
 
-        {filteredVehicles.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            {filteredVehicles.map((vehicle) => (
-              <article
-                key={vehicle.id}
-                className="group overflow-hidden rounded-3xl border border-[var(--rise-border)] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
-              >
-                <div className="relative h-56 overflow-hidden bg-slate-100">
-                  {vehicle.mainImage ? (
-                    <img
-                      src={vehicle.mainImage}
-                      alt={vehicle.name}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="grid h-full w-full place-items-center bg-[var(--rise-blue-soft)] text-sm font-black text-[var(--rise-blue)]">
-                      Sin imagen
-                    </div>
-                  )}
+        <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {featuredVehicles.map((vehicle, index) => (
+            <VehicleCard
+              key={vehicle.id}
+              vehicle={vehicle}
+              priority={index === 0}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
-                  <span className="absolute left-4 top-4 rounded-full bg-[var(--rise-navy)]/90 px-3 py-1 text-xs font-bold text-white backdrop-blur">
-                    {vehicle.type}
-                  </span>
-
-                  <button
-                    type="button"
-                    className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-slate-700 shadow-sm backdrop-blur hover:text-[var(--rise-blue)]"
-                    aria-label="Agregar a favoritos"
-                  >
-                    <Heart size={18} />
-                  </button>
-                </div>
-
-                <div className="p-5">
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    <span className="rounded-full bg-[var(--rise-blue-soft)] px-3 py-1 text-xs font-black text-[var(--rise-blue)]">
-                      {conditionLabels[vehicle.condition]}
-                    </span>
-
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
-                      {statusLabels[vehicle.status]}
-                    </span>
-                  </div>
-
-                  <h3 className="text-lg font-black text-[var(--rise-navy)]">
-                    {vehicle.name}
-                  </h3>
-
-                  <p className="mt-1 text-sm font-semibold text-slate-500">
-                    {vehicle.brandName} · {vehicle.year}
-                  </p>
-
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-slate-500">
-                    {vehicle.specs.slice(0, 3).map((spec) => (
-                      <span
-                        key={spec}
-                        className="rounded-full bg-slate-100 px-3 py-1"
-                      >
-                        {spec}
-                      </span>
-                    ))}
-                  </div>
-
-                  <p className="mt-5 text-2xl font-black text-[var(--rise-navy)]">
-                    {formatCurrency(vehicle.price)}
-                  </p>
-
-                  <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
-                    <MapPin size={16} className="text-[var(--rise-blue)]" />
-                    {vehicle.branchCity}
-                  </div>
-
-                  <div className="mt-5 grid gap-3">
-                    <Link
-                      href={`/vehiculos/${vehicle.id}`}
-                      className="inline-flex items-center justify-center rounded-xl border border-[var(--rise-border)] px-4 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
-                    >
-                      Ver detalles
-                    </Link>
-
-                    <VehicleLeadActions
-                      vehicleId={vehicle.id}
-                      branchId={vehicle.branchId}
-                      vehicleName={`${vehicle.brandName} ${vehicle.name}`}
-                      whatsapp={vehicle.branchWhatsapp}
-                      mode="compact"
-                    />
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+function VehicleCard({
+  vehicle,
+  priority,
+}: {
+  vehicle: FeaturedVehicle;
+  priority: boolean;
+}) {
+  return (
+    <article className="group overflow-hidden rounded-[18px] border border-black/8 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(15,23,42,0.1)]">
+      <Link
+        href={`/vehiculos/${vehicle.id}`}
+        className="relative block h-[265px] overflow-hidden bg-[#ebe9e4]"
+      >
+        {vehicle.mainImage ? (
+          <Image
+            src={vehicle.mainImage}
+            alt={`${vehicle.brandName} ${vehicle.name}`}
+            fill
+            priority={priority}
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+            className="object-cover transition duration-700 group-hover:scale-[1.045]"
+          />
         ) : (
-          <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-10 text-center shadow-sm">
-            <h3 className="text-2xl font-black text-[var(--rise-navy)]">
-              No hay vehículos destacados
-            </h3>
-
-            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">
-              Marca unidades como destacadas desde el módulo administrativo para
-              mostrarlas en esta sección.
-            </p>
-
-            <Link
-              href="/admin/inventario"
-              className="mt-6 inline-flex rounded-xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-            >
-              Ir al inventario admin
-            </Link>
+          <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_center,#d9d7d1,#f1f0ec)]">
+            <span className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">
+              Sin imagen
+            </span>
           </div>
         )}
-      </Container>
 
-      <RequestModal
-        isOpen={Boolean(selectedVehicle)}
-        title="Solicita una cotización"
-        description="Déjanos tus datos y un asesor de Grupo Rise te contactará para compartirte disponibilidad, precio y opciones de financiamiento."
-        requestType="Cotización"
-        vehicleName={selectedVehicle?.name}
-        onClose={() => setSelectedVehicle(null)}
-      />
-    </section>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+
+        <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+          <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#0a0f14] shadow-sm">
+            {getConditionLabel(vehicle.condition)}
+          </span>
+
+          <span className="rounded-full bg-[#c9954d] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#0a0f14] shadow-sm">
+            {getCategoryLabel(vehicle.category)}
+          </span>
+        </div>
+
+        <div className="absolute bottom-4 right-4 grid h-11 w-11 place-items-center rounded-full bg-white text-[#0a0f14] shadow-lg transition duration-300 group-hover:bg-[#c9954d]">
+          <ArrowRight
+            size={18}
+            className="transition-transform group-hover:translate-x-0.5"
+          />
+        </div>
+      </Link>
+
+      <div className="p-5 md:p-6">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#9b682a]">
+          {vehicle.brandName}
+        </p>
+
+        <h3 className="mt-2 line-clamp-2 text-2xl font-black leading-tight tracking-[-0.035em] text-[#0a0f14]">
+          {vehicle.name}
+        </h3>
+
+        {/* <p className="mt-1 text-sm font-semibold text-slate-500">
+          {vehicle.model}
+        </p> */}
+
+        {/* <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 border-y border-slate-100 py-4">
+          {<span className="inline-flex items-center gap-2 text-xs font-bold text-slate-500">
+            <CalendarDays size={15} className="text-[#b77b33]" />
+            {vehicle.year}
+          </span>}
+
+          {<span className="inline-flex items-center gap-2 text-xs font-bold text-slate-500">
+            <MapPin size={15} className="text-[#b77b33]" />
+            {vehicle.branchCity}
+          </span> }
+        </div> */}
+
+        <div className="mt-5 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+              Precio
+            </p>
+
+            <p className="mt-1 text-xl font-black tracking-[-0.03em] text-[#0a0f14]">
+              {formatCurrency(vehicle.price)}
+            </p>
+          </div>
+
+          <Link
+            href={`/vehiculos/${vehicle.id}`}
+            className="group/link inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#0a0f14]"
+          >
+            Ver detalle
+
+            <ArrowRight
+              size={14}
+              className="text-[#b77b33] transition-transform group-hover/link:translate-x-1"
+            />
+          </Link>
+        </div>
+      </div>
+    </article>
   );
 }

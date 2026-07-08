@@ -38,9 +38,12 @@ function shouldUseSecureCookies() {
   return process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://") ?? false;
 }
 
-function redirectTo(request: Request, path: string) {
-  return NextResponse.redirect(new URL(path, request.url), {
+function redirectTo(path: string) {
+  return new NextResponse(null, {
     status: 303,
+    headers: {
+      Location: path,
+    },
   });
 }
 
@@ -52,7 +55,7 @@ export async function POST(request: Request) {
   });
 
   if (alreadyHasAdmins > 0) {
-    return redirectTo(request, "/admin-login");
+    return redirectTo("/admin-login");
   }
 
   const formData = await request.formData();
@@ -64,35 +67,25 @@ export async function POST(request: Request) {
 
   if (!name || !email || !password || !confirmPassword) {
     return redirectTo(
-      request,
-      `/admin-setup?error=${encodeURIComponent(
-        "Todos los campos son obligatorios."
-      )}`
+      `/admin-setup?error=${encodeURIComponent("Todos los campos son obligatorios")}`
     );
   }
 
   if (!email.includes("@")) {
     return redirectTo(
-      request,
-      `/admin-setup?error=${encodeURIComponent("Ingresa un correo válido.")}`
+      `/admin-setup?error=${encodeURIComponent("Ingrese un correo valido")}`
     );
   }
 
   if (password !== confirmPassword) {
     return redirectTo(
-      request,
-      `/admin-setup?error=${encodeURIComponent(
-        "Las contraseñas no coinciden."
-      )}`
+      `/admin-setup?error=${encodeURIComponent("Las contraseñas no coinciden")}`
     );
   }
 
   if (!isStrongPassword(password)) {
     return redirectTo(
-      request,
-      `/admin-setup?error=${encodeURIComponent(
-        "La contraseña debe tener mínimo 10 caracteres, letras y números."
-      )}`
+      `/admin-setup?error=${encodeURIComponent("La contraseña debe de ser mas larga")}`
     );
   }
 
@@ -117,7 +110,7 @@ export async function POST(request: Request) {
     },
   });
 
-  const response = redirectTo(request, "/admin");
+  const response = redirectTo("/admin");
 
   response.cookies.set(ADMIN_SESSION_COOKIE, token, {
     httpOnly: true,

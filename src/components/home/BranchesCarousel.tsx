@@ -1,258 +1,393 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+    ArrowRight,
+    Building2,
     ChevronLeft,
     ChevronRight,
     MapPin,
     MessageCircle,
-    Phone,
 } from "lucide-react";
-import { Container } from "@/components/ui/Container";
 
-type BranchCarouselItem = {
+type BranchItem = {
     id: number;
     name: string;
     city: string;
-    state: string;
-    address: string;
+    state?: string | null;
+    address?: string | null;
     phone?: string | null;
     whatsapp?: string | null;
-    googleMapsUrl?: string | null;
     services?: string | null;
+    logoUrl?: string | null;
+    coverImageUrl?: string | null;
 };
 
 type BranchesCarouselProps = {
-    branches: BranchCarouselItem[];
+    branches: BranchItem[];
 };
 
 function cleanPhone(value?: string | null) {
-    return value?.replace(/\D/g, "") ?? "";
+    return String(value ?? "").replace(/\D/g, "");
 }
 
-function getMapUrl(branch: BranchCarouselItem) {
-    if (branch.googleMapsUrl?.trim()) {
-        return branch.googleMapsUrl;
+function getWhatsAppHref(branch: BranchItem) {
+    const phone = cleanPhone(branch.whatsapp || branch.phone);
+
+    if (!phone) {
+        return null;
     }
 
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        `${branch.address}, ${branch.city}, ${branch.state}`
-    )}`;
+    const message = encodeURIComponent(
+        `Hola, me gustaría recibir información de la sucursal ${branch.name}.`
+    );
+
+    return `https://wa.me/52${phone}?text=${message}`;
 }
 
-function getMapLocationText(branch: BranchCarouselItem) {
-    return `${branch.address}, ${branch.city}, ${branch.state}`;
+function getLocation(branch: BranchItem) {
+    return [branch.city, branch.state].filter(Boolean).join(", ");
 }
 
-function getMapEmbedUrl(branch: BranchCarouselItem) {
-    if (branch.googleMapsUrl?.includes("/embed")) {
-        return branch.googleMapsUrl;
+function getServiceLabels(services?: string | null) {
+    if (!services) {
+        return [];
     }
 
-    return `https://www.google.com/maps?q=${encodeURIComponent(
-        getMapLocationText(branch)
-    )}&output=embed`;
-}
-
-function splitServices(value?: string | null) {
-    return String(value ?? "")
+    return services
         .split(",")
-        .map((item) => item.trim())
+        .map((service) => service.trim())
         .filter(Boolean)
-        .slice(0, 3);
+        .slice(0, 2);
 }
 
-export function BranchesCarousel({ branches }: BranchesCarouselProps) {
-    const [currentIndex, setCurrentIndex] = useState(0);
+export function BranchesCarousel({
+    branches,
+}: BranchesCarouselProps) {
+    const carouselRef = useRef<HTMLDivElement>(null);
+    const [isPaused, setIsPaused] = useState(false);
 
-    const safeBranches = useMemo(() => branches.filter(Boolean), [branches]);
+    if (branches.length === 0) {
+        return null;
+    }
 
+    function moveCarousel(direction: "left" | "right") {
+        const container = carouselRef.current;
+
+        if (!container) {
+            return;
+        }
+
+        const firstCard = container.firstElementChild as HTMLElement | null;
+        const cardWidth = firstCard?.offsetWidth ?? 360;
+        const styles = window.getComputedStyle(container);
+        const gap = Number.parseFloat(styles.columnGap || styles.gap || "20");
+        const movement = cardWidth + gap;
+
+        if (direction === "right") {
+            const reachedEnd =
+                container.scrollLeft + container.clientWidth >=
+                container.scrollWidth - 10;
+
+            if (reachedEnd) {
+                container.scrollTo({
+                    left: 0,
+                    behavior: "smooth",
+                });
+
+                return;
+            }
+        }
+
+        if (direction === "left" && container.scrollLeft <= 10) {
+            container.scrollTo({
+                left: container.scrollWidth,
+                behavior: "smooth",
+            });
+
+            return;
+        }
+
+        container.scrollBy({
+            left: direction === "left" ? -movement : movement,
+            behavior: "smooth",
+        });
+    }
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
-        if (safeBranches.length <= 1) {
+        if (branches.length <= 1 || isPaused) {
+            return;
+        }
+
+        const prefersReducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+        if (prefersReducedMotion) {
             return;
         }
 
         const interval = window.setInterval(() => {
-            setCurrentIndex((current) =>
-                current === safeBranches.length - 1 ? 0 : current + 1
-            );
-        }, 4500);
+            const container = carouselRef.current;
+
+            if (!container) {
+                return;
+            }
+
+            const firstCard = container.firstElementChild as HTMLElement | null;
+            const cardWidth = firstCard?.offsetWidth ?? 360;
+            const styles = window.getComputedStyle(container);
+            const gap = Number.parseFloat(styles.columnGap || styles.gap || "20");
+            const movement = cardWidth + gap;
+
+            const reachedEnd =
+                container.scrollLeft + container.clientWidth >=
+                container.scrollWidth - 10;
+
+            if (reachedEnd) {
+                container.scrollTo({
+                    left: 0,
+                    behavior: "smooth",
+                });
+
+                return;
+            }
+
+            container.scrollBy({
+                left: movement,
+                behavior: "smooth",
+            });
+        }, 1000);
 
         return () => window.clearInterval(interval);
-    }, [safeBranches.length]);
-
-    function goToPrevious() {
-        setCurrentIndex((current) =>
-            current === 0 ? safeBranches.length - 1 : current - 1
-        );
-    }
-
-    function goToNext() {
-        setCurrentIndex((current) =>
-            current === safeBranches.length - 1 ? 0 : current + 1
-        );
-    }
-
-    if (safeBranches.length === 0) {
-        return null;
-    }
-
-    const currentBranch = safeBranches[currentIndex];
-    const whatsapp = cleanPhone(currentBranch.whatsapp);
-    const phone = cleanPhone(currentBranch.phone);
-    const services = splitServices(currentBranch.services);
-    const mapUrl = getMapUrl(currentBranch);
-    const mapEmbedUrl = getMapEmbedUrl(currentBranch);
+    }, [branches.length, isPaused]);
 
     return (
-        <section className="py-12">
-            <Container>
-                <div className="overflow-hidden rounded-[2rem] border border-[var(--rise-border)] bg-white shadow-xl shadow-slate-900/10">
-                    <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
-                        <div className="relative min-h-[360px] bg-[var(--rise-navy)] p-8 text-white md:p-10">
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.45),transparent_35%),linear-gradient(135deg,rgba(15,23,42,1),rgba(15,23,42,0.92))]" />
+        <section className="overflow-hidden bg-white py-16 md:py-20 lg:py-24">
+            <div className="mx-auto w-full max-w-[1440px] px-5 md:px-8 lg:px-10">
+                <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <span className="h-px w-8 bg-[#bd8540]" />
 
-                            <div className="relative z-10 flex h-full flex-col justify-between">
-                                <div>
-                                    <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white/80">
-                                        Sucursales Grupo Rise
-                                    </span>
-
-                                    <h2 className="mt-6 text-3xl font-black tracking-tight md:text-5xl">
-                                        Encuentra tu agencia más cercana
-                                    </h2>
-
-                                    <p className="mt-4 max-w-md text-sm leading-7 text-white/70 md:text-base">
-                                        Consulta nuestras sucursales disponibles, ubicación,
-                                        teléfonos y marcas disponibles.
-                                    </p>
-                                </div>
-
-                                <div className="mt-8 flex items-center gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={goToPrevious}
-                                        className="grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20"
-                                        aria-label="Sucursal anterior"
-                                    >
-                                        <ChevronLeft size={22} />
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={goToNext}
-                                        className="grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20"
-                                        aria-label="Sucursal siguiente"
-                                    >
-                                        <ChevronRight size={22} />
-                                    </button>
-
-                                    <div className="ml-2 flex gap-2">
-                                        {safeBranches.map((branch, index) => (
-                                            <button
-                                                key={branch.id}
-                                                type="button"
-                                                onClick={() => setCurrentIndex(index)}
-                                                className={`h-2.5 rounded-full transition ${index === currentIndex
-                                                    ? "w-8 bg-white"
-                                                    : "w-2.5 bg-white/35 hover:bg-white/60"
-                                                    }`}
-                                                aria-label={`Ver sucursal ${branch.name}`}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9b682a]">
+                                Presencia Grupo Rise
+                            </p>
                         </div>
 
-                        <div className="p-6 md:p-10">
-                            <div className="rounded-[1.5rem] border border-[var(--rise-border)] bg-slate-50 p-6">
-                                <div className="flex flex-wrap items-start justify-between gap-4">
-                                    <div>
-                                        <p className="text-sm font-black uppercase tracking-[0.18em] text-[var(--rise-blue)]">
-                                            {currentBranch.city}, {currentBranch.state}
-                                        </p>
+                        <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#0a0f14] md:text-4xl lg:text-5xl">
+                            Encuentra tu agencia
+                        </h2>
 
-                                        <h3 className="mt-2 text-2xl font-black text-[var(--rise-navy)] md:text-3xl">
-                                            {currentBranch.name}
-                                        </h3>
-                                    </div>
+                        <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-slate-500">
+                            Conoce nuestras sucursales y encuentra atención, vehículos y
+                            servicios cerca de ti.
+                        </p>
+                    </div>
 
-                                    <span className="rounded-full bg-emerald-50 px-4 py-2 text-xs font-black uppercase tracking-wider text-emerald-700">
-                                        Disponible
-                                    </span>
-                                </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => moveCarousel("left")}
+                            aria-label="Mostrar sucursal anterior"
+                            className="grid h-11 w-11 place-items-center rounded-full border border-black/15 bg-white text-[#0a0f14] transition hover:border-[#c9954d] hover:bg-[#c9954d]"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
 
-                                {services.length > 0 && (
-                                    <div className="mt-5 flex flex-wrap gap-2">
-                                        {services.map((service) => (
-                                            <span
-                                                key={service}
-                                                className="rounded-full bg-[var(--rise-blue-soft)] px-3 py-1 text-xs font-black text-[var(--rise-blue)]"
-                                            >
-                                                {service}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-                                <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[var(--rise-border)] bg-white shadow-sm">
-                                    <iframe
-                                        src={mapEmbedUrl}
-                                        title={`Mapa de ${currentBranch.name}`}
-                                        className="h-56 w-full"
-                                        loading="lazy"
-                                        referrerPolicy="no-referrer-when-downgrade"
-                                    />
-                                </div>
+                        <button
+                            type="button"
+                            onClick={() => moveCarousel("right")}
+                            aria-label="Mostrar siguiente sucursal"
+                            className="grid h-11 w-11 place-items-center rounded-full border border-black/15 bg-white text-[#0a0f14] transition hover:border-[#c9954d] hover:bg-[#c9954d]"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
 
-                                <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                                    <a
-                                        href={mapUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-                                    >
-                                        <MapPin size={18} />
-                                        Ver mapa
-                                    </a>
+                        <Link
+                            href="/sucursales"
+                            className="ml-1 hidden items-center gap-3 text-xs font-black uppercase tracking-[0.15em] text-[#0a0f14] sm:inline-flex"
+                        >
+                            Ver todas
 
-                                    {phone && (
-                                        <a
-                                            href={`tel:${phone}`}
-                                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--rise-border)] bg-white px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-[var(--rise-blue-soft)]"
-                                        >
-                                            <Phone size={18} />
-                                            Llamar
-                                        </a>
-                                    )}
-
-                                    {whatsapp && (
-                                        <a
-                                            href={`https://wa.me/52${whatsapp}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-700 transition hover:bg-emerald-100"
-                                        >
-                                            <MessageCircle size={18} />
-                                            WhatsApp
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="mt-6 text-center">
-                                <Link
-                                    href="/sucursales"
-                                    className="text-sm font-black text-[var(--rise-blue)] hover:underline"
-                                >
-                                    Ver todas las sucursales
-                                </Link>
-                            </div>
-                        </div>
+                            <ArrowRight
+                                size={16}
+                                className="text-[#b77b33]"
+                            />
+                        </Link>
                     </div>
                 </div>
-            </Container>
+
+                <div
+                    ref={carouselRef}
+                    onMouseEnter={() => setIsPaused(true)}
+                    onMouseLeave={() => setIsPaused(false)}
+                    onFocusCapture={() => setIsPaused(true)}
+                    onBlurCapture={() => setIsPaused(false)}
+                    onTouchStart={() => setIsPaused(true)}
+                    onTouchEnd={() => setIsPaused(false)}
+                    className="mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                    {branches.map((branch, index) => (
+                        <BranchCard
+                            key={branch.id}
+                            branch={branch}
+                            priority={index === 0}
+                        />
+                    ))}
+                </div>
+
+                <div className="mt-5 flex justify-center sm:hidden">
+                    <Link
+                        href="/sucursales"
+                        className="inline-flex h-12 items-center justify-center gap-3 rounded-lg bg-[#0a0f14] px-6 text-sm font-black text-white transition hover:bg-[#c9954d] hover:text-[#0a0f14]"
+                    >
+                        Ver todas las sucursales
+                        <ArrowRight size={17} />
+                    </Link>
+                </div>
+            </div>
         </section>
+    );
+}
+
+function BranchCard({
+    branch,
+    priority,
+}: {
+    branch: BranchItem;
+    priority: boolean;
+}) {
+    const whatsappHref = getWhatsAppHref(branch);
+    const location = getLocation(branch);
+    const services = getServiceLabels(branch.services);
+
+    return (
+        <article className="group w-[84vw] max-w-[355px] shrink-0 snap-start overflow-hidden rounded-[18px] border border-black/8 bg-[#f8f7f4] shadow-[0_10px_35px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(15,23,42,0.1)] sm:w-[350px] lg:w-[370px] lg:max-w-[370px]">
+            <Link
+                href={`/sucursales/${branch.id}`}
+                className="relative block h-[205px] overflow-hidden bg-[#e8e7e2]"
+            >
+                {branch.coverImageUrl ? (
+                    <Image
+                        src={branch.coverImageUrl}
+                        alt={`Fachada de ${branch.name}`}
+                        fill
+                        priority={priority}
+                        sizes="(max-width: 640px) 84vw, 370px"
+                        className="object-cover transition duration-700 group-hover:scale-[1.045]"
+                    />
+                ) : (
+                    <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_center,#d9d7d1,#efeee9)]">
+                        <Building2
+                            size={48}
+                            strokeWidth={1.3}
+                            className="text-slate-400"
+                        />
+                    </div>
+                )}
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
+
+                {branch.logoUrl && (
+                    <div className="absolute left-4 top-4 flex h-14 w-20 items-center justify-center rounded-lg border border-white/70 bg-white p-2 shadow-lg">
+                        <Image
+                            src={branch.logoUrl}
+                            alt={`Logo ${branch.name}`}
+                            width={80}
+                            height={56}
+                            className="max-h-full max-w-full object-contain"
+                        />
+                    </div>
+                )}
+
+                <div className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white text-[#0a0f14] shadow-lg transition group-hover:bg-[#c9954d]">
+                    <ArrowRight
+                        size={17}
+                        className="transition-transform group-hover:translate-x-0.5"
+                    />
+                </div>
+            </Link>
+
+            <div className="p-5">
+                <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#9b682a]">
+                    Agencia Grupo Rise
+                </p>
+
+                <Link href={`/sucursales/${branch.id}`}>
+                    <h3 className="mt-2 line-clamp-2 min-h-[52px] text-xl font-black leading-tight tracking-[-0.03em] text-[#0a0f14] transition hover:text-[#9b682a]">
+                        {branch.name}
+                    </h3>
+                </Link>
+
+                {/* {location && (
+                    <div className="mt-4 flex items-start gap-2.5">
+                        <MapPin
+                            size={16}
+                            className="mt-0.5 shrink-0 text-[#b77b33]"
+                        />
+
+                        <p className="text-sm font-bold text-slate-600">
+                            {location}
+                        </p>
+                    </div>
+                )} */}
+
+               {/*  {branch.address && (
+                    <p className="mt-2 line-clamp-2 min-h-[40px] pl-[26px] text-xs font-medium leading-5 text-slate-500">
+                        {branch.address}
+                    </p>
+                )}
+
+                {services.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        {services.map((service) => (
+                            <span
+                                key={service}
+                                className="rounded-full bg-[#eee9df] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#78501f]"
+                            >
+                                {service}
+                            </span>
+                        ))}
+                    </div>
+                )} */}
+
+                <div className="mt-5 grid gap-2 border-t border-black/8 pt-4 sm:grid-cols-2">
+                    <Link
+                        href={`/sucursales/${branch.id}`}
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#0a0f14] px-4 text-xs font-black text-white transition hover:bg-[#c9954d] hover:text-[#0a0f14]"
+                    >
+                        Ver agencia
+                        <ArrowRight size={15} />
+                    </Link>
+
+                    {whatsappHref ? (
+                        <a
+                            href={whatsappHref}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-4 text-xs font-black text-[#0a0f14] transition hover:border-[#25d366] hover:bg-[#edfdf3]"
+                        >
+                            <MessageCircle
+                                size={16}
+                                className="text-[#159447]"
+                            />
+
+                            WhatsApp
+                        </a>
+                    ) : (
+                        <Link
+                            href={`/sucursales/${branch.id}`}
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-4 text-xs font-black text-[#0a0f14] transition hover:bg-slate-50"
+                        >
+                            Más información
+                        </Link>
+                    )}
+                </div>
+            </div>
+        </article>
     );
 }

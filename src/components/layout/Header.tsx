@@ -3,34 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ChevronDown, Menu, X } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  Menu,
+  X,
+} from "lucide-react";
 import { useState } from "react";
-import { Container } from "@/components/ui/Container";
 
-const mainLinks = [
-  {
-    label: "Inicio",
-    href: "/",
-  },
-  {
-    label: "Seminuevos",
-    href: "/inventario",
-  },
-  {
-    label: "Sucursales",
-    href: "/sucursales",
-  },
-  {
-    label: "Servicios",
-    href: "#",
-  },
-];
-
-const catalogLinks = [
-  {
-    label: "Ver todas las marcas",
-    href: "/catalogo",
-  },
+const catalogBrands = [
   {
     label: "Can-Am",
     href: "/catalogo/can-am",
@@ -40,23 +21,23 @@ const catalogLinks = [
     href: "/catalogo/polaris",
   },
   {
-    label: "Royal Enfield",
-    href: "/catalogo/royal-enfield",
-  },
-  {
     label: "Sea-Doo",
     href: "/catalogo/sea-doo",
-  },
-  {
-    label: "Triumph Motorcycles",
-    href: "/catalogo/triumph-motorcycles",
   },
   {
     label: "Indian Motorcycle",
     href: "/catalogo/indian-motorcycle",
   },
   {
-    label: "Zeekrlife",
+    label: "Triumph",
+    href: "/catalogo/triumph-motorcycles",
+  },
+  {
+    label: "Royal Enfield",
+    href: "/catalogo/royal-enfield",
+  },
+  {
+    label: "Zeekr",
     href: "/catalogo/zeekrlife",
   },
   {
@@ -65,181 +46,269 @@ const catalogLinks = [
   },
 ];
 
-function isActivePath(pathname: string, href: string) {
-  if (href === "/") {
-    return pathname === "/";
-  }
-
-  return pathname.startsWith(href.split("?")[0]);
-}
-
 export function Header() {
   const pathname = usePathname();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const catalogActive =
+    pathname.startsWith("/catalogo") ||
+    pathname.startsWith("/vehiculos");
+
+  const seminuevosActive = pathname.startsWith("/inventario");
+  const branchesActive = pathname.startsWith("/sucursales");
+  const servicesActive = pathname.startsWith("/servicios");
 
   function closeMobileMenu() {
-    setIsMobileMenuOpen(false);
+    setMobileMenuOpen(false);
+  }
+
+  function desktopLinkClass(active: boolean) {
+    return `group relative flex h-full items-center px-4 text-sm font-bold transition ${
+      active
+        ? "text-[#0a0f14]"
+        : "text-slate-600 hover:text-[#0a0f14]"
+    }`;
+  }
+
+  function activeLineClass(active: boolean) {
+    return `absolute bottom-0 left-4 right-4 h-[2px] origin-left bg-[#c98a35] transition-transform duration-300 ${
+      active
+        ? "scale-x-100"
+        : "scale-x-0 group-hover:scale-x-100"
+    }`;
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--rise-border)] bg-white/95 backdrop-blur">
-      <Container>
-        <div className="flex h-20 items-center justify-between">
-          <Link href="/" className="flex items-center" onClick={closeMobileMenu}>
-            <Image
-              src="/brand/logo-rise.jpeg"
-              alt="Grupo Rise"
-              width={210}
-              height={60}
-              priority
-              className="h-12 w-auto object-contain"
-            />
+    <header className="sticky top-0 z-50 border-b border-black/5 bg-white/95 shadow-[0_6px_25px_rgba(15,23,42,0.04)] backdrop-blur-xl">
+      <div className="mx-auto flex h-[100px] w-full max-w-[1440px] items-center gap-7 px-5 md:px-8 lg:px-10">
+        {/* Logo */}
+        <Link
+          href="/"
+          onClick={closeMobileMenu}
+          aria-label="Ir al inicio de Grupo Rise"
+          className="flex min-w-0 shrink-0 items-center justify-start lg:w-[220px]"
+        >
+          <Image
+            src="/brand/logo-rise.jpeg"
+            alt="Grupo Rise"
+            width={220}
+            height={75}
+            priority
+            className="h-[52px] w-auto origin-left scale-[1.06] object-contain mix-blend-multiply"
+          />
+        </Link>
+
+        {/* Navegación de escritorio */}
+        <nav className="hidden h-full flex-1 items-center justify-center lg:flex">
+          <Link
+            href="/"
+            className={desktopLinkClass(pathname === "/")}
+          >
+            Inicio
+            <span className={activeLineClass(pathname === "/")} />
           </Link>
 
-          <nav className="hidden items-center gap-2 lg:flex">
+          {/* Catálogo desplegable */}
+          <div className="group relative flex h-full items-center">
             <Link
-              href="/"
-              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${pathname === "/"
-                  ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
-                }`}
+              href="/catalogo"
+              className={desktopLinkClass(catalogActive)}
             >
-              Inicio
+              <span className="flex items-center gap-1.5">
+                Catálogo
+
+                <ChevronDown
+                  size={15}
+                  className="transition-transform duration-200 group-hover:rotate-180"
+                />
+              </span>
+
+              <span className={activeLineClass(catalogActive)} />
             </Link>
 
-            <div className="group relative">
-              <button
-                type="button"
-                className={`inline-flex items-center gap-1 rounded-xl px-4 py-2 text-sm font-bold transition ${pathname.startsWith("/catalogo")
-                    ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
-                  }`}
-              >
-                Nuestras Marcas
-                <ChevronDown
-                  size={16}
-                  className="transition group-hover:rotate-180"
-                />
-              </button>
+            {/* El padding superior evita que el dropdown parpadee */}
+            <div className="invisible absolute left-1/2 top-full z-50 w-[510px] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100">
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+                <div className="border-b border-slate-100 bg-slate-50 px-5 py-4">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-[#a66d27]">
+                    Marcas que manejamos.
+                  </p>
 
-              <div className="invisible absolute left-0 top-full z-50 w-56 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100">
-                <div className="rounded-2xl border border-[var(--rise-border)] bg-white p-2 shadow-xl shadow-slate-900/10">
-                  {catalogLinks.map((item) => (
+                  <p className="mt-1 text-sm text-slate-500">
+                    Explora vehículos nuevos por marca.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-1 p-3">
+                  <Link
+                    href="/catalogo"
+                    className="col-span-2 flex items-center justify-between rounded-lg bg-[#0a0f14] px-4 py-3 text-sm font-black text-white transition hover:bg-[#171d24]"
+                  >
+                    Ver todos los vehículos nuevos
+                    <ArrowRight size={17} />
+                  </Link>
+
+                  {catalogBrands.map((brand) => (
                     <Link
-                      key={item.href}
-                      href={item.href}
-                      className="block rounded-xl px-4 py-3 text-sm font-bold text-slate-600 transition hover:bg-[var(--rise-blue-soft)] hover:text-[var(--rise-blue)]"
+                      key={brand.label}
+                      href={brand.href}
+                      className="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#f7ead7] hover:text-[#0a0f14]"
                     >
-                      {item.label}
+                      {brand.label}
+
+                      <ArrowRight
+                        size={14}
+                        className="text-[#c98a35]"
+                      />
                     </Link>
                   ))}
                 </div>
               </div>
             </div>
-
-            <Link
-              href="/inventario"
-              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${pathname.startsWith("/inventario")
-                  ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
-                }`}
-            >
-              Seminuevos
-            </Link>
-
-            <Link
-              href="/sucursales"
-              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${pathname.startsWith("/sucursales")
-                  ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
-                }`}
-            >
-              Sucursales
-            </Link>
-
-            <Link
-              href="/servicios"
-              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${pathname.startsWith("/servicios")
-                  ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-[var(--rise-navy)]"
-                }`}
-            >
-              Servicios
-            </Link>
-          </nav>
-
-          <div className="hidden items-center gap-3 lg:flex">
-            <Link
-              href="/agendar-cita"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-            >
-              <CalendarDays size={18} />
-              Agendar cita
-            </Link>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen((current) => !current)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--rise-border)] text-[var(--rise-navy)] lg:hidden"
-            aria-label="Abrir menú"
+          <Link
+            href="/inventario"
+            className={desktopLinkClass(seminuevosActive)}
           >
-            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+            Seminuevos
+            <span className={activeLineClass(seminuevosActive)} />
+          </Link>
+
+          <Link
+            href="/sucursales"
+            className={desktopLinkClass(branchesActive)}
+          >
+            Sucursales
+            <span className={activeLineClass(branchesActive)} />
+          </Link>
+
+          <Link
+            href="/servicios"
+            className={desktopLinkClass(servicesActive)}
+          >
+            Servicios
+            <span className={activeLineClass(servicesActive)} />
+          </Link>
+        </nav>
+
+        {/* Acción derecha */}
+        <div className="hidden w-[220px] shrink-0 justify-end lg:flex">
+          <Link
+            href="/contacto"
+            className="group inline-flex h-12 items-center justify-center gap-3 rounded-lg border border-[#0a0f14] bg-[#0a0f14] px-6 text-sm font-black text-white shadow-[0_8px_22px_rgba(10,15,20,0.15)] transition hover:-translate-y-0.5 hover:border-[#c98a35] hover:bg-[#c98a35] hover:text-[#0a0f14]"
+          >
+            Contáctanos
+
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-[#c98a35] text-[#0a0f14] transition group-hover:bg-[#0a0f14] group-hover:text-white">
+              <ArrowRight size={14} strokeWidth={2.6} />
+            </span>
+          </Link>
         </div>
 
-        {isMobileMenuOpen && (
-          <div className="border-t border-[var(--rise-border)] py-4 lg:hidden">
-            <nav className="grid gap-2">
-              {mainLinks.map((item) => {
-                const active = isActivePath(pathname, item.href);
+        {/* Botón móvil */}
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen((current) => !current)}
+          aria-expanded={mobileMenuOpen}
+          aria-label={
+            mobileMenuOpen
+              ? "Cerrar menú de navegación"
+              : "Abrir menú de navegación"
+          }
+          className="ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-slate-200 bg-[#0a0f14] text-white transition hover:bg-[#c98a35] hover:text-[#0a0f14] lg:hidden"
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+      </div>
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={closeMobileMenu}
-                    className={`rounded-xl px-4 py-3 text-sm font-black transition ${active
-                      ? "bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]"
-                      : "text-slate-700 hover:bg-slate-100"
-                      }`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
+      {/* Menú móvil */}
+      <div
+        className={`overflow-hidden border-t bg-white transition-all duration-300 lg:hidden ${
+          mobileMenuOpen
+            ? "max-h-[600px] border-slate-100 opacity-100"
+            : "max-h-0 border-transparent opacity-0"
+        }`}
+      >
+        <nav className="mx-auto w-full max-w-[1440px] space-y-1 px-5 py-5 md:px-8">
+          <MobileLink
+            href="/"
+            label="Inicio"
+            active={pathname === "/"}
+            onClick={closeMobileMenu}
+          />
 
-              <div className="mt-2 rounded-2xl bg-slate-50 p-3">
-                <p className="px-1 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
-                  Catálogo
-                </p>
+          <MobileLink
+            href="/catalogo"
+            label="Catálogo"
+            active={catalogActive}
+            onClick={closeMobileMenu}
+          />
 
-                <div className="mt-2 grid gap-1">
-                  {catalogLinks.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={closeMobileMenu}
-                      className="rounded-xl px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-white hover:text-[var(--rise-blue)]"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
+          <MobileLink
+            href="/inventario"
+            label="Seminuevos"
+            active={seminuevosActive}
+            onClick={closeMobileMenu}
+          />
 
-              <Link
-                href="/sucursales"
-                onClick={closeMobileMenu}
-                className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-              >
-                <CalendarDays size={18} />
-                Agendar cita
-              </Link>
-            </nav>
-          </div>
-        )}
-      </Container>
+          <MobileLink
+            href="/sucursales"
+            label="Sucursales"
+            active={branchesActive}
+            onClick={closeMobileMenu}
+          />
+
+          <MobileLink
+            href="/servicios"
+            label="Servicios"
+            active={servicesActive}
+            onClick={closeMobileMenu}
+          />
+
+          <Link
+            href="/servicios"
+            onClick={closeMobileMenu}
+            className="mt-4 flex h-13 items-center justify-center gap-3 rounded-lg bg-[#0a0f14] px-5 py-4 text-sm font-black text-white transition hover:bg-[#c98a35] hover:text-[#0a0f14]"
+          >
+            Contáctanos
+            <ArrowRight size={17} />
+          </Link>
+        </nav>
+      </div>
     </header>
+  );
+}
+
+function MobileLink({
+  href,
+  label,
+  active,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`flex items-center justify-between rounded-lg px-4 py-3.5 text-sm font-black transition ${
+        active
+          ? "bg-[#f7ead7] text-[#0a0f14]"
+          : "text-slate-600 hover:bg-slate-50 hover:text-[#0a0f14]"
+      }`}
+    >
+      {label}
+
+      <ArrowRight
+        size={16}
+        className={
+          active ? "text-[#a66d27]" : "text-slate-400"
+        }
+      />
+    </Link>
   );
 }

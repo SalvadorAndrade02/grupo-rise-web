@@ -26,10 +26,63 @@ body {
 }
 
 :root {
-  --rise-navy: #0b1f2a;
-  --rise-navy-soft: #123246;
-  --rise-blue: #174e73;
-  --rise-blue-soft: #eaf3f8;
-  --rise-border: #d8e3ea;
-  --rise-bg: #f6f9fb;
+  /* Variables existentes del proyecto */
+  --rise-navy: #071d2a;
+  --rise-blue: #0755b5;
+  --rise-blue-soft: #eaf3fb;
+  --rise-border: #d9e3ea;
+  --rise-bg: #f4f7f9;
+
+  /* Nueva identidad del sitio público */
+  --public-ink: #0a0f14;
+  --public-ink-soft: #151b22;
+  --public-text: #20262d;
+  --public-muted: #69717c;
+
+  --public-accent: #c98a35;
+  --public-accent-dark: #9a6423;
+  --public-accent-soft: #f7ead7;
+
+  --public-background: #f6f6f3;
+  --public-surface: #ffffff;
+  --public-surface-soft: #f1f2f3;
+  --public-border: #e2e4e7;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--public-background);
+  color: var(--public-text);
+}
+
+::selection {
+  background: var(--public-accent);
+  color: white;
+}
+
+.public-container {
+  width: min(100% - 2rem, 1440px);
+  margin-inline: auto;
+}
+
+.public-eyebrow {
+  color: var(--public-accent-dark);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.public-title {
+  color: var(--public-ink);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+
+.public-muted {
+  color: var(--public-muted);
 }

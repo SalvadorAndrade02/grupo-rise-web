@@ -1,128 +1,111 @@
-import Link from "next/link";
-import { ArrowRight, ImageIcon, Sparkles } from "lucide-react";
+"use client";
 
-type HomeBrandCard = {
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { useState } from "react";
+
+type BrandItem = {
   id: number;
   name: string;
   slug: string;
-  cover: string;
-  count: number;
-  minPrice: number;
+  logo?: string | null;
 };
 
 type HomeBrandCatalogsProps = {
-  brands: HomeBrandCard[];
+  brands: BrandItem[];
 };
 
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-export function HomeBrandCatalogs({ brands }: HomeBrandCatalogsProps) {
+export function HomeBrandCatalogs({
+  brands,
+}: HomeBrandCatalogsProps) {
   if (brands.length === 0) {
     return null;
   }
 
   return (
-    <section className="bg-[var(--rise-bg)] px-4 py-14 md:py-18">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+    <section
+      id="marcas"
+      className="border-y border-black/5 bg-white py-16 md:py-20"
+    >
+      <div className="mx-auto w-full max-w-[1440px] px-5 md:px-8 lg:px-10">
+        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
-            <p className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-              <Sparkles size={17} />
-              Catálogos por marca
-            </p>
+            <div className="flex items-center gap-3">
+              <span className="h-px w-8 bg-[#bd8540]" />
 
-            <h2 className="mt-3 text-3xl font-black tracking-tight text-[var(--rise-navy)] md:text-5xl">
-              Explora nuestras marcas
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9b682a]">
+                Grupo multimarca
+              </p>
+            </div>
+
+            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#0a0f14] md:text-4xl">
+              Nuestras marcas
             </h2>
 
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
-              Accede directamente al catálogo de cada marca y consulta unidades
-              nuevas disponibles en Grupo Rise.
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-slate-500">
+              Explora los vehículos disponibles de las marcas que forman parte
+              de Grupo Rise.
             </p>
           </div>
 
           <Link
             href="/catalogo"
-            className="inline-flex h-12 items-center justify-center rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+            className="group inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.15em] text-[#0a0f14]"
           >
-            Ver catálogo completo
+            Ver catálogo
+
+            <span className="grid h-9 w-9 place-items-center rounded-full border border-black/15 transition group-hover:border-[#c9954d] group-hover:bg-[#c9954d]">
+              <ArrowRight
+                size={15}
+                className="transition-transform group-hover:translate-x-0.5"
+              />
+            </span>
           </Link>
         </div>
 
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-9 grid grid-cols-2 border-l border-t border-slate-200 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
           {brands.map((brand) => (
-            <Link
-              key={brand.id}
-              href={`/catalogo/${brand.slug}`}
-              className="group overflow-hidden rounded-[2rem] border border-[var(--rise-border)] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-900/10"
-            >
-              <div className="relative h-56 overflow-hidden bg-slate-100">
-                {brand.cover ? (
-                  <img
-                    src={brand.cover}
-                    alt={brand.name}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <ImageIcon size={44} className="text-slate-400" />
-                  </div>
-                )}
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-
-                <div className="absolute bottom-4 left-4 right-4">
-                  <p className="text-xs font-black uppercase tracking-[0.25em] text-blue-100">
-                    Catálogo
-                  </p>
-
-                  <h3 className="mt-1 text-3xl font-black text-white">
-                    {brand.name}
-                  </h3>
-                </div>
-              </div>
-
-              <div className="p-5">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl bg-slate-50 p-3">
-                    <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                      Unidades
-                    </p>
-
-                    <p className="mt-1 text-lg font-black text-[var(--rise-navy)]">
-                      {brand.count > 0 ? brand.count : "Próx."}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl bg-slate-50 p-3">
-                    <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                      Desde
-                    </p>
-
-                    <p className="mt-1 text-lg font-black text-[var(--rise-navy)]">
-                      {brand.minPrice ? formatMoney(brand.minPrice) : "Consultar"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-4 inline-flex items-center gap-2 text-sm font-black text-[var(--rise-blue)]">
-                  Ver {brand.name}
-                  <ArrowRight
-                    size={17}
-                    className="transition group-hover:translate-x-1"
-                  />
-                </div>
-              </div>
-            </Link>
+            <BrandLogoCard key={brand.id} brand={brand} />
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function BrandLogoCard({
+  brand,
+}: {
+  brand: BrandItem;
+}) {
+  const [imageError, setImageError] = useState(false);
+  const showLogo = Boolean(brand.logo) && !imageError;
+
+  return (
+    <Link
+      href={`/catalogo/${brand.slug}`}
+      aria-label={`Ver vehículos de ${brand.name}`}
+      className="group relative flex min-h-[150px] items-center justify-center overflow-hidden border-b border-r border-slate-200 bg-white px-5 py-7 transition duration-300 hover:z-10 hover:bg-[#f7f4ee] hover:shadow-[0_16px_35px_rgba(15,23,42,0.08)]"
+    >
+      <div className="relative flex h-[76px] w-full items-center justify-center">
+        {showLogo ? (
+          <Image
+            src={brand.logo!}
+            alt={`Logo ${brand.name}`}
+            fill
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 28vw, 12vw"
+            className="object-contain grayscale transition duration-300 group-hover:scale-105 group-hover:grayscale-0"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <span className="text-center text-lg font-black tracking-[-0.025em] text-slate-700 transition group-hover:text-[#9b682a]">
+            {brand.name}
+          </span>
+        )}
+      </div>
+
+      <span className="absolute bottom-0 left-1/2 h-[3px] w-0 -translate-x-1/2 bg-[#c9954d] transition-all duration-300 group-hover:w-full" />
+    </Link>
   );
 }

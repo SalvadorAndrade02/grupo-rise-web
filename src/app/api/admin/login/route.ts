@@ -30,9 +30,12 @@ function shouldUseSecureCookies() {
   return process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://") ?? false;
 }
 
-function redirectTo(request: Request, path: string) {
-  return NextResponse.redirect(new URL(path, request.url), {
+function redirectTo(path: string) {
+  return new NextResponse(null, {
     status: 303,
+    headers: {
+      Location: path,
+    },
   });
 }
 
@@ -44,7 +47,6 @@ export async function POST(request: Request) {
 
   if (!email || !password) {
     return redirectTo(
-      request,
       `/admin-login?error=${encodeURIComponent(
         "Ingresa correo y contraseña."
       )}`
@@ -55,7 +57,6 @@ export async function POST(request: Request) {
 
   if (!admin) {
     return redirectTo(
-      request,
       `/admin-login?error=${encodeURIComponent(
         "Correo o contraseña incorrectos."
       )}`
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
     },
   });
 
-  const response = redirectTo(request, "/admin");
+  const response = redirectTo("/admin");
 
   response.cookies.set(ADMIN_SESSION_COOKIE, token, {
     httpOnly: true,
