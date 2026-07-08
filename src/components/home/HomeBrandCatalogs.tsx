@@ -32,9 +32,9 @@ export function HomeBrandCatalogs({
         <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
             <div className="flex items-center gap-3">
-              <span className="h-px w-8 bg-[#bd8540]" />
+              <span className="h-px w-8 bg-[#1A2A3A]" /> {/* Dorado cambiado al azul de la foto */}
 
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9b682a]">
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#1A2A3A]"> {/* Dorado cambiado al azul de la foto */}
                 Grupo multimarca
               </p>
             </div>
@@ -55,7 +55,7 @@ export function HomeBrandCatalogs({
           >
             Ver catálogo
 
-            <span className="grid h-9 w-9 place-items-center rounded-full border border-black/15 transition group-hover:border-[#c9954d] group-hover:bg-[#c9954d]">
+            <span className="grid h-9 w-9 place-items-center rounded-full border border-black/15 transition group-hover:border-[#1A2A3A] group-hover:bg-[#1A2A3A] group-hover:text-white"> {/* Círculo en hover cambia al azul de la foto */}
               <ArrowRight
                 size={15}
                 className="transition-transform group-hover:translate-x-0.5"
@@ -86,7 +86,7 @@ function BrandLogoCard({
     <Link
       href={`/catalogo/${brand.slug}`}
       aria-label={`Ver vehículos de ${brand.name}`}
-      className="group relative flex min-h-[150px] items-center justify-center overflow-hidden border-b border-r border-slate-200 bg-white px-5 py-7 transition duration-300 hover:z-10 hover:bg-[#f7f4ee] hover:shadow-[0_16px_35px_rgba(15,23,42,0.08)]"
+      className="group relative flex min-h-[150px] items-center justify-center overflow-hidden border-b border-r border-slate-200 bg-white px-5 py-7 transition duration-300 hover:z-10 hover:bg-[#1A2A3A]/5 hover:shadow-[0_16px_35px_rgba(15,23,42,0.08)]" // El fondo hover cambió de beige a un toque sutil del azul de la foto
     >
       <div className="relative flex h-[76px] w-full items-center justify-center">
         {showLogo ? (
@@ -95,16 +95,17 @@ function BrandLogoCard({
             alt={`Logo ${brand.name}`}
             fill
             sizes="(max-width: 640px) 45vw, (max-width: 1024px) 28vw, 12vw"
-            className="object-contain grayscale transition duration-300 group-hover:scale-105 group-hover:grayscale-0 group-active:scale-105 group-active:grayscale-0" onError={() => setImageError(true)}
+            className="object-contain grayscale transition duration-300 group-hover:scale-105 group-hover:grayscale-0 group-active:scale-105 group-active:grayscale-0"
+            onError={() => setImageError(true)}
           />
         ) : (
-          <span className="text-center text-lg font-black tracking-[-0.025em] text-slate-700 transition group-hover:text-[#9b682a]">
+          <span className="text-center text-lg font-black tracking-[-0.025em] text-slate-700 transition group-hover:text-[#1A2A3A]"> {/* Texto sin logo cambia al azul de la foto */}
             {brand.name}
           </span>
         )}
       </div>
 
-      <span className="absolute bottom-0 left-1/2 h-[3px] w-0 -translate-x-1/2 bg-[#c9954d] transition-all duration-300 group-hover:w-full" />
+      <span className="absolute bottom-0 left-1/2 h-[3px] w-0 -translate-x-1/2 bg-[#1A2A3A] transition-all duration-300 group-hover:w-full" /> {/* Línea inferior expansiva usa el azul de la foto */}
     </Link>
   );
 }

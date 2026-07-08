@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -64,9 +66,9 @@ export function FeaturedVehicles({
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
             <div className="flex items-center gap-3">
-              <span className="h-px w-8 bg-[#bd8540]" />
+              <span className="h-px w-8 bg-[#1A2A3A]" /> {/* Línea decorativa con el azul de la foto */}
 
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9b682a]">
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#1A2A3A]"> {/* Texto con el azul de la foto */}
                 Selección Grupo Rise
               </p>
             </div>
@@ -87,7 +89,7 @@ export function FeaturedVehicles({
           >
             Ver todos los vehículos
 
-            <span className="grid h-10 w-10 place-items-center rounded-full border border-black/15 bg-white transition group-hover:border-[#c9954d] group-hover:bg-[#c9954d]">
+            <span className="grid h-10 w-10 place-items-center rounded-full border border-black/15 bg-white transition group-hover:border-[#1A2A3A] group-hover:bg-[#1A2A3A] group-hover:text-white"> {/* Círculo hover con el azul de la foto */}
               <ArrowRight
                 size={16}
                 className="transition-transform group-hover:translate-x-0.5"
@@ -130,7 +132,7 @@ function VehicleCard({
             fill
             priority={priority}
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-            className="object-cover transition duration-700 group-hover:scale-[1.045]"
+            className="object-cover transition duration-700 group-hover:scale-[1.045] group-active:scale-[1.045]"
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_center,#d9d7d1,#f1f0ec)]">
@@ -143,47 +145,31 @@ function VehicleCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
 
         <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-          <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#0a0f14] shadow-sm">
+          <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#1A2A3A] shadow-sm"> {/* Texto activo usa el azul de la foto */}
             {getConditionLabel(vehicle.condition)}
           </span>
 
-          <span className="rounded-full bg-[#c9954d] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#0a0f14] shadow-sm">
+          <span className="rounded-full bg-[#1A2A3A] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-white shadow-sm"> {/* Badge cambia a fondo azul de la foto y texto blanco */}
             {getCategoryLabel(vehicle.category)}
           </span>
         </div>
 
-        <div className="absolute bottom-4 right-4 grid h-11 w-11 place-items-center rounded-full bg-white text-[#0a0f14] shadow-lg transition duration-300 group-hover:bg-[#c9954d]">
+        <div className="absolute bottom-4 right-4 grid h-11 w-11 place-items-center rounded-full bg-white text-[#0a0f14] shadow-lg transition duration-300 group-hover:bg-[#1A2A3A] group-hover:text-white group-active:text-white"> {/* Círculo flotante cambia al azul de la foto en hover */}
           <ArrowRight
             size={18}
-            className="transition-transform group-hover:translate-x-0.5"
+            className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"  
           />
         </div>
       </Link>
 
       <div className="p-5 md:p-6">
-        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#9b682a]">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#1A2A3A]"> {/* Nombre de marca superior usa el azul de la foto */}
           {vehicle.brandName}
         </p>
 
         <h3 className="mt-2 line-clamp-2 text-2xl font-black leading-tight tracking-[-0.035em] text-[#0a0f14]">
           {vehicle.name}
         </h3>
-
-        {/* <p className="mt-1 text-sm font-semibold text-slate-500">
-          {vehicle.model}
-        </p> */}
-
-        {/* <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 border-y border-slate-100 py-4">
-          {<span className="inline-flex items-center gap-2 text-xs font-bold text-slate-500">
-            <CalendarDays size={15} className="text-[#b77b33]" />
-            {vehicle.year}
-          </span>}
-
-          {<span className="inline-flex items-center gap-2 text-xs font-bold text-slate-500">
-            <MapPin size={15} className="text-[#b77b33]" />
-            {vehicle.branchCity}
-          </span> }
-        </div> */}
 
         <div className="mt-5 flex items-end justify-between gap-4">
           <div>
@@ -204,7 +190,7 @@ function VehicleCard({
 
             <ArrowRight
               size={14}
-              className="text-[#b77b33] transition-transform group-hover/link:translate-x-1"
+              className="text-[#1A2A3A] transition-transform group-hover/link:translate-x-1 group-active/link:translate-x-1"
             />
           </Link>
         </div>

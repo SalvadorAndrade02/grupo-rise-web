@@ -63,19 +63,18 @@ export function Header() {
   }
 
   function desktopLinkClass(active: boolean) {
-    return `group relative flex h-full items-center px-4 text-sm font-bold transition ${
-      active
-        ? "text-[#0a0f14]"
-        : "text-slate-600 hover:text-[#0a0f14]"
-    }`;
+    return `group relative flex h-full items-center px-4 text-sm font-bold transition ${active
+        ? "text-[#1A2A3A]" // Color de la foto (azul marino oscuro) para el enlace activo
+        : "text-slate-600 hover:text-[#1A2A3A]" // Hover también usa el color de la foto
+      }`;
   }
 
   function activeLineClass(active: boolean) {
-    return `absolute bottom-0 left-4 right-4 h-[2px] origin-left bg-[#c98a35] transition-transform duration-300 ${
+    return `absolute bottom-0 left-4 right-4 h-[2px] origin-left bg-[#1A2A3A] transition-transform duration-300 ${ // Color de la foto para la línea
       active
         ? "scale-x-100"
         : "scale-x-0 group-hover:scale-x-100"
-    }`;
+      }`;
   }
 
   return (
@@ -130,7 +129,7 @@ export function Header() {
             <div className="invisible absolute left-1/2 top-full z-50 w-[510px] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100">
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
                 <div className="border-b border-slate-100 bg-slate-50 px-5 py-4">
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-[#a66d27]">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-[#1A2A3A]"> {/* Color de la foto para el texto */}
                     Marcas que manejamos.
                   </p>
 
@@ -142,7 +141,7 @@ export function Header() {
                 <div className="grid grid-cols-2 gap-1 p-3">
                   <Link
                     href="/catalogo"
-                    className="col-span-2 flex items-center justify-between rounded-lg bg-[#0a0f14] px-4 py-3 text-sm font-black text-white transition hover:bg-[#171d24]"
+                    className="col-span-2 flex items-center justify-between rounded-lg bg-[#1A2A3A] px-4 py-3 text-sm font-black text-white transition hover:bg-[#1A2A3A]/90" // Botón usa el color de la foto
                   >
                     Ver todos los vehículos nuevos
                     <ArrowRight size={17} />
@@ -152,13 +151,13 @@ export function Header() {
                     <Link
                       key={brand.label}
                       href={brand.href}
-                      className="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#f7ead7] hover:text-[#0a0f14]"
+                      className="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#1A2A3A]/5 hover:text-[#1A2A3A]" // Hover usa fondo claro y texto del color de la foto
                     >
                       {brand.label}
 
                       <ArrowRight
                         size={14}
-                        className="text-[#c98a35]"
+                        className="text-[#1A2A3A]" // Color de la foto para la flecha
                       />
                     </Link>
                   ))}
@@ -196,11 +195,11 @@ export function Header() {
         <div className="hidden w-[220px] shrink-0 justify-end lg:flex">
           <Link
             href="/contacto"
-            className="group inline-flex h-12 items-center justify-center gap-3 rounded-lg border border-[#0a0f14] bg-[#0a0f14] px-6 text-sm font-black text-white shadow-[0_8px_22px_rgba(10,15,20,0.15)] transition hover:-translate-y-0.5 hover:border-[#c98a35] hover:bg-[#c98a35] hover:text-[#0a0f14]"
+            className="group inline-flex h-12 items-center justify-center gap-3 rounded-lg border border-[#1A2A3A] bg-[#1A2A3A] px-6 text-sm font-black text-white shadow-[0_8px_22px_rgba(26,42,58,0.15)] transition hover:-translate-y-0.5 hover:border-[#1A2A3A]/90 hover:bg-[#1A2A3A]/90 active:scale-[0.98]" // Botón "Contáctanos" usa el color de la foto
           >
             Contáctanos
 
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-[#c98a35] text-[#0a0f14] transition group-hover:bg-[#0a0f14] group-hover:text-white">
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-white/20 text-white transition group-hover:bg-white group-hover:text-[#1A2A3A]"> {/* Fondo de flecha usa blanco translúcido */}
               <ArrowRight size={14} strokeWidth={2.6} />
             </span>
           </Link>
@@ -216,7 +215,7 @@ export function Header() {
               ? "Cerrar menú de navegación"
               : "Abrir menú de navegación"
           }
-          className="ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-slate-200 bg-[#0a0f14] text-white transition hover:bg-[#c98a35] hover:text-[#0a0f14] lg:hidden"
+          className="ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-slate-200 bg-[#1A2A3A] text-white transition hover:bg-[#1A2A3A]/90 active:scale-95 lg:hidden" // Botón móvil usa el color de la foto
         >
           {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
@@ -224,11 +223,10 @@ export function Header() {
 
       {/* Menú móvil */}
       <div
-        className={`overflow-hidden border-t bg-white transition-all duration-300 lg:hidden ${
-          mobileMenuOpen
+        className={`overflow-hidden border-t bg-white transition-all duration-300 lg:hidden ${mobileMenuOpen
             ? "max-h-[600px] border-slate-100 opacity-100"
             : "max-h-0 border-transparent opacity-0"
-        }`}
+          }`}
       >
         <nav className="mx-auto w-full max-w-[1440px] space-y-1 px-5 py-5 md:px-8">
           <MobileLink
@@ -267,9 +265,9 @@ export function Header() {
           />
 
           <Link
-            href="/servicios"
+            href="/contacto"
             onClick={closeMobileMenu}
-            className="mt-4 flex h-13 items-center justify-center gap-3 rounded-lg bg-[#0a0f14] px-5 py-4 text-sm font-black text-white transition hover:bg-[#c98a35] hover:text-[#0a0f14]"
+            className="mt-4 flex items-center justify-center gap-3 rounded-lg bg-[#1A2A3A] px-5 py-4 text-sm font-black text-white transition hover:bg-[#1A2A3A]/90 active:scale-[0.98]" // Botón móvil usa el color de la foto
           >
             Contáctanos
             <ArrowRight size={17} />
@@ -295,19 +293,16 @@ function MobileLink({
     <Link
       href={href}
       onClick={onClick}
-      className={`flex items-center justify-between rounded-lg px-4 py-3.5 text-sm font-black transition ${
-        active
-          ? "bg-[#f7ead7] text-[#0a0f14]"
-          : "text-slate-600 hover:bg-slate-50 hover:text-[#0a0f14]"
-      }`}
+      className={`flex items-center justify-between rounded-lg px-4 py-3.5 text-sm font-black transition ${active
+          ? "bg-[#1A2A3A]/5 text-[#1A2A3A]" // Enlace móvil activo usa color claro y texto del color de la foto
+          : "text-slate-600 hover:bg-[#1A2A3A]/5 hover:text-[#1A2A3A]" // Hover usa color claro y texto del color de la foto
+        }`}
     >
       {label}
 
       <ArrowRight
         size={16}
-        className={
-          active ? "text-[#a66d27]" : "text-slate-400"
-        }
+        className={active ? "text-[#1A2A3A]" : "text-slate-400"} // Color de la foto para flecha activa
       />
     </Link>
   );

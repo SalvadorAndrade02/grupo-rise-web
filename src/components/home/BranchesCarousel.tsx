@@ -171,9 +171,9 @@ export function BranchesCarousel({
                 <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
                     <div>
                         <div className="flex items-center gap-3">
-                            <span className="h-px w-8 bg-[#bd8540]" />
+                            <span className="h-px w-8 bg-[#1A2A3A]" /> {/* Dorado cambiado a azul marino */}
 
-                            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9b682a]">
+                            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#1A2A3A]"> {/* Subtítulo en azul marino */}
                                 Presencia Grupo Rise
                             </p>
                         </div>
@@ -183,7 +183,7 @@ export function BranchesCarousel({
                         </h2>
 
                         <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-slate-500">
-                            Conoce nuestras sucursales y encuentra atención, vehículos y
+                            Conoce nuestras sucursales and encuentra atención, vehículos y
                             servicios cerca de ti.
                         </p>
                     </div>
@@ -193,7 +193,7 @@ export function BranchesCarousel({
                             type="button"
                             onClick={() => moveCarousel("left")}
                             aria-label="Mostrar sucursal anterior"
-                            className="grid h-11 w-11 place-items-center rounded-full border border-black/15 bg-white text-[#0a0f14] transition hover:border-[#c9954d] hover:bg-[#c9954d]"
+                            className="grid h-11 w-11 place-items-center rounded-full border border-black/15 bg-white text-[#0a0f14] transition hover:border-[#1A2A3A] hover:bg-[#1A2A3A] hover:text-white active:scale-95 active:border-[#192a3a] active:bg-[#192a3a] active:text-white"
                         >
                             <ChevronLeft size={20} />
                         </button>
@@ -202,7 +202,7 @@ export function BranchesCarousel({
                             type="button"
                             onClick={() => moveCarousel("right")}
                             aria-label="Mostrar siguiente sucursal"
-                            className="grid h-11 w-11 place-items-center rounded-full border border-black/15 bg-white text-[#0a0f14] transition hover:border-[#c9954d] hover:bg-[#c9954d]"
+                            className="grid h-11 w-11 place-items-center rounded-full border border-black/15 bg-white text-[#0a0f14] transition hover:border-[#1A2A3A] hover:bg-[#1A2A3A] hover:text-white active:scale-95 active:border-[#192a3a] active:bg-[#192a3a] active:text-white"
                         >
                             <ChevronRight size={20} />
                         </button>
@@ -215,7 +215,7 @@ export function BranchesCarousel({
 
                             <ArrowRight
                                 size={16}
-                                className="text-[#b77b33]"
+                                className="text-[#1A2A3A]"
                             />
                         </Link>
                     </div>
@@ -243,7 +243,7 @@ export function BranchesCarousel({
                 <div className="mt-5 flex justify-center sm:hidden">
                     <Link
                         href="/sucursales"
-                        className="inline-flex h-12 items-center justify-center gap-3 rounded-lg bg-[#0a0f14] px-6 text-sm font-black text-white transition hover:bg-[#c9954d] hover:text-[#0a0f14]"
+                        className="inline-flex h-12 items-center justify-center gap-3 rounded-lg bg-[#0a0f14] px-6 text-sm font-black text-white transition hover:bg-[#1A2A3A]"
                     >
                         Ver todas las sucursales
                         <ArrowRight size={17} />
@@ -266,7 +266,7 @@ function BranchCard({
     const services = getServiceLabels(branch.services);
 
     return (
-        <article className="group w-[84vw] max-w-[355px] shrink-0 snap-start overflow-hidden rounded-[18px] border border-black/8 bg-[#f8f7f4] shadow-[0_10px_35px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(15,23,42,0.1)] sm:w-[350px] lg:w-[370px] lg:max-w-[370px]">
+        <article className="group w-[84vw] max-w-[355px] shrink-0 snap-start overflow-hidden rounded-[18px] border border-black/8 bg-[#f8f7f4] shadow-[0_10px_35px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(15,23,42,0.1)] sm:w-[350px] lg:w-[370px] lg:max-w-[370px] active:scale-[0.98] active:border-[#192a3a]/50">
             <Link
                 href={`/sucursales/${branch.id}`}
                 className="relative block h-[205px] overflow-hidden bg-[#e8e7e2]"
@@ -278,7 +278,7 @@ function BranchCard({
                         fill
                         priority={priority}
                         sizes="(max-width: 640px) 84vw, 370px"
-                        className="object-cover transition duration-700 group-hover:scale-[1.045]"
+                        className="object-cover transition duration-700 group-hover:scale-[1.045] group-active:scale-[1.045]"
                     />
                 ) : (
                     <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_center,#d9d7d1,#efeee9)]">
@@ -304,7 +304,7 @@ function BranchCard({
                     </div>
                 )}
 
-                <div className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white text-[#0a0f14] shadow-lg transition group-hover:bg-[#c9954d]">
+                <div className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white text-[#0a0f14] shadow-lg transition group-hover:bg-[#1A2A3A] group-hover:text-white group-active:text-white" > {/* Círculo flotante cambia a azul marino */}
                     <ArrowRight
                         size={17}
                         className="transition-transform group-hover:translate-x-0.5"
@@ -313,52 +313,21 @@ function BranchCard({
             </Link>
 
             <div className="p-5">
-                <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#9b682a]">
+                <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#1A2A3A]"> {/* Tag superior en azul marino */}
                     Agencia Grupo Rise
                 </p>
 
                 <Link href={`/sucursales/${branch.id}`}>
-                    <h3 className="mt-2 line-clamp-2 min-h-[52px] text-xl font-black leading-tight tracking-[-0.03em] text-[#0a0f14] transition hover:text-[#9b682a]">
+                    <h3 className="mt-2 line-clamp-2 min-h-[52px] text-xl font-black leading-tight tracking-[-0.03em] text-[#0a0f14] transition hover:text-[#1A2A3A]"> {/* Hover del título cambia a azul marino */}
                         {branch.name}
                     </h3>
                 </Link>
 
-                {/* {location && (
-                    <div className="mt-4 flex items-start gap-2.5">
-                        <MapPin
-                            size={16}
-                            className="mt-0.5 shrink-0 text-[#b77b33]"
-                        />
-
-                        <p className="text-sm font-bold text-slate-600">
-                            {location}
-                        </p>
-                    </div>
-                )} */}
-
-               {/*  {branch.address && (
-                    <p className="mt-2 line-clamp-2 min-h-[40px] pl-[26px] text-xs font-medium leading-5 text-slate-500">
-                        {branch.address}
-                    </p>
-                )}
-
-                {services.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                        {services.map((service) => (
-                            <span
-                                key={service}
-                                className="rounded-full bg-[#eee9df] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#78501f]"
-                            >
-                                {service}
-                            </span>
-                        ))}
-                    </div>
-                )} */}
 
                 <div className="mt-5 grid gap-2 border-t border-black/8 pt-4 sm:grid-cols-2">
                     <Link
                         href={`/sucursales/${branch.id}`}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#0a0f14] px-4 text-xs font-black text-white transition hover:bg-[#c9954d] hover:text-[#0a0f14]"
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#0a0f14] px-4 text-xs font-black text-white transition hover:bg-[#1A2A3A] active:scale-95 active:border-[#192a3a] active:bg-[#192a3a] active:text-white"
                     >
                         Ver agencia
                         <ArrowRight size={15} />
@@ -369,7 +338,7 @@ function BranchCard({
                             href={whatsappHref}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-4 text-xs font-black text-[#0a0f14] transition hover:border-[#25d366] hover:bg-[#edfdf3]"
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-4 text-xs font-black text-[#0a0f14] transition hover:border-[#25d366] hover:bg-[#edfdf3] active:scale-[0.98] active:border-[#25d366] active:bg-[#edfdf3]"
                         >
                             <MessageCircle
                                 size={16}

@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -52,15 +54,14 @@ export function Footer() {
 
   return (
     <footer className="bg-[#090d12] text-white">
-      {/* Llamada principal */}
       <section className="border-b border-white/10">
         <div className="mx-auto w-full max-w-[1440px] px-5 py-12 md:px-8 lg:px-10 lg:py-14">
           <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]">
             <div>
               <div className="flex items-center gap-3">
-                <span className="h-px w-8 bg-[#d1a05a]" />
+                <span className="h-px w-8 bg-white" />
 
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#dfb777]">
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white">
                   Atención Grupo Rise
                 </p>
               </div>
@@ -78,7 +79,7 @@ export function Footer() {
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
               <Link
                 href="/catalogo"
-                className="group inline-flex h-13 items-center justify-center gap-3 rounded-lg bg-[#d1a05a] px-6 py-4 text-sm font-black text-[#0a0f14] transition hover:-translate-y-0.5 hover:bg-[#e2b979]"
+                className="group inline-flex h-13 items-center justify-center gap-3 rounded-lg bg-[#1A2A3A] px-6 py-4 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#263d54]"
               >
                 Explorar catálogo
 
@@ -101,10 +102,8 @@ export function Footer() {
         </div>
       </section>
 
-      {/* Contenido principal */}
       <section>
         <div className="mx-auto grid w-full max-w-[1440px] gap-10 px-5 py-14 md:grid-cols-2 md:px-8 lg:grid-cols-[1.35fr_0.8fr_0.8fr_1fr] lg:px-10 lg:py-16">
-          {/* Identidad */}
           <div>
             <Link
               href="/"
@@ -129,7 +128,7 @@ export function Footer() {
             <div className="mt-6 flex items-start gap-3">
               <MapPin
                 size={18}
-                className="mt-0.5 shrink-0 text-[#d1a05a]"
+                className="mt-0.5 shrink-0 text-[#1A2A3A]"
               />
 
               <p className="text-sm font-bold leading-6 text-white/70">
@@ -138,24 +137,21 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Vehículos */}
           <FooterColumn
             title="Vehículos"
             icon={CarFront}
             links={vehicleLinks}
           />
 
-          {/* Grupo Rise */}
           <FooterColumn
             title="Grupo Rise"
             icon={Building2}
             links={companyLinks}
           />
 
-          {/* Servicios */}
           <div>
             <div className="flex items-center gap-3">
-              <Wrench size={17} className="text-[#d1a05a]" />
+              <Wrench size={17} className="text-[#1A2A3A]" />
 
               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">
                 Atención
@@ -187,7 +183,6 @@ export function Footer() {
         </div>
       </section>
 
-      {/* Parte legal */}
       <section className="border-t border-white/10">
         <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-5 py-6 text-xs font-semibold text-white/40 md:flex-row md:items-center md:justify-between md:px-8 lg:px-10">
           <p>
@@ -199,7 +194,7 @@ export function Footer() {
 
             <Link
               href="/contacto"
-              className="transition hover:text-[#d1a05a]"
+              className="transition hover:text-[#1A2A3A]"
             >
               Contacto
             </Link>
@@ -225,7 +220,7 @@ function FooterColumn({
   return (
     <div>
       <div className="flex items-center gap-3">
-        <Icon size={17} className="text-[#d1a05a]" />
+        <Icon size={17} className="text-[#1A2A3A]" />
 
         <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">
           {title}
@@ -237,13 +232,13 @@ function FooterColumn({
           <Link
             key={`${link.href}-${link.label}`}
             href={link.href}
-            className="group flex items-center justify-between border-b border-white/5 py-3 text-sm font-semibold text-white/55 transition hover:border-[#d1a05a]/40 hover:text-white"
+            className="group flex items-center justify-between border-b border-white/5 py-3 text-sm font-semibold text-white/55 transition hover:border-[#1A2A3A]/40 hover:text-white"
           >
             {link.label}
 
             <ArrowRight
               size={14}
-              className="text-white/20 transition group-hover:translate-x-1 group-hover:text-[#d1a05a]"
+              className="text-white/20 transition group-hover:translate-x-1 group-hover:text-[#1A2A3A]"
             />
           </Link>
         ))}
@@ -262,7 +257,7 @@ function FooterAction({
   return (
     <Link
       href={href}
-      className="group flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-bold text-white/65 transition hover:border-[#d1a05a]/60 hover:bg-[#d1a05a] hover:text-[#0a0f14]"
+      className="group flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-bold text-white/65 transition hover:border-[#1A2A3A]/60 hover:bg-[#1A2A3A] hover:text-white"
     >
       {label}
 
