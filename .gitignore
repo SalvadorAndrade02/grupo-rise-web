@@ -45,9 +45,6 @@ next-env.d.ts
 # Docker runtime data
 docker-data/
 
-# Runtime uploads
-public/uploads/
-
 # SQLite local databases
 dev.db
 prisma/dev.db
