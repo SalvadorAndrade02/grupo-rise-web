@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import type { LucideIcon } from "lucide-react";
 import {
+  AlertCircle,
+  AlertTriangle,
   ArrowLeft,
+  ArrowRight,
   BadgeCheck,
+  CheckCircle2,
   Eye,
   EyeOff,
   FolderTree,
@@ -11,7 +16,6 @@ import {
   Plus,
   Save,
   Tags,
-  AlertTriangle,
   Trash2,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -25,10 +29,17 @@ type CatalogCategoriesPageProps = {
   }>;
 };
 
-function getNumberValue(formData: FormData, fieldName: string) {
-  const value = Number(formData.get(fieldName));
+function getNumberValue(
+  formData: FormData,
+  fieldName: string
+) {
+  const value = Number(
+    formData.get(fieldName)
+  );
 
-  return Number.isFinite(value) ? value : 0;
+  return Number.isFinite(value)
+    ? value
+    : 0;
 }
 
 function slugify(value: string) {
@@ -41,8 +52,13 @@ function slugify(value: string) {
     .replace(/(^-|-$)+/g, "");
 }
 
-async function getUniqueCategorySlug(brandId: number, name: string) {
-  const baseSlug = slugify(name) || "categoria";
+async function getUniqueCategorySlug(
+  brandId: number,
+  name: string
+) {
+  const baseSlug =
+    slugify(name) || "categoria";
+
   let slug = baseSlug;
   let suffix = 2;
 
@@ -63,15 +79,32 @@ async function getUniqueCategorySlug(brandId: number, name: string) {
   return slug;
 }
 
-async function createCatalogCategory(formData: FormData) {
+async function createCatalogCategory(
+  formData: FormData
+) {
   "use server";
 
-  const brandId = getNumberValue(formData, "brandId");
-  const parentId = getNumberValue(formData, "parentId");
-  const sortOrder = getNumberValue(formData, "sortOrder");
+  const brandId = getNumberValue(
+    formData,
+    "brandId"
+  );
 
-  const name = String(formData.get("name") || "").trim();
-  const active = formData.get("active") === "on";
+  const parentId = getNumberValue(
+    formData,
+    "parentId"
+  );
+
+  const sortOrder = getNumberValue(
+    formData,
+    "sortOrder"
+  );
+
+  const name = String(
+    formData.get("name") || ""
+  ).trim();
+
+  const active =
+    formData.get("active") === "on";
 
   if (!brandId || !name) {
     redirect(
@@ -82,13 +115,17 @@ async function createCatalogCategory(formData: FormData) {
   }
 
   if (parentId) {
-    const parent = await prisma.catalogCategory.findUnique({
-      where: {
-        id: parentId,
-      },
-    });
+    const parent =
+      await prisma.catalogCategory.findUnique({
+        where: {
+          id: parentId,
+        },
+      });
 
-    if (!parent || parent.brandId !== brandId) {
+    if (
+      !parent ||
+      parent.brandId !== brandId
+    ) {
       redirect(
         `/admin/catalogo/categorias?error=${encodeURIComponent(
           "La categoría padre debe pertenecer a la misma marca."
@@ -97,7 +134,11 @@ async function createCatalogCategory(formData: FormData) {
     }
   }
 
-  const slug = await getUniqueCategorySlug(brandId, name);
+  const slug =
+    await getUniqueCategorySlug(
+      brandId,
+      name
+    );
 
   await prisma.catalogCategory.create({
     data: {
@@ -112,9 +153,15 @@ async function createCatalogCategory(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/catalogo");
-  revalidatePath("/admin/catalogo/nuevo");
-  revalidatePath("/admin/catalogo/categorias");
-  revalidatePath("/admin/inventario/nuevo");
+  revalidatePath(
+    "/admin/catalogo/nuevo"
+  );
+  revalidatePath(
+    "/admin/catalogo/categorias"
+  );
+  revalidatePath(
+    "/admin/inventario/nuevo"
+  );
 
   redirect(
     `/admin/catalogo/categorias?success=${encodeURIComponent(
@@ -123,11 +170,18 @@ async function createCatalogCategory(formData: FormData) {
   );
 }
 
-async function toggleCatalogCategoryActive(formData: FormData) {
+async function toggleCatalogCategoryActive(
+  formData: FormData
+) {
   "use server";
 
-  const categoryId = Number(formData.get("categoryId"));
-  const active = String(formData.get("active")) === "true";
+  const categoryId = Number(
+    formData.get("categoryId")
+  );
+
+  const active =
+    String(formData.get("active")) ===
+    "true";
 
   if (!categoryId) {
     return;
@@ -137,22 +191,36 @@ async function toggleCatalogCategoryActive(formData: FormData) {
     where: {
       id: categoryId,
     },
+
     data: {
       active: !active,
     },
   });
 
   revalidatePath("/admin/catalogo");
-  revalidatePath("/admin/catalogo/nuevo");
-  revalidatePath("/admin/catalogo/categorias");
-  revalidatePath("/admin/inventario/nuevo");
+  revalidatePath(
+    "/admin/catalogo/nuevo"
+  );
+  revalidatePath(
+    "/admin/catalogo/categorias"
+  );
+  revalidatePath(
+    "/admin/inventario/nuevo"
+  );
 }
 
-async function deleteCatalogCategory(formData: FormData) {
+async function deleteCatalogCategory(
+  formData: FormData
+) {
   "use server";
 
-  const categoryId = Number(formData.get("categoryId"));
-  const confirmText = String(formData.get("confirmText") || "").trim();
+  const categoryId = Number(
+    formData.get("categoryId")
+  );
+
+  const confirmText = String(
+    formData.get("confirmText") || ""
+  ).trim();
 
   if (!categoryId) {
     redirect(
@@ -170,15 +238,17 @@ async function deleteCatalogCategory(formData: FormData) {
     );
   }
 
-  const category = await prisma.catalogCategory.findUnique({
-    where: {
-      id: categoryId,
-    },
-    include: {
-      children: true,
-      models: true,
-    },
-  });
+  const category =
+    await prisma.catalogCategory.findUnique({
+      where: {
+        id: categoryId,
+      },
+
+      include: {
+        children: true,
+        models: true,
+      },
+    });
 
   if (!category) {
     redirect(
@@ -212,9 +282,15 @@ async function deleteCatalogCategory(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/catalogo");
-  revalidatePath("/admin/catalogo/nuevo");
-  revalidatePath("/admin/catalogo/categorias");
-  revalidatePath("/admin/inventario/nuevo");
+  revalidatePath(
+    "/admin/catalogo/nuevo"
+  );
+  revalidatePath(
+    "/admin/catalogo/categorias"
+  );
+  revalidatePath(
+    "/admin/inventario/nuevo"
+  );
 
   redirect(
     `/admin/catalogo/categorias?success=${encodeURIComponent(
@@ -228,223 +304,283 @@ export default async function CatalogCategoriesPage({
 }: CatalogCategoriesPageProps) {
   const params = await searchParams;
 
-  const [brands, categories] = await Promise.all([
-    prisma.brand.findMany({
-      where: {
-        active: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    }),
+  const [brands, categories] =
+    await Promise.all([
+      prisma.brand.findMany({
+        where: {
+          active: true,
+        },
 
-    prisma.catalogCategory.findMany({
-      include: {
-        brand: true,
-        parent: true,
-        children: true,
-        models: true,
-      },
-      orderBy: [
-        {
-          brand: {
-            name: "asc",
-          },
-        },
-        {
-          sortOrder: "asc",
-        },
-        {
+        orderBy: {
           name: "asc",
         },
-      ],
-    }),
-  ]);
+      }),
 
-  const activeCategories = categories.filter((category) => category.active);
-  const parentCategories = categories.filter((category) => !category.parentId);
-  const childCategories = categories.filter((category) => category.parentId);
+      prisma.catalogCategory.findMany({
+        include: {
+          brand: true,
+          parent: true,
+          children: true,
+          models: true,
+        },
+
+        orderBy: [
+          {
+            brand: {
+              name: "asc",
+            },
+          },
+          {
+            sortOrder: "asc",
+          },
+          {
+            name: "asc",
+          },
+        ],
+      }),
+    ]);
+
+  const activeCategories =
+    categories.filter(
+      (category) => category.active
+    );
+
+  const hiddenCategories =
+    categories.filter(
+      (category) => !category.active
+    );
+
+  const parentCategories =
+    categories.filter(
+      (category) => !category.parentId
+    );
+
+  const childCategories =
+    categories.filter(
+      (category) => category.parentId
+    );
+
+  const stats = [
+    {
+      label: "Categorías",
+      value: categories.length,
+      description:
+        "Total de categorías registradas.",
+      icon: FolderTree,
+      tone: "navy" as const,
+    },
+    {
+      label: "Activas",
+      value: activeCategories.length,
+      description:
+        "Disponibles para modelos nuevos.",
+      icon: BadgeCheck,
+      tone: "emerald" as const,
+    },
+    {
+      label: "Principales",
+      value: parentCategories.length,
+      description:
+        "Categorías sin nivel superior.",
+      icon: Layers3,
+      tone: "amber" as const,
+    },
+    {
+      label: "Subcategorías",
+      value: childCategories.length,
+      description:
+        "Categorías asociadas a otra.",
+      icon: Tags,
+      tone: "blue" as const,
+    },
+  ];
 
   return (
-    <div>
-      <div className="flex flex-wrap items-start justify-between gap-5">
-        <div>
+    <div className="pb-10">
+      {/* Encabezado */}
+      <section className="relative overflow-hidden rounded-[22px] bg-[#192a3a] px-5 py-7 text-white shadow-[0_18px_50px_rgba(15,23,42,0.14)] md:px-7 md:py-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_32%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
+
+        <div className="relative flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
+          <div className="max-w-3xl">
+            <Link
+              href="/admin/catalogo"
+              className="inline-flex items-center gap-2 text-xs font-black text-white/60 transition hover:text-white"
+            >
+              <ArrowLeft size={16} />
+              Volver al catálogo
+            </Link>
+
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#dfe7ec] backdrop-blur-sm">
+              <FolderTree size={15} />
+              Organización del catálogo
+            </div>
+
+            <h1 className="mt-4 text-3xl font-black tracking-[-0.045em] md:text-4xl lg:text-5xl">
+              Categorías por marca
+            </h1>
+
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-white/60 md:text-base">
+              Organiza los modelos mediante
+              categorías principales y
+              subcategorías específicas para cada
+              marca.
+            </p>
+          </div>
+
           <Link
-            href="/admin/catalogo"
-            className="inline-flex items-center gap-2 text-sm font-black text-slate-500 transition hover:text-[var(--rise-blue)]"
+            href="/admin/catalogo/nuevo"
+            className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
           >
-            <ArrowLeft size={18} />
-            Volver al catálogo base
+            <Plus size={18} />
+            Nuevo modelo
+
+            <ArrowRight
+              size={16}
+              className="transition-transform group-hover:translate-x-0.5"
+            />
           </Link>
-
-          <p className="mt-6 text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-            Catálogo base
-          </p>
-
-          <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">
-            Categorías por marca
-          </h1>
-
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
-            Crea categorías comerciales para organizar los modelos base. Estas
-            categorías aparecerán al registrar modelos y unidades reales.
-          </p>
         </div>
+      </section>
 
-        <Link
-          href="/admin/catalogo/nuevo"
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-        >
-          <Plus size={18} />
-          Nuevo modelo
-        </Link>
-      </div>
-
+      {/* Mensajes */}
       {params.error && (
-        <div className="mt-6 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-700">
-          {params.error}
+        <div
+          role="alert"
+          className="mt-5 flex items-start gap-3 rounded-[16px] border border-red-200 bg-red-50 px-4 py-4 text-sm font-bold text-red-700"
+        >
+          <AlertCircle
+            size={20}
+            className="mt-0.5 shrink-0"
+          />
+
+          <span>{params.error}</span>
         </div>
       )}
 
       {params.success && (
-        <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
-          {params.success}
+        <div
+          role="status"
+          className="mt-5 flex items-start gap-3 rounded-[16px] border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm font-bold text-emerald-700"
+        >
+          <CheckCircle2
+            size={20}
+            className="mt-0.5 shrink-0"
+          />
+
+          <span>{params.success}</span>
         </div>
       )}
 
-      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm">
-          <FolderTree size={24} className="text-[var(--rise-blue)]" />
-          <p className="mt-4 text-4xl font-black">{categories.length}</p>
-          <p className="mt-1 text-xs font-black uppercase tracking-wider text-slate-500">
-            Categorías
-          </p>
-        </div>
-
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm">
-          <BadgeCheck size={24} className="text-emerald-600" />
-          <p className="mt-4 text-4xl font-black">
-            {activeCategories.length}
-          </p>
-          <p className="mt-1 text-xs font-black uppercase tracking-wider text-slate-500">
-            Activas
-          </p>
-        </div>
-
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm">
-          <Layers3 size={24} className="text-amber-600" />
-          <p className="mt-4 text-4xl font-black">
-            {parentCategories.length}
-          </p>
-          <p className="mt-1 text-xs font-black uppercase tracking-wider text-slate-500">
-            Principales
-          </p>
-        </div>
-
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm">
-          <Tags size={24} className="text-purple-600" />
-          <p className="mt-4 text-4xl font-black">{childCategories.length}</p>
-          <p className="mt-1 text-xs font-black uppercase tracking-wider text-slate-500">
-            Subcategorías
-          </p>
-        </div>
+      {/* Estadísticas */}
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat) => (
+          <CategoryStatCard
+            key={stat.label}
+            {...stat}
+          />
+        ))}
       </section>
 
-      <section className="mt-6 grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+      {/* Formulario y listado */}
+      <section className="mt-6 grid gap-6 xl:grid-cols-[390px_minmax(0,1fr)]">
+        {/* Nueva categoría */}
         <aside className="xl:sticky xl:top-6 xl:self-start">
           <form
             action={createCatalogCategory}
-            className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-xl shadow-slate-900/5 md:p-6"
+            className="overflow-hidden rounded-[22px] border border-black/8 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]"
           >
-            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-              Nueva categoría
-            </p>
+            <div className="border-b border-slate-100 bg-[#f8fafb] p-5 md:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="h-px w-7 bg-[#192a3a]" />
 
-            <h2 className="mt-2 text-2xl font-black">
-              Crear categoría
-            </h2>
+                    <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#192a3a]">
+                      Nueva categoría
+                    </p>
+                  </div>
 
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Selecciona una marca y captura una categoría principal o una
-              subcategoría.
-            </p>
+                  <h2 className="mt-3 text-2xl font-black tracking-[-0.035em]">
+                    Crear categoría
+                  </h2>
 
-            <div className="mt-6 grid gap-4">
-              <label className="block">
-                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Marca
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Registra una categoría principal
+                    o una subcategoría para una
+                    marca.
+                  </p>
+                </div>
+
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#192a3a] text-white">
+                  <FolderTree size={20} />
                 </span>
+              </div>
+            </div>
 
-                <select
-                  name="brandId"
-                  required
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                >
-                  <option value="">Selecciona una marca</option>
+            <div className="grid gap-5 p-5 md:p-6">
+              <FormSelect
+                label="Marca"
+                name="brandId"
+                required
+              >
+                <option value="">
+                  Selecciona una marca
+                </option>
 
-                  {brands.map((brand) => (
-                    <option key={brand.id} value={brand.id}>
-                      {brand.name}
+                {brands.map((brand) => (
+                  <option
+                    key={brand.id}
+                    value={brand.id}
+                  >
+                    {brand.name}
+                  </option>
+                ))}
+              </FormSelect>
+
+              <FormInput
+                label="Nombre de categoría"
+                name="name"
+                required
+                placeholder="Ej. Side-by-Side"
+              />
+
+              <FormSelect
+                label="Categoría padre"
+                name="parentId"
+                description="La categoría padre debe pertenecer a la misma marca."
+              >
+                <option value="">
+                  Sin categoría padre
+                </option>
+
+                {parentCategories.map(
+                  (category) => (
+                    <option
+                      key={category.id}
+                      value={category.id}
+                    >
+                      {category.brand.name} ·{" "}
+                      {category.name}
                     </option>
-                  ))}
-                </select>
-              </label>
+                  )
+                )}
+              </FormSelect>
 
-              <label className="block">
-                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Nombre de categoría
-                </span>
+              <FormInput
+                label="Orden"
+                name="sortOrder"
+                type="number"
+                defaultValue={0}
+                description="Los números menores aparecen primero."
+              />
 
-                <input
-                  name="name"
-                  required
-                  placeholder="Ej. Side-by-Side, Cuatrimotos, 350, Ranger"
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Categoría padre
-                </span>
-
-                <select
-                  name="parentId"
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                >
-                  <option value="">Sin categoría padre</option>
-
-                  {parentCategories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.brand.name} · {category.name}
-                    </option>
-                  ))}
-                </select>
-
-                <p className="mt-2 text-xs text-slate-500">
-                  Si eliges padre, debe pertenecer a la misma marca.
-                </p>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Orden
-                </span>
-
-                <input
-                  name="sortOrder"
-                  type="number"
-                  defaultValue={0}
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-                />
-              </label>
-
-              <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <label className="flex cursor-pointer items-start gap-3 rounded-[16px] border border-slate-200 bg-[#f8fafb] p-4 transition hover:border-[#192a3a]/30">
                 <input
                   type="checkbox"
                   name="active"
                   defaultChecked
-                  className="mt-1 h-5 w-5 rounded border-slate-300"
+                  className="mt-0.5 h-5 w-5 rounded border-slate-300 accent-[#192a3a]"
                 />
 
                 <span>
@@ -453,189 +589,411 @@ export default async function CatalogCategoriesPage({
                   </span>
 
                   <span className="mt-1 block text-xs leading-5 text-slate-500">
-                    Si está activa, aparecerá al crear modelos.
+                    Estará disponible al registrar o
+                    editar modelos.
                   </span>
                 </span>
               </label>
 
               <button
                 type="submit"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
               >
-                <Save size={18} />
+                <Save size={17} />
                 Guardar categoría
               </button>
             </div>
           </form>
         </aside>
 
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Categorías existentes */}
+        <section className="rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.04)] md:p-6">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                Categorías registradas
-              </p>
+              <div className="flex items-center gap-3">
+                <span className="h-px w-7 bg-[#192a3a]" />
 
-              <h2 className="mt-2 text-2xl font-black">
-                Organización del catálogo
-              </h2>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4">
-            {categories.length > 0 ? (
-              categories.map((category) => (
-                <article
-                  key={category.id}
-                  className="rounded-[2rem] border border-slate-100 bg-slate-50 p-5"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                        {category.brand.name}
-                      </p>
-
-                      <h3 className="mt-2 text-2xl font-black text-[var(--rise-navy)]">
-                        {category.name}
-                      </h3>
-
-                      <p className="mt-2 text-sm font-bold text-slate-500">
-                        {category.parent
-                          ? `Subcategoría de ${category.parent.name}`
-                          : "Categoría principal"}
-                      </p>
-                    </div>
-
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${category.active
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-slate-200 text-slate-700"
-                        }`}
-                    >
-                      {category.active ? "Activa" : "Oculta"}
-                    </span>
-                  </div>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl bg-white p-3">
-                      <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                        Modelos
-                      </p>
-
-                      <p className="mt-1 text-lg font-black text-[var(--rise-blue)]">
-                        {category.models.length}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl bg-white p-3">
-                      <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                        Subcategorías
-                      </p>
-
-                      <p className="mt-1 text-lg font-black text-[var(--rise-blue)]">
-                        {category.children.length}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl bg-white p-3">
-                      <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                        Orden
-                      </p>
-
-                      <p className="mt-1 text-lg font-black text-slate-700">
-                        {category.sortOrder}
-                      </p>
-                    </div>
-                  </div>
-
-                  <form action={toggleCatalogCategoryActive} className="mt-4">
-                    <input
-                      type="hidden"
-                      name="categoryId"
-                      value={category.id}
-                    />
-                    <input
-                      type="hidden"
-                      name="active"
-                      value={String(category.active)}
-                    />
-
-                    <button
-                      type="submit"
-                      className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-black text-slate-700 transition hover:bg-slate-100"
-                    >
-                      {category.active ? (
-                        <>
-                          <EyeOff size={17} />
-                          Ocultar
-                        </>
-                      ) : (
-                        <>
-                          <Eye size={17} />
-                          Mostrar
-                        </>
-                      )}
-                    </button>
-                  </form>
-
-                  <details className="mt-3 rounded-2xl border border-red-100 bg-red-50 p-4">
-                    <summary className="flex cursor-pointer items-center gap-2 text-xs font-black uppercase tracking-wider text-red-700">
-                      <Trash2 size={16} />
-                      Eliminar categoría
-                    </summary>
-
-                    <div className="mt-4 rounded-2xl bg-white p-4">
-                      <div className="flex gap-3">
-                        <AlertTriangle className="mt-1 shrink-0 text-red-600" size={20} />
-
-                        <div>
-                          <p className="text-sm font-black text-red-700">
-                            Esta acción no se puede deshacer.
-                          </p>
-
-                          <p className="mt-1 text-xs leading-5 text-slate-500">
-                            Solo se permitirá eliminar si no tiene modelos ni subcategorías
-                            asociadas.
-                          </p>
-                        </div>
-                      </div>
-
-                      <form action={deleteCatalogCategory} className="mt-4 grid gap-3">
-                        <input type="hidden" name="categoryId" value={category.id} />
-
-                        <input
-                          name="confirmText"
-                          placeholder="Escribe ELIMINAR"
-                          className="h-10 rounded-2xl border border-red-100 bg-red-50 px-4 text-xs font-black text-red-700 outline-none transition placeholder:text-red-300 focus:border-red-300 focus:bg-white"
-                        />
-
-                        <button
-                          type="submit"
-                          className="h-10 rounded-2xl bg-red-600 px-4 text-xs font-black uppercase tracking-wider text-white transition hover:bg-red-700"
-                        >
-                          Eliminar definitivamente
-                        </button>
-                      </form>
-                    </div>
-                  </details>
-                </article>
-              ))
-            ) : (
-              <div className="rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
-                <FolderTree size={48} className="mx-auto text-slate-400" />
-
-                <h3 className="mt-4 text-2xl font-black">
-                  Sin categorías todavía
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  Crea la primera categoría para organizar modelos por marca.
+                <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[#192a3a]">
+                  Categorías registradas
                 </p>
               </div>
-            )}
+
+              <h2 className="mt-3 text-2xl font-black tracking-[-0.035em]">
+                Organización actual
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Revisa jerarquías, modelos
+                relacionados y visibilidad.
+              </p>
+            </div>
+
+            <span className="w-fit rounded-full border border-slate-200 bg-[#f8fafb] px-4 py-2 text-xs font-black text-slate-600">
+              {categories.length} categoría
+              {categories.length === 1
+                ? ""
+                : "s"}
+            </span>
           </div>
-        </div>
+
+          {categories.length > 0 ? (
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              {categories.map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 rounded-[20px] border border-dashed border-slate-300 bg-[#f8fafb] p-10 text-center">
+              <FolderTree
+                size={48}
+                className="mx-auto text-slate-400"
+              />
+
+              <h3 className="mt-4 text-2xl font-black">
+                Sin categorías todavía
+              </h3>
+
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+                Utiliza el formulario para crear la
+                primera categoría del catálogo.
+              </p>
+            </div>
+          )}
+        </section>
       </section>
+
+      {/* Resumen */}
+      <section className="mt-6 rounded-[18px] border border-[#192a3a]/10 bg-[#e7edf1] px-5 py-4">
+        <p className="text-sm font-black text-[#192a3a]">
+          Resumen de categorías
+        </p>
+
+        <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+          Hay {hiddenCategories.length} categorías
+          ocultas y {childCategories.length} que
+          dependen de una categoría principal.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function CategoryStatCard({
+  label,
+  value,
+  description,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: number;
+  description: string;
+  icon: LucideIcon;
+  tone:
+  | "navy"
+  | "emerald"
+  | "amber"
+  | "blue";
+}) {
+  const tones = {
+    navy: "border-[#192a3a]/10 bg-[#e7edf1] text-[#192a3a]",
+    emerald:
+      "border-emerald-100 bg-emerald-50 text-emerald-700",
+    amber:
+      "border-amber-100 bg-amber-50 text-amber-700",
+    blue:
+      "border-blue-100 bg-blue-50 text-blue-700",
+  };
+
+  return (
+    <article className="rounded-[20px] border border-black/8 bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)]">
+      <span
+        className={`grid h-11 w-11 place-items-center rounded-xl border ${tones[tone]}`}
+      >
+        <Icon size={21} />
+      </span>
+
+      <p className="mt-5 text-4xl font-black tracking-[-0.05em] text-[#192a3a]">
+        {value}
+      </p>
+
+      <h2 className="mt-2 text-sm font-black">
+        {label}
+      </h2>
+
+      <p className="mt-1 text-xs font-medium leading-5 text-slate-500">
+        {description}
+      </p>
+    </article>
+  );
+}
+
+function FormInput({
+  label,
+  name,
+  type = "text",
+  placeholder,
+  defaultValue,
+  required = false,
+  description,
+}: {
+  label: string;
+  name: string;
+  type?: string;
+  placeholder?: string;
+  defaultValue?: string | number;
+  required?: boolean;
+  description?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+        {label}
+      </span>
+
+      <input
+        name={name}
+        type={type}
+        required={required}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
+      />
+
+      {description && (
+        <span className="mt-2 block text-xs leading-5 text-slate-500">
+          {description}
+        </span>
+      )}
+    </label>
+  );
+}
+
+function FormSelect({
+  label,
+  name,
+  required = false,
+  description,
+  children,
+}: {
+  label: string;
+  name: string;
+  required?: boolean;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+        {label}
+      </span>
+
+      <select
+        name={name}
+        required={required}
+        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
+      >
+        {children}
+      </select>
+
+      {description && (
+        <span className="mt-2 block text-xs leading-5 text-slate-500">
+          {description}
+        </span>
+      )}
+    </label>
+  );
+}
+
+function CategoryCard({
+  category,
+}: {
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+    active: boolean;
+    sortOrder: number;
+    parent: {
+      name: string;
+    } | null;
+    brand: {
+      name: string;
+    };
+    children: {
+      id: number;
+    }[];
+    models: {
+      id: number;
+    }[];
+  };
+}) {
+  const canDelete =
+    category.children.length === 0 &&
+    category.models.length === 0;
+
+  return (
+    <article className="flex flex-col rounded-[20px] border border-slate-100 bg-[#f8fafb] p-5 transition hover:border-[#192a3a]/20 hover:bg-white hover:shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#192a3a]">
+            {category.brand.name}
+          </p>
+
+          <h3 className="mt-2 truncate text-xl font-black tracking-[-0.03em]">
+            {category.name}
+          </h3>
+
+          <p className="mt-2 text-xs font-semibold text-slate-500">
+            {category.parent
+              ? `Subcategoría de ${category.parent.name}`
+              : "Categoría principal"}
+          </p>
+        </div>
+
+        <span
+          className={`shrink-0 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] ${category.active
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-slate-200 bg-slate-100 text-slate-600"
+            }`}
+        >
+          {category.active
+            ? "Activa"
+            : "Oculta"}
+        </span>
+      </div>
+
+      <div className="mt-5 grid grid-cols-3 gap-2">
+        <CategoryDetail
+          label="Modelos"
+          value={category.models.length}
+        />
+
+        <CategoryDetail
+          label="Subcategorías"
+          value={category.children.length}
+        />
+
+        <CategoryDetail
+          label="Orden"
+          value={category.sortOrder}
+        />
+      </div>
+
+      <div className="mt-5 border-t border-slate-200 pt-4">
+        <form
+          action={
+            toggleCatalogCategoryActive
+          }
+        >
+          <input
+            type="hidden"
+            name="categoryId"
+            value={category.id}
+          />
+
+          <input
+            type="hidden"
+            name="active"
+            value={String(category.active)}
+          />
+
+          <button
+            type="submit"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a] active:scale-[0.98]"
+          >
+            {category.active ? (
+              <>
+                <EyeOff size={16} />
+                Ocultar categoría
+              </>
+            ) : (
+              <>
+                <Eye size={16} />
+                Mostrar categoría
+              </>
+            )}
+          </button>
+        </form>
+
+        <details className="group mt-3 rounded-xl border border-red-200 bg-red-50">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-red-700">
+            <Trash2 size={15} />
+            Eliminar categoría
+          </summary>
+
+          <div className="border-t border-red-100 p-4">
+            <div className="flex gap-3">
+              <AlertTriangle
+                size={18}
+                className="mt-0.5 shrink-0 text-red-600"
+              />
+
+              <div>
+                <p className="text-xs font-black text-red-700">
+                  {canDelete
+                    ? "Acción irreversible"
+                    : "Categoría relacionada"}
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  {canDelete
+                    ? "Esta categoría no tiene modelos ni subcategorías relacionadas."
+                    : "No podrá eliminarse mientras tenga modelos o subcategorías relacionadas."}
+                </p>
+              </div>
+            </div>
+
+            <form
+              action={deleteCatalogCategory}
+              className="mt-4 grid gap-3"
+            >
+              <input
+                type="hidden"
+                name="categoryId"
+                value={category.id}
+              />
+
+              <input
+                name="confirmText"
+                placeholder="Escribe ELIMINAR"
+                autoComplete="off"
+                className="h-11 rounded-xl border border-red-200 bg-white px-4 text-xs font-black text-red-700 outline-none placeholder:text-red-300 focus:border-red-400"
+              />
+
+              <button
+                type="submit"
+                className="h-11 rounded-xl bg-red-600 px-4 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-red-700 active:scale-[0.98]"
+              >
+                Eliminar definitivamente
+              </button>
+            </form>
+          </div>
+        </details>
+      </div>
+    </article>
+  );
+}
+
+function CategoryDetail({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="rounded-[14px] border border-slate-100 bg-white p-3 text-center">
+      <p className="text-lg font-black text-[#192a3a]">
+        {value}
+      </p>
+
+      <p className="mt-1 truncate text-[8px] font-black uppercase tracking-[0.08em] text-slate-400">
+        {label}
+      </p>
     </div>
   );
 }

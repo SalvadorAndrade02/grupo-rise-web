@@ -3,12 +3,10 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import {
   ArrowRight,
-  BadgeCheck,
   CalendarDays,
   CheckCircle2,
   ClipboardList,
   Mail,
-  MapPin,
   MessageSquare,
   PackageSearch,
   Phone,
@@ -33,49 +31,113 @@ type ServicesPageProps = {
   }>;
 };
 
-function getTextValue(formData: FormData, fieldName: string) {
-  return String(formData.get(fieldName) ?? "").trim();
+function getTextValue(
+  formData: FormData,
+  fieldName: string
+) {
+  return String(
+    formData.get(fieldName) ?? ""
+  ).trim();
 }
 
-function getOptionalTextValue(formData: FormData, fieldName: string) {
-  const value = getTextValue(formData, fieldName);
+function getOptionalTextValue(
+  formData: FormData,
+  fieldName: string
+) {
+  const value = getTextValue(
+    formData,
+    fieldName
+  );
 
   return value || null;
 }
 
-function getNumberValue(formData: FormData, fieldName: string) {
-  const value = Number(formData.get(fieldName));
+function getNumberValue(
+  formData: FormData,
+  fieldName: string
+) {
+  const value = Number(
+    formData.get(fieldName)
+  );
 
-  return Number.isFinite(value) ? value : 0;
+  return Number.isFinite(value)
+    ? value
+    : 0;
 }
 
-function getOptionalDateValue(formData: FormData, fieldName: string) {
-  const value = getTextValue(formData, fieldName);
+function getOptionalDateValue(
+  formData: FormData,
+  fieldName: string
+) {
+  const value = getTextValue(
+    formData,
+    fieldName
+  );
 
   if (!value) {
     return null;
   }
 
-  const date = new Date(`${value}T00:00:00`);
+  const date = new Date(
+    `${value}T00:00:00`
+  );
 
-  return Number.isNaN(date.getTime()) ? null : date;
+  return Number.isNaN(date.getTime())
+    ? null
+    : date;
 }
 
-function buildMessage(title: string, items: string[]) {
-  return [title, ...items.filter(Boolean)].join("\n");
+function buildMessage(
+  title: string,
+  items: string[]
+) {
+  return [
+    title,
+    ...items.filter(Boolean),
+  ].join("\n");
 }
 
-async function submitServiceRequest(formData: FormData) {
+async function submitServiceRequest(
+  formData: FormData
+) {
   "use server";
 
-  const requestType = getTextValue(formData, "requestType");
+  const requestType = getTextValue(
+    formData,
+    "requestType"
+  );
 
-  const name = getTextValue(formData, "name");
-  const phone = getTextValue(formData, "phone");
-  const email = getOptionalTextValue(formData, "email");
-  const branchId = getNumberValue(formData, "branchId");
-  const preferredDate = getOptionalDateValue(formData, "preferredDate");
-  const preferredTime = getOptionalTextValue(formData, "preferredTime");
+  const name = getTextValue(
+    formData,
+    "name"
+  );
+
+  const phone = getTextValue(
+    formData,
+    "phone"
+  );
+
+  const email = getOptionalTextValue(
+    formData,
+    "email"
+  );
+
+  const branchId = getNumberValue(
+    formData,
+    "branchId"
+  );
+
+  const preferredDate =
+    getOptionalDateValue(
+      formData,
+      "preferredDate"
+    );
+
+  const preferredTime =
+    getOptionalTextValue(
+      formData,
+      "preferredTime"
+    );
 
   if (!name || !phone || !branchId) {
     redirect(
@@ -85,12 +147,13 @@ async function submitServiceRequest(formData: FormData) {
     );
   }
 
-  const branch = await prisma.branch.findFirst({
-    where: {
-      id: branchId,
-      active: true,
-    },
-  });
+  const branch =
+    await prisma.branch.findFirst({
+      where: {
+        id: branchId,
+        active: true,
+      },
+    });
 
   if (!branch) {
     redirect(
@@ -101,11 +164,35 @@ async function submitServiceRequest(formData: FormData) {
   }
 
   if (requestType === "SERVICE") {
-    const vehicleBrand = getOptionalTextValue(formData, "vehicleBrand");
-    const vehicleModel = getOptionalTextValue(formData, "vehicleModel");
-    const vehicleYear = getOptionalTextValue(formData, "vehicleYear");
-    const mileage = getOptionalTextValue(formData, "mileage");
-    const serviceDetail = getTextValue(formData, "serviceDetail");
+    const vehicleBrand =
+      getOptionalTextValue(
+        formData,
+        "vehicleBrand"
+      );
+
+    const vehicleModel =
+      getOptionalTextValue(
+        formData,
+        "vehicleModel"
+      );
+
+    const vehicleYear =
+      getOptionalTextValue(
+        formData,
+        "vehicleYear"
+      );
+
+    const mileage =
+      getOptionalTextValue(
+        formData,
+        "mileage"
+      );
+
+    const serviceDetail =
+      getTextValue(
+        formData,
+        "serviceDetail"
+      );
 
     if (!serviceDetail) {
       redirect(
@@ -115,20 +202,35 @@ async function submitServiceRequest(formData: FormData) {
       );
     }
 
-    const message = buildMessage("Solicitud de servicio / mantenimiento", [
-      `Sucursal solicitada: ${branch.name}`,
-      vehicleBrand ? `Marca: ${vehicleBrand}` : "",
-      vehicleModel ? `Modelo: ${vehicleModel}` : "",
-      vehicleYear ? `Año: ${vehicleYear}` : "",
-      mileage ? `Kilometraje: ${mileage}` : "",
-      preferredDate
-        ? `Fecha preferida: ${preferredDate.toLocaleDateString("es-MX")}`
-        : "",
-      preferredTime ? `Hora preferida: ${preferredTime}` : "",
-      "",
-      "Detalle:",
-      serviceDetail,
-    ]);
+    const message = buildMessage(
+      "Solicitud de servicio / mantenimiento",
+      [
+        `Sucursal solicitada: ${branch.name}`,
+        vehicleBrand
+          ? `Marca: ${vehicleBrand}`
+          : "",
+        vehicleModel
+          ? `Modelo: ${vehicleModel}`
+          : "",
+        vehicleYear
+          ? `Año: ${vehicleYear}`
+          : "",
+        mileage
+          ? `Kilometraje: ${mileage}`
+          : "",
+        preferredDate
+          ? `Fecha preferida: ${preferredDate.toLocaleDateString(
+            "es-MX"
+          )}`
+          : "",
+        preferredTime
+          ? `Hora preferida: ${preferredTime}`
+          : "",
+        "",
+        "Detalle:",
+        serviceDetail,
+      ]
+    );
 
     await prisma.lead.create({
       data: {
@@ -148,16 +250,46 @@ async function submitServiceRequest(formData: FormData) {
     revalidatePath("/admin/leads");
     revalidatePath("/servicios");
 
-    redirect("/gracias?tipo=servicio");
+    redirect(
+      "/gracias?tipo=servicio"
+    );
   }
 
   if (requestType === "PARTS") {
-    const vehicleBrand = getOptionalTextValue(formData, "partsVehicleBrand");
-    const vehicleModel = getOptionalTextValue(formData, "partsVehicleModel");
-    const vehicleYear = getOptionalTextValue(formData, "partsVehicleYear");
-    const partName = getTextValue(formData, "partName");
-    const quantity = getOptionalTextValue(formData, "quantity");
-    const partDetail = getTextValue(formData, "partDetail");
+    const vehicleBrand =
+      getOptionalTextValue(
+        formData,
+        "partsVehicleBrand"
+      );
+
+    const vehicleModel =
+      getOptionalTextValue(
+        formData,
+        "partsVehicleModel"
+      );
+
+    const vehicleYear =
+      getOptionalTextValue(
+        formData,
+        "partsVehicleYear"
+      );
+
+    const partName = getTextValue(
+      formData,
+      "partName"
+    );
+
+    const quantity =
+      getOptionalTextValue(
+        formData,
+        "quantity"
+      );
+
+    const partDetail =
+      getTextValue(
+        formData,
+        "partDetail"
+      );
 
     if (!partName || !partDetail) {
       redirect(
@@ -167,21 +299,36 @@ async function submitServiceRequest(formData: FormData) {
       );
     }
 
-    const message = buildMessage("Cotización de refacciones", [
-      `Sucursal solicitada: ${branch.name}`,
-      vehicleBrand ? `Marca: ${vehicleBrand}` : "",
-      vehicleModel ? `Modelo: ${vehicleModel}` : "",
-      vehicleYear ? `Año: ${vehicleYear}` : "",
-      `Refacción solicitada: ${partName}`,
-      quantity ? `Cantidad: ${quantity}` : "",
-      preferredDate
-        ? `Fecha preferida: ${preferredDate.toLocaleDateString("es-MX")}`
-        : "",
-      preferredTime ? `Hora preferida: ${preferredTime}` : "",
-      "",
-      "Detalle:",
-      partDetail,
-    ]);
+    const message = buildMessage(
+      "Cotización de refacciones",
+      [
+        `Sucursal solicitada: ${branch.name}`,
+        vehicleBrand
+          ? `Marca: ${vehicleBrand}`
+          : "",
+        vehicleModel
+          ? `Modelo: ${vehicleModel}`
+          : "",
+        vehicleYear
+          ? `Año: ${vehicleYear}`
+          : "",
+        `Refacción solicitada: ${partName}`,
+        quantity
+          ? `Cantidad: ${quantity}`
+          : "",
+        preferredDate
+          ? `Fecha preferida: ${preferredDate.toLocaleDateString(
+            "es-MX"
+          )}`
+          : "",
+        preferredTime
+          ? `Hora preferida: ${preferredTime}`
+          : "",
+        "",
+        "Detalle:",
+        partDetail,
+      ]
+    );
 
     await prisma.lead.create({
       data: {
@@ -201,7 +348,9 @@ async function submitServiceRequest(formData: FormData) {
     revalidatePath("/admin/leads");
     revalidatePath("/servicios");
 
-    redirect("/gracias?tipo=refacciones");
+    redirect(
+      "/gracias?tipo=refacciones"
+    );
   }
 
   redirect(
@@ -211,376 +360,531 @@ async function submitServiceRequest(formData: FormData) {
   );
 }
 
-export default async function ServicesPage({ searchParams }: ServicesPageProps) {
+export default async function ServicesPage({
+  searchParams,
+}: ServicesPageProps) {
   const params = await searchParams;
 
-  const branches = await prisma.branch.findMany({
-    where: {
-      active: true,
-    },
-    orderBy: [
-      {
-        sortOrder: "asc",
+  const branches =
+    await prisma.branch.findMany({
+      where: {
+        active: true,
       },
-      {
-        city: "asc",
-      },
-    ],
-  });
+
+      orderBy: [
+        {
+          sortOrder: "asc",
+        },
+        {
+          city: "asc",
+        },
+      ],
+    });
 
   return (
-    <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
+    <>
       <Header />
 
-      <section className="relative overflow-hidden bg-[var(--rise-navy)] px-4 py-16 text-white md:py-24">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.45),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(15,23,42,0.8),transparent_40%)]" />
+      <main className="min-h-screen bg-[#f4f6f7] text-[#0a0f14]">
+        {/* Encabezado */}
+        <section className="relative overflow-hidden bg-[#192a3a] text-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_30%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
 
-        <Container>
-          <div className="relative max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-blue-100 backdrop-blur">
-              <Sparkles size={16} />
-              Servicios Grupo Rise
+          <Container>
+            <div className="relative py-12 lg:py-16">
+              <div className="max-w-3xl">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#dfe7ec] backdrop-blur-sm">
+                  <Sparkles size={15} />
+                  Servicios Grupo Rise
+                </div>
+
+                <h1 className="mt-5 text-4xl font-black leading-tight tracking-[-0.045em] md:text-5xl lg:text-6xl">
+                  Servicio y refacciones para tu vehículo
+                </h1>
+
+                <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-white/65 md:text-base">
+                  Solicita mantenimiento, diagnóstico
+                  o una cotización de refacciones.
+                  Selecciona la sucursal y nuestro
+                  equipo dará seguimiento a tu
+                  solicitud.
+                </p>
+
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                  <a
+                    href="#servicio"
+                    className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+                  >
+                    Solicitar servicio
+
+                    <ArrowRight
+                      size={17}
+                      className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
+                    />
+                  </a>
+
+                  <a
+                    href="#refacciones"
+                    className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-black text-white transition hover:bg-white/15 active:scale-[0.98]"
+                  >
+                    Cotizar refacciones
+
+                    <ArrowRight
+                      size={17}
+                      className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
+                    />
+                  </a>
+                </div>
+              </div>
+
+              {/* Resumen compacto */}
+              <div className="mt-9 grid gap-3 md:grid-cols-3">
+                <ServiceSummary
+                  icon={Wrench}
+                  title="Servicio"
+                  description="Mantenimiento, revisión y diagnóstico."
+                />
+
+                <ServiceSummary
+                  icon={PackageSearch}
+                  title="Refacciones"
+                  description="Piezas, accesorios y disponibilidad."
+                />
+
+                <ServiceSummary
+                  icon={MessageSquare}
+                  title="Seguimiento"
+                  description="La solicitud llega al equipo de la sucursal."
+                />
+              </div>
             </div>
+          </Container>
+        </section>
 
-            <h1 className="mt-6 text-4xl font-black tracking-tight md:text-6xl">
-              Agenda servicio o cotiza refacciones
-            </h1>
+        <section className="py-10 md:py-12 lg:py-14">
+          <Container>
+            {(params.success ||
+              params.error) && (
+                <div
+                  className={`mb-7 rounded-xl border px-5 py-4 text-sm font-black ${params.success
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : "border-red-200 bg-red-50 text-red-700"
+                    }`}
+                >
+                  {params.success ||
+                    params.error}
+                </div>
+              )}
 
-            <p className="mt-5 max-w-2xl text-base leading-8 text-blue-100 md:text-lg">
-              Por ahora puedes enviar una solicitud de servicio o una cotización
-              de refacciones. Un asesor de Grupo Rise dará seguimiento desde la
-              sucursal seleccionada.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
+            {/* Accesos */}
+            <div className="mb-8 grid gap-4 md:grid-cols-2">
               <a
                 href="#servicio"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-black text-[var(--rise-navy)] transition hover:bg-blue-50"
+                className="group flex items-center justify-between rounded-[20px] border border-black/8 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.045)] transition hover:-translate-y-1 hover:border-[#192a3a]/40 active:border-[#192a3a]/40"
               >
-                Solicitar servicio
-                <ArrowRight size={17} />
+                <div className="flex items-center gap-4">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
+                    <Settings size={22} />
+                  </span>
+
+                  <div>
+                    <p className="text-lg font-black">
+                      Solicitar servicio
+                    </p>
+
+                    <p className="mt-1 text-sm text-slate-500">
+                      Mantenimiento o diagnóstico.
+                    </p>
+                  </div>
+                </div>
+
+                <ArrowRight
+                  size={19}
+                  className="shrink-0 text-[#192a3a] transition-transform group-hover:translate-x-1 group-active:translate-x-1"
+                />
               </a>
 
               <a
                 href="#refacciones"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 text-sm font-black text-white backdrop-blur transition hover:bg-white/15"
+                className="group flex items-center justify-between rounded-[20px] border border-black/8 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.045)] transition hover:-translate-y-1 hover:border-[#192a3a]/40 active:border-[#192a3a]/40"
               >
-                Cotizar refacciones
-                <ArrowRight size={17} />
+                <div className="flex items-center gap-4">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
+                    <PackageSearch size={22} />
+                  </span>
+
+                  <div>
+                    <p className="text-lg font-black">
+                      Cotizar refacciones
+                    </p>
+
+                    <p className="mt-1 text-sm text-slate-500">
+                      Piezas, accesorios y disponibilidad.
+                    </p>
+                  </div>
+                </div>
+
+                <ArrowRight
+                  size={19}
+                  className="shrink-0 text-[#192a3a] transition-transform group-hover:translate-x-1 group-active:translate-x-1"
+                />
               </a>
             </div>
-          </div>
 
-          <div className="relative mt-10 grid gap-4 md:grid-cols-3">
-            <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 backdrop-blur">
-              <Wrench size={24} className="text-blue-100" />
-              <p className="mt-4 text-3xl font-black">Servicio</p>
-              <p className="mt-1 text-sm font-bold text-blue-100">
-                Mantenimiento, revisión o diagnóstico.
-              </p>
-            </div>
+            <div className="grid gap-8 xl:grid-cols-2">
+              {/* Servicio */}
+              <section
+                id="servicio"
+                className="scroll-mt-[125px] rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] md:p-7"
+              >
+                <FormHeader
+                  icon={Settings}
+                  eyebrow="Mantenimiento"
+                  title="Solicitar servicio"
+                  description="Comparte la información de tu unidad y describe el servicio, revisión o diagnóstico que necesitas."
+                />
 
-            <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 backdrop-blur">
-              <PackageSearch size={24} className="text-blue-100" />
-              <p className="mt-4 text-3xl font-black">Refacciones</p>
-              <p className="mt-1 text-sm font-bold text-blue-100">
-                Solicitud de piezas o accesorios.
-              </p>
-            </div>
-
-            <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 backdrop-blur">
-              <MessageSquare size={24} className="text-blue-100" />
-              <p className="mt-4 text-3xl font-black">Seguimiento</p>
-              <p className="mt-1 text-sm font-bold text-blue-100">
-                Tu solicitud entra al CRM interno.
-              </p>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      <section className="relative z-10 -mt-10 px-4 pb-16 md:-mt-14 md:pb-20">
-        <Container>
-          {(params.success || params.error) && (
-            <div
-              className={`mb-6 rounded-2xl border p-4 text-sm font-black ${params.success
-                  ? "border-emerald-100 bg-emerald-50 text-emerald-700"
-                  : "border-red-100 bg-red-50 text-red-700"
-                }`}
-            >
-              {params.success || params.error}
-            </div>
-          )}
-
-          <div className="grid gap-8 xl:grid-cols-2">
-            <section
-              id="servicio"
-              className="rounded-[2.5rem] border border-[var(--rise-border)] bg-white p-5 shadow-xl shadow-slate-900/10 md:p-8"
-            >
-              <div className="flex items-start gap-4">
-                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
-                  <Settings size={28} />
-                </div>
-
-                <div>
-                  <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                    Formulario
-                  </p>
-
-                  <h2 className="mt-2 text-3xl font-black">
-                    Solicitar servicio
-                  </h2>
-
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Envía los datos de tu unidad y el tipo de servicio que
-                    necesitas.
-                  </p>
-                </div>
-              </div>
-
-              <form action={submitServiceRequest} className="mt-8 grid gap-5">
-                <input type="hidden" name="requestType" value="SERVICE" />
-
-                <div className="grid gap-5 md:grid-cols-2">
-                  <InputField
-                    icon="user"
-                    label="Nombre completo *"
-                    name="name"
-                    required
-                    placeholder="Nombre del cliente"
+                <form
+                  action={
+                    submitServiceRequest
+                  }
+                  className="mt-7 grid gap-5"
+                >
+                  <input
+                    type="hidden"
+                    name="requestType"
+                    value="SERVICE"
                   />
 
-                  <InputField
-                    icon="phone"
-                    label="Teléfono / WhatsApp *"
-                    name="phone"
-                    required
-                    placeholder="81 1234 5678"
-                  />
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <InputField
+                      icon="user"
+                      label="Nombre completo *"
+                      name="name"
+                      required
+                      autoComplete="name"
+                      placeholder="Nombre del cliente"
+                    />
 
-                  <InputField
-                    icon="mail"
-                    label="Correo"
-                    name="email"
-                    type="email"
-                    placeholder="correo@ejemplo.com"
-                  />
+                    <InputField
+                      icon="phone"
+                      label="Teléfono / WhatsApp *"
+                      name="phone"
+                      required
+                      type="tel"
+                      autoComplete="tel"
+                      placeholder="81 1234 5678"
+                    />
 
-                  <BranchSelect branches={branches} />
+                    <InputField
+                      icon="mail"
+                      label="Correo"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="correo@ejemplo.com"
+                    />
 
-                  <InputField
-                    label="Marca de la unidad"
-                    name="vehicleBrand"
-                    placeholder="Polaris, Can-Am, Triumph..."
-                  />
+                    <BranchSelect
+                      branches={branches}
+                    />
 
-                  <InputField
-                    label="Modelo"
-                    name="vehicleModel"
-                    placeholder="RZR XP, Defender, Bonneville..."
-                  />
+                    <InputField
+                      label="Marca de la unidad"
+                      name="vehicleBrand"
+                      placeholder="Polaris, Can-Am..."
+                    />
 
-                  <InputField
-                    label="Año"
-                    name="vehicleYear"
-                    placeholder="2024"
-                  />
+                    <InputField
+                      label="Modelo"
+                      name="vehicleModel"
+                      placeholder="RZR XP, Defender..."
+                    />
 
-                  <InputField
-                    label="Kilometraje"
-                    name="mileage"
-                    placeholder="12,000 km"
-                  />
+                    <InputField
+                      label="Año"
+                      name="vehicleYear"
+                      inputMode="numeric"
+                      placeholder="2024"
+                    />
 
-                  <InputField
-                    icon="calendar"
-                    label="Fecha preferida"
-                    name="preferredDate"
-                    type="date"
-                  />
+                    <InputField
+                      label="Kilometraje"
+                      name="mileage"
+                      placeholder="12,000 km"
+                    />
 
-                  <InputField
-                    label="Hora preferida"
-                    name="preferredTime"
-                    type="time"
-                  />
-                </div>
+                    <InputField
+                      icon="calendar"
+                      label="Fecha preferida"
+                      name="preferredDate"
+                      type="date"
+                    />
 
-                <label className="block">
-                  <span className="mb-2 block text-sm font-bold text-slate-700">
-                    ¿Qué servicio necesitas? *
-                  </span>
+                    <InputField
+                      label="Hora preferida"
+                      name="preferredTime"
+                      type="time"
+                    />
+                  </div>
 
-                  <textarea
+                  <TextAreaField
+                    label="¿Qué servicio necesitas? *"
                     name="serviceDetail"
                     required
-                    rows={5}
                     placeholder="Describe el servicio, falla, mantenimiento o revisión que necesitas."
-                    className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
                   />
-                </label>
 
-                <button
-                  type="submit"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+                  <button
+                    type="submit"
+                    className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#29465c] active:scale-[0.98]"
+                  >
+                    Enviar solicitud
+
+                    <ArrowRight
+                      size={17}
+                      className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
+                    />
+                  </button>
+                </form>
+              </section>
+
+              {/* Refacciones */}
+              <section
+                id="refacciones"
+                className="scroll-mt-[125px] rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] md:p-7"
+              >
+                <FormHeader
+                  icon={PackageSearch}
+                  eyebrow="Piezas y accesorios"
+                  title="Cotizar refacciones"
+                  description="Solicita precio y disponibilidad de piezas, accesorios o refacciones para tu unidad."
+                />
+
+                <form
+                  action={
+                    submitServiceRequest
+                  }
+                  className="mt-7 grid gap-5"
                 >
-                  Enviar solicitud de servicio
-                  <ArrowRight size={17} />
-                </button>
-              </form>
-            </section>
-
-            <section
-              id="refacciones"
-              className="rounded-[2.5rem] border border-[var(--rise-border)] bg-white p-5 shadow-xl shadow-slate-900/10 md:p-8"
-            >
-              <div className="flex items-start gap-4">
-                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-amber-50 text-amber-700">
-                  <PackageSearch size={28} />
-                </div>
-
-                <div>
-                  <p className="text-sm font-black uppercase tracking-[0.25em] text-amber-700">
-                    Formulario
-                  </p>
-
-                  <h2 className="mt-2 text-3xl font-black">
-                    Cotizar refacciones
-                  </h2>
-
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Solicita precio y disponibilidad de piezas, accesorios o
-                    refacciones.
-                  </p>
-                </div>
-              </div>
-
-              <form action={submitServiceRequest} className="mt-8 grid gap-5">
-                <input type="hidden" name="requestType" value="PARTS" />
-
-                <div className="grid gap-5 md:grid-cols-2">
-                  <InputField
-                    icon="user"
-                    label="Nombre completo *"
-                    name="name"
-                    required
-                    placeholder="Nombre del cliente"
+                  <input
+                    type="hidden"
+                    name="requestType"
+                    value="PARTS"
                   />
 
-                  <InputField
-                    icon="phone"
-                    label="Teléfono / WhatsApp *"
-                    name="phone"
-                    required
-                    placeholder="81 1234 5678"
-                  />
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <InputField
+                      icon="user"
+                      label="Nombre completo *"
+                      name="name"
+                      required
+                      autoComplete="name"
+                      placeholder="Nombre del cliente"
+                    />
 
-                  <InputField
-                    icon="mail"
-                    label="Correo"
-                    name="email"
-                    type="email"
-                    placeholder="correo@ejemplo.com"
-                  />
+                    <InputField
+                      icon="phone"
+                      label="Teléfono / WhatsApp *"
+                      name="phone"
+                      required
+                      type="tel"
+                      autoComplete="tel"
+                      placeholder="81 1234 5678"
+                    />
 
-                  <BranchSelect branches={branches} />
+                    <InputField
+                      icon="mail"
+                      label="Correo"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="correo@ejemplo.com"
+                    />
 
-                  <InputField
-                    label="Marca de la unidad"
-                    name="partsVehicleBrand"
-                    placeholder="Polaris, Can-Am, Triumph..."
-                  />
+                    <BranchSelect
+                      branches={branches}
+                    />
 
-                  <InputField
-                    label="Modelo"
-                    name="partsVehicleModel"
-                    placeholder="RZR XP, Defender, Bonneville..."
-                  />
+                    <InputField
+                      label="Marca de la unidad"
+                      name="partsVehicleBrand"
+                      placeholder="Polaris, Can-Am..."
+                    />
 
-                  <InputField
-                    label="Año"
-                    name="partsVehicleYear"
-                    placeholder="2024"
-                  />
+                    <InputField
+                      label="Modelo"
+                      name="partsVehicleModel"
+                      placeholder="RZR XP, Defender..."
+                    />
 
-                  <InputField
-                    label="Refacción solicitada *"
-                    name="partName"
-                    required
-                    placeholder="Filtro, llanta, defensa, accesorio..."
-                  />
+                    <InputField
+                      label="Año"
+                      name="partsVehicleYear"
+                      inputMode="numeric"
+                      placeholder="2024"
+                    />
 
-                  <InputField
-                    label="Cantidad"
-                    name="quantity"
-                    placeholder="1, 2, 4..."
-                  />
+                    <InputField
+                      label="Refacción solicitada *"
+                      name="partName"
+                      required
+                      placeholder="Filtro, llanta, defensa..."
+                    />
 
-                  <InputField
-                    icon="calendar"
-                    label="Fecha preferida"
-                    name="preferredDate"
-                    type="date"
-                  />
+                    <InputField
+                      label="Cantidad"
+                      name="quantity"
+                      inputMode="numeric"
+                      placeholder="1, 2, 4..."
+                    />
 
-                  <InputField
-                    label="Hora preferida"
-                    name="preferredTime"
-                    type="time"
-                  />
-                </div>
+                    <InputField
+                      icon="calendar"
+                      label="Fecha preferida"
+                      name="preferredDate"
+                      type="date"
+                    />
 
-                <label className="block">
-                  <span className="mb-2 block text-sm font-bold text-slate-700">
-                    Detalle de la cotización *
-                  </span>
+                    <InputField
+                      label="Hora preferida"
+                      name="preferredTime"
+                      type="time"
+                    />
+                  </div>
 
-                  <textarea
+                  <TextAreaField
+                    label="Detalle de la cotización *"
                     name="partDetail"
                     required
-                    rows={5}
-                    placeholder="Describe la pieza, número de parte si lo tienes, versión de la unidad o cualquier detalle importante."
-                    className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-amber-500 focus:bg-white"
+                    placeholder="Describe la pieza, número de parte, versión de la unidad o cualquier detalle importante."
                   />
-                </label>
 
-                <button
-                  type="submit"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-amber-600 px-5 text-sm font-black text-white transition hover:bg-amber-700"
-                >
-                  Enviar cotización de refacciones
-                  <ArrowRight size={17} />
-                </button>
-              </form>
-            </section>
-          </div>
+                  <button
+                    type="submit"
+                    className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#29465c] active:scale-[0.98]"
+                  >
+                    Solicitar cotización
 
-          <section className="mt-8 rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-7">
-            <div className="grid gap-5 md:grid-cols-3">
-              <InfoItem
-                icon="check"
-                title="Sin compromiso"
-                description="El formulario solo registra la solicitud para que un asesor pueda dar seguimiento."
-              />
-
-              <InfoItem
-                icon="shield"
-                title="Sucursal asignada"
-                description="La solicitud queda relacionada con la sucursal seleccionada."
-              />
-
-              <InfoItem
-                icon="clipboard"
-                title="Seguimiento en CRM"
-                description="El equipo puede revisar y actualizar el estado desde el panel administrativo."
-              />
+                    <ArrowRight
+                      size={17}
+                      className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
+                    />
+                  </button>
+                </form>
+              </section>
             </div>
-          </section>
-        </Container>
-      </section>
+
+            {/* Información final */}
+            <section className="mt-8 rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)] md:p-7">
+              <div className="grid gap-4 md:grid-cols-3">
+                <InfoItem
+                  icon={CheckCircle2}
+                  title="Sin compromiso"
+                  description="El envío del formulario solo registra la solicitud para que un asesor pueda contactarte."
+                />
+
+                <InfoItem
+                  icon={ShieldCheck}
+                  title="Sucursal asignada"
+                  description="La solicitud queda relacionada con la agencia que hayas seleccionado."
+                />
+
+                <InfoItem
+                  icon={ClipboardList}
+                  title="Seguimiento interno"
+                  description="El equipo puede revisar y actualizar el estado desde el panel administrativo."
+                />
+              </div>
+            </section>
+
+            <div className="mt-8 text-center">
+              <p className="text-sm font-semibold text-slate-500">
+                También puedes consultar las
+                ubicaciones y medios de contacto de
+                nuestras agencias.
+              </p>
+
+              <Link
+                href="/sucursales"
+                className="group mt-4 inline-flex items-center gap-2 text-sm font-black text-[#192a3a]"
+              >
+                Ver sucursales
+
+                <ArrowRight
+                  size={16}
+                  className="transition-transform group-hover:translate-x-1 group-active:translate-x-1"
+                />
+              </Link>
+            </div>
+          </Container>
+        </section>
+      </main>
 
       <Footer />
-    </main>
+    </>
+  );
+}
+
+function ServiceSummary({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: typeof Wrench;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex items-start gap-4 rounded-[18px] border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-[#dfe7ec]">
+        <Icon size={19} />
+      </span>
+
+      <div>
+        <p className="font-black text-white">
+          {title}
+        </p>
+
+        <p className="mt-1 text-xs font-medium leading-5 text-white/55">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function FormHeader({
+  icon: Icon,
+  eyebrow,
+  title,
+  description,
+}: {
+  icon: typeof Settings;
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex items-start gap-4">
+      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
+        <Icon size={22} />
+      </span>
+
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#192a3a]">
+          {eyebrow}
+        </p>
+
+        <h2 className="mt-2 text-2xl font-black tracking-[-0.035em] md:text-3xl">
+          {title}
+        </h2>
+
+        <p className="mt-2 text-sm leading-6 text-slate-500">
+          {description}
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -596,19 +900,25 @@ function BranchSelect({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-bold text-slate-700">
+      <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-slate-500">
         Sucursal *
       </span>
 
       <select
         name="branchId"
         required
-        className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
+        defaultValue=""
+        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#192a3a] focus:bg-white"
       >
-        <option value="">Selecciona una sucursal</option>
+        <option value="" disabled>
+          Selecciona una sucursal
+        </option>
 
         {branches.map((branch) => (
-          <option key={branch.id} value={branch.id}>
+          <option
+            key={branch.id}
+            value={branch.id}
+          >
             {branch.name} · {branch.city}
           </option>
         ))}
@@ -624,13 +934,29 @@ function InputField({
   placeholder,
   required = false,
   icon,
+  autoComplete,
+  inputMode,
 }: {
   label: string;
   name: string;
   type?: string;
   placeholder?: string;
   required?: boolean;
-  icon?: "user" | "phone" | "mail" | "calendar";
+  icon?:
+  | "user"
+  | "phone"
+  | "mail"
+  | "calendar";
+  autoComplete?: string;
+  inputMode?:
+  | "none"
+  | "text"
+  | "decimal"
+  | "numeric"
+  | "tel"
+  | "search"
+  | "email"
+  | "url";
 }) {
   const Icon =
     icon === "user"
@@ -645,15 +971,15 @@ function InputField({
 
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-bold text-slate-700">
+      <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-slate-500">
         {label}
       </span>
 
       <div className="relative">
         {Icon && (
           <Icon
-            size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+            size={17}
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
           />
         )}
 
@@ -662,7 +988,9 @@ function InputField({
           type={type}
           required={required}
           placeholder={placeholder}
-          className={`h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white ${Icon ? "pl-11" : ""
+          autoComplete={autoComplete}
+          inputMode={inputMode}
+          className={`h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white ${Icon ? "pl-11" : ""
             }`}
         />
       </div>
@@ -670,31 +998,56 @@ function InputField({
   );
 }
 
+function TextAreaField({
+  label,
+  name,
+  placeholder,
+  required = false,
+}: {
+  label: string;
+  name: string;
+  placeholder: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+        {label}
+      </span>
+
+      <textarea
+        name={name}
+        required={required}
+        rows={5}
+        placeholder={placeholder}
+        className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white"
+      />
+    </label>
+  );
+}
+
 function InfoItem({
-  icon,
+  icon: Icon,
   title,
   description,
 }: {
-  icon: "check" | "shield" | "clipboard";
+  icon: typeof CheckCircle2;
   title: string;
   description: string;
 }) {
-  const Icon =
-    icon === "check"
-      ? CheckCircle2
-      : icon === "shield"
-        ? ShieldCheck
-        : ClipboardList;
-
   return (
-    <div className="rounded-2xl bg-slate-50 p-5">
-      <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
-        <Icon size={22} />
-      </div>
+    <div className="rounded-2xl bg-[#f8fafb] p-5">
+      <span className="grid h-10 w-10 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
+        <Icon size={19} />
+      </span>
 
-      <h3 className="mt-4 text-lg font-black">{title}</h3>
+      <h3 className="mt-4 text-lg font-black">
+        {title}
+      </h3>
 
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-500">
+        {description}
+      </p>
     </div>
   );
 }

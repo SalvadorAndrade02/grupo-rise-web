@@ -1,12 +1,11 @@
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import {
   AlertTriangle,
   ArrowRight,
   BadgeCheck,
-  BarChart3,
   Bell,
   Building2,
-  CalendarDays,
   Car,
   CheckCircle2,
   Clock,
@@ -56,14 +55,17 @@ function getLeadStatusLabel(status: string) {
 
 function getLeadStatusClasses(status: string) {
   const classes: Record<string, string> = {
-    NUEVO: "bg-blue-50 text-blue-700",
-    CONTACTADO: "bg-purple-50 text-purple-700",
-    EN_SEGUIMIENTO: "bg-amber-50 text-amber-700",
-    CERRADO: "bg-emerald-50 text-emerald-700",
-    PERDIDO: "bg-red-50 text-red-700",
+    NUEVO: "border-blue-200 bg-blue-50 text-blue-700",
+    CONTACTADO: "border-violet-200 bg-violet-50 text-violet-700",
+    EN_SEGUIMIENTO: "border-amber-200 bg-amber-50 text-amber-700",
+    CERRADO: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    PERDIDO: "border-red-200 bg-red-50 text-red-700",
   };
 
-  return classes[status] ?? "bg-slate-100 text-slate-600";
+  return (
+    classes[status] ??
+    "border-slate-200 bg-slate-100 text-slate-600"
+  );
 }
 
 function getVehicleStatusLabel(status: string) {
@@ -100,7 +102,9 @@ function getVehicleIssues(vehicle: {
 }) {
   const issues: string[] = [];
 
-  const hasImage = Boolean(vehicle.mainImage) || vehicle.images.length > 0;
+  const hasImage =
+    Boolean(vehicle.mainImage) ||
+    vehicle.images.length > 0;
 
   if (!hasImage) {
     issues.push("Sin imagen");
@@ -118,15 +122,18 @@ function getVehicleIssues(vehicle: {
     issues.push("Oculto");
   }
 
-  if (vehicle.active && vehicle.status !== VehicleStatus.DISPONIBLE) {
-    issues.push("Visible pero no disponible");
+  if (
+    vehicle.active &&
+    vehicle.status !== VehicleStatus.DISPONIBLE
+  ) {
+    issues.push("No disponible");
   }
 
   if (
     vehicle.status === VehicleStatus.VENDIDO ||
     vehicle.status === VehicleStatus.APARTADO
   ) {
-    issues.push("Vendido/apartado");
+    issues.push("Vendido o apartado");
   }
 
   return issues;
@@ -203,7 +210,10 @@ export default async function AdminDashboardPage() {
     prisma.vehicle.count({
       where: {
         status: {
-          in: [VehicleStatus.VENDIDO, VehicleStatus.APARTADO],
+          in: [
+            VehicleStatus.VENDIDO,
+            VehicleStatus.APARTADO,
+          ],
         },
       },
     }),
@@ -337,68 +347,83 @@ export default async function AdminDashboardPage() {
     }),
   ]);
 
-  const publishedVehicles = publishedNewVehicles + publishedUsedVehicles;
+  const publishedVehicles =
+    publishedNewVehicles +
+    publishedUsedVehicles;
+
   const totalLeads =
-    newLeads + contactedLeads + followUpLeads + closedLeads + lostLeads;
+    newLeads +
+    contactedLeads +
+    followUpLeads +
+    closedLeads +
+    lostLeads;
+
+  const attentionCount =
+    vehiclesWithoutImage +
+    vehiclesWithoutDescription;
 
   const mainStats = [
     {
       label: "Solicitudes nuevas",
       value: newLeads,
-      description: "Leads pendientes de contactar",
+      description:
+        "Prospectos pendientes de contactar.",
       icon: Bell,
       href: "/admin/leads?estado=NUEVO",
-      tone: "blue",
+      tone: "blue" as const,
     },
     {
       label: "En seguimiento",
       value: followUpLeads,
-      description: "Prospectos activos",
+      description:
+        "Prospectos con atención activa.",
       icon: Clock,
       href: "/admin/leads?estado=EN_SEGUIMIENTO",
-      tone: "amber",
+      tone: "amber" as const,
     },
     {
       label: "Vehículos publicados",
       value: publishedVehicles,
-      description: "Catálogo + inventario público",
+      description:
+        "Unidades visibles en el sitio público.",
       icon: BadgeCheck,
       href: "/admin/inventario",
-      tone: "emerald",
+      tone: "emerald" as const,
     },
     {
       label: "Requieren atención",
-      value: vehiclesWithoutImage + vehiclesWithoutDescription,
-      description: "Sin imagen o descripción",
+      value: attentionCount,
+      description:
+        "Unidades sin imagen o descripción.",
       icon: AlertTriangle,
       href: "/admin/inventario",
-      tone: "red",
+      tone: "red" as const,
     },
   ];
 
   const inventoryStats = [
     {
-      label: "Unidades registradas",
+      label: "Registradas",
       value: totalVehicles,
       icon: Car,
     },
     {
-      label: "Nuevos",
+      label: "Nuevas",
       value: newVehicles,
       icon: Sparkles,
     },
     {
-      label: "Seminuevos",
+      label: "Seminuevas",
       value: usedVehicles,
       icon: Tags,
     },
     {
-      label: "Ocultos",
+      label: "Ocultas",
       value: hiddenVehicles,
       icon: EyeOff,
     },
     {
-      label: "Vendidos / apartados",
+      label: "Vendidas / apartadas",
       value: soldOrReservedVehicles,
       icon: CheckCircle2,
     },
@@ -415,11 +440,11 @@ export default async function AdminDashboardPage() {
       value: totalLeads,
     },
     {
-      label: "Nuevos",
+      label: "Nuevas",
       value: newLeads,
     },
     {
-      label: "Contactados",
+      label: "Contactadas",
       value: contactedLeads,
     },
     {
@@ -427,264 +452,175 @@ export default async function AdminDashboardPage() {
       value: followUpLeads,
     },
     {
-      label: "Cerrados",
+      label: "Cerradas",
       value: closedLeads,
     },
     {
-      label: "Perdidos",
+      label: "Perdidas",
       value: lostLeads,
     },
   ];
 
   return (
-    <div>
-      <div className="flex flex-wrap items-start justify-between gap-5">
-        <div>
-          <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-            Panel administrativo
-          </p>
+    <div className="pb-10">
+      {/* Encabezado */}
+      <section className="relative overflow-hidden rounded-[22px] bg-[#192a3a] px-5 py-7 text-white shadow-[0_18px_50px_rgba(15,23,42,0.14)] md:px-7 md:py-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_32%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
 
-          <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">
-            Dashboard Grupo Rise
-          </h1>
+        <div className="relative flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#dfe7ec] backdrop-blur-sm">
+              <Sparkles size={14} />
+              Panel administrativo
+            </div>
 
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
-            Resumen de inventario, catálogo, seminuevos y solicitudes
-            comerciales del sitio.
-          </p>
-        </div>
+            <h1 className="mt-4 text-3xl font-black tracking-[-0.045em] md:text-4xl lg:text-5xl">
+              Dashboard Grupo Rise
+            </h1>
 
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/admin/inventario/nuevo"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-          >
-            <Plus size={18} />
-            Registrar unidad
-          </Link>
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-white/60 md:text-base">
+              Resumen general del inventario,
+              publicaciones y solicitudes comerciales
+              registradas en el sitio.
+            </p>
+          </div>
 
-          <Link
-            href="/admin/leads"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--rise-border)] bg-white px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
-          >
-            <MessageSquare size={18} />
-            Ver solicitudes
-          </Link>
-        </div>
-      </div>
-
-      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {mainStats.map((stat) => {
-          const Icon = stat.icon;
-
-          return (
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Link
-              key={stat.label}
-              href={stat.href}
-              className="group rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
+              href="/admin/inventario/nuevo"
+              className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div
-                  className={`grid h-12 w-12 place-items-center rounded-2xl ${stat.tone === "blue"
-                    ? "bg-blue-50 text-blue-700"
-                    : stat.tone === "amber"
-                      ? "bg-amber-50 text-amber-700"
-                      : stat.tone === "emerald"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-red-50 text-red-700"
-                    }`}
-                >
-                  <Icon size={23} />
-                </div>
-
-                <ArrowRight
-                  size={18}
-                  className="text-slate-300 transition group-hover:translate-x-1 group-hover:text-[var(--rise-blue)]"
-                />
-              </div>
-
-              <p className="mt-5 text-4xl font-black text-[var(--rise-navy)]">
-                {stat.value}
-              </p>
-
-              <h2 className="mt-2 text-sm font-black uppercase tracking-wider text-slate-700">
-                {stat.label}
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                {stat.description}
-              </p>
+              <Plus size={18} />
+              Registrar unidad
             </Link>
-          );
-        })}
-      </section>
-
-      <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                Inventario
-              </p>
-
-              <h2 className="mt-2 text-2xl font-black">
-                Estado de unidades
-              </h2>
-            </div>
-
-            <Link
-              href="/admin/inventario"
-              className="text-sm font-black text-[var(--rise-blue)] hover:underline"
-            >
-              Administrar inventario
-            </Link>
-          </div>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {inventoryStats.map((stat) => {
-              const Icon = stat.icon;
-
-              return (
-                <div
-                  key={stat.label}
-                  className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
-                >
-                  <Icon size={22} className="text-[var(--rise-blue)]" />
-
-                  <p className="mt-4 text-3xl font-black text-[var(--rise-navy)]">
-                    {stat.value}
-                  </p>
-
-                  <p className="mt-1 text-xs font-black uppercase tracking-wider text-slate-500">
-                    {stat.label}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-6 grid gap-4 rounded-2xl bg-slate-50 p-4 md:grid-cols-2">
-            <div className="rounded-2xl bg-white p-4 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-                Catálogo público
-              </p>
-
-              <p className="mt-2 text-3xl font-black text-[var(--rise-blue)]">
-                {publishedNewVehicles}
-              </p>
-
-              <p className="mt-1 text-sm font-bold text-slate-500">
-                Nuevos disponibles publicados
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-4 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-wider text-slate-400">
-                Inventario público
-              </p>
-
-              <p className="mt-2 text-3xl font-black text-[var(--rise-blue)]">
-                {publishedUsedVehicles}
-              </p>
-
-              <p className="mt-1 text-sm font-bold text-slate-500">
-                Seminuevos disponibles publicados
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                CRM
-              </p>
-
-              <h2 className="mt-2 text-2xl font-black">
-                Estado de solicitudes
-              </h2>
-            </div>
 
             <Link
               href="/admin/leads"
-              className="text-sm font-black text-[var(--rise-blue)] hover:underline"
+              className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-black text-white transition hover:bg-white/15 active:scale-[0.98]"
             >
-              Ver CRM
+              <MessageSquare size={18} />
+              Ver solicitudes
             </Link>
           </div>
+        </div>
+      </section>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      {/* Estadísticas principales */}
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {mainStats.map((stat) => (
+          <MainStatCard
+            key={stat.label}
+            {...stat}
+          />
+        ))}
+      </section>
+
+      {/* Inventario y CRM */}
+      <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
+        <AdminSection
+          eyebrow="Inventario"
+          title="Estado de las unidades"
+          actionHref="/admin/inventario"
+          actionLabel="Administrar"
+        >
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {inventoryStats.map((stat) => (
+              <SmallStatCard
+                key={stat.label}
+                icon={stat.icon}
+                label={stat.label}
+                value={stat.value}
+              />
+            ))}
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <PublicInventoryCard
+              label="Catálogo público"
+              value={publishedNewVehicles}
+              description="Vehículos nuevos publicados"
+            />
+
+            <PublicInventoryCard
+              label="Seminuevos públicos"
+              value={publishedUsedVehicles}
+              description="Seminuevos publicados"
+            />
+          </div>
+        </AdminSection>
+
+        <AdminSection
+          eyebrow="CRM comercial"
+          title="Estado de solicitudes"
+          actionHref="/admin/leads"
+          actionLabel="Ver CRM"
+        >
+          <div className="grid grid-cols-2 gap-3">
             {leadStats.map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                className="rounded-[16px] border border-slate-100 bg-[#f8fafb] p-4"
               >
-                <p className="text-3xl font-black text-[var(--rise-navy)]">
+                <p className="text-3xl font-black tracking-[-0.04em] text-[#192a3a]">
                   {stat.value}
                 </p>
 
-                <p className="mt-1 text-xs font-black uppercase tracking-wider text-slate-500">
+                <p className="mt-1 text-[10px] font-black uppercase tracking-[0.13em] text-slate-500">
                   {stat.label}
                 </p>
               </div>
             ))}
           </div>
 
-          <div className="mt-6 rounded-2xl bg-[var(--rise-blue-soft)] p-5">
-            <TrendingUp size={24} className="text-[var(--rise-blue)]" />
+          <div className="mt-5 rounded-[18px] border border-[#192a3a]/10 bg-[#e7edf1] p-5">
+            <TrendingUp
+              size={23}
+              className="text-[#192a3a]"
+            />
 
-            <p className="mt-3 text-sm font-black text-[var(--rise-navy)]">
+            <p className="mt-3 text-sm font-black text-[#192a3a]">
               Seguimiento recomendado
             </p>
 
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Prioriza solicitudes nuevas y las que están en seguimiento. Las
-              solicitudes cerradas ayudan a medir avance comercial.
+              Prioriza las solicitudes nuevas y las que
+              permanecen en seguimiento activo.
             </p>
           </div>
-        </div>
+        </AdminSection>
       </section>
 
-      <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                Atención requerida
-              </p>
-
-              <h2 className="mt-2 text-2xl font-black">
-                Vehículos por revisar
-              </h2>
-            </div>
-
-            <Link
-              href="/admin/inventario"
-              className="text-sm font-black text-[var(--rise-blue)] hover:underline"
-            >
-              Revisar inventario
-            </Link>
-          </div>
-
-          <div className="mt-6 space-y-3">
+      {/* Atención y leads */}
+      <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
+        <AdminSection
+          eyebrow="Atención requerida"
+          title="Vehículos por revisar"
+          actionHref="/admin/inventario"
+          actionLabel="Revisar inventario"
+        >
+          <div className="space-y-3">
             {attentionVehicles.length > 0 ? (
               attentionVehicles.map((vehicle) => {
-                const image = vehicle.mainImage || vehicle.images[0]?.url || "";
-                const issues = getVehicleIssues(vehicle);
+                const image =
+                  vehicle.mainImage ||
+                  vehicle.images[0]?.url ||
+                  "";
+
+                const issues =
+                  getVehicleIssues(vehicle);
 
                 return (
                   <Link
                     key={vehicle.id}
                     href={`/admin/inventario/${vehicle.id}/editar`}
-                    className="grid gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:bg-white hover:shadow-lg hover:shadow-slate-900/5 md:grid-cols-[96px_1fr_auto]"
+                    className="group grid gap-4 rounded-[18px] border border-slate-100 bg-[#f8fafb] p-4 transition hover:border-[#192a3a]/25 hover:bg-white hover:shadow-[0_12px_30px_rgba(15,23,42,0.07)] md:grid-cols-[96px_minmax(0,1fr)_auto] md:items-center"
                   >
-                    <div className="h-24 overflow-hidden rounded-2xl bg-slate-200">
+                    <div className="h-24 overflow-hidden rounded-xl bg-slate-200">
                       {image ? (
                         <img
                           src={image}
                           alt={`${vehicle.brand.name} ${vehicle.name}`}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                         />
                       ) : (
                         <div className="grid h-full place-items-center text-slate-400">
@@ -693,24 +629,25 @@ export default async function AdminDashboardPage() {
                       )}
                     </div>
 
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--rise-blue)]">
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#192a3a]">
                         {vehicle.brand.name}
                       </p>
 
-                      <h3 className="mt-1 text-lg font-black">
+                      <h3 className="mt-1 truncate text-lg font-black">
                         {vehicle.name}
                       </h3>
 
-                      <p className="mt-1 text-sm font-bold text-slate-500">
-                        {vehicle.branch.name} · {vehicle.branch.city}
+                      <p className="mt-1 text-xs font-semibold text-slate-500">
+                        {vehicle.branch.name} ·{" "}
+                        {vehicle.branch.city}
                       </p>
 
                       <div className="mt-3 flex flex-wrap gap-2">
                         {issues.map((issue) => (
                           <span
                             key={issue}
-                            className="rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700"
+                            className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-black text-amber-700"
                           >
                             {issue}
                           </span>
@@ -718,52 +655,34 @@ export default async function AdminDashboardPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center text-sm font-black text-[var(--rise-blue)]">
+                    <span className="inline-flex items-center gap-1 text-xs font-black text-[#192a3a]">
                       Editar
-                    </div>
+                      <ArrowRight
+                        size={14}
+                        className="transition-transform group-hover:translate-x-0.5"
+                      />
+                    </span>
                   </Link>
                 );
               })
             ) : (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                <CheckCircle2
-                  size={42}
-                  className="mx-auto text-emerald-600"
-                />
-
-                <h3 className="mt-3 text-xl font-black">
-                  Todo se ve bien
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  No hay vehículos con alertas principales por ahora.
-                </p>
-              </div>
+              <EmptyState
+                icon={CheckCircle2}
+                title="Todo se ve bien"
+                description="No hay vehículos con alertas principales por ahora."
+                positive
+              />
             )}
           </div>
-        </div>
+        </AdminSection>
 
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                Solicitudes recientes
-              </p>
-
-              <h2 className="mt-2 text-2xl font-black">
-                Últimos prospectos
-              </h2>
-            </div>
-
-            <Link
-              href="/admin/leads"
-              className="text-sm font-black text-[var(--rise-blue)] hover:underline"
-            >
-              Ver todas
-            </Link>
-          </div>
-
-          <div className="mt-6 space-y-3">
+        <AdminSection
+          eyebrow="Solicitudes recientes"
+          title="Últimos prospectos"
+          actionHref="/admin/leads"
+          actionLabel="Ver todas"
+        >
+          <div className="space-y-3">
             {recentLeads.length > 0 ? (
               recentLeads.map((lead) => {
                 const vehicleName = lead.vehicle
@@ -774,33 +693,37 @@ export default async function AdminDashboardPage() {
                   <Link
                     key={lead.id}
                     href="/admin/leads"
-                    className="block rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:bg-white hover:shadow-lg hover:shadow-slate-900/5"
+                    className="group block rounded-[18px] border border-slate-100 bg-[#f8fafb] p-4 transition hover:border-[#192a3a]/25 hover:bg-white hover:shadow-[0_12px_30px_rgba(15,23,42,0.07)]"
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-black">{lead.name}</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black">
+                          {lead.name}
+                        </p>
 
-                        <p className="mt-1 text-xs font-bold text-slate-500">
+                        <p className="mt-1 truncate text-xs font-semibold text-slate-500">
                           {vehicleName}
                         </p>
                       </div>
 
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-black ${getLeadStatusClasses(
+                        className={`shrink-0 rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-[0.08em] ${getLeadStatusClasses(
                           lead.status
                         )}`}
                       >
-                        {getLeadStatusLabel(lead.status)}
+                        {getLeadStatusLabel(
+                          lead.status
+                        )}
                       </span>
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500">
+                      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-black text-slate-500">
                         {getLeadTypeLabel(lead.type)}
                       </span>
 
                       {lead.branch && (
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500">
+                        <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-black text-slate-500">
                           {lead.branch.city}
                         </span>
                       )}
@@ -809,135 +732,365 @@ export default async function AdminDashboardPage() {
                 );
               })
             ) : (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                <MessageSquare size={42} className="mx-auto text-slate-400" />
-
-                <h3 className="mt-3 text-xl font-black">
-                  Sin solicitudes todavía
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  Cuando un cliente solicite información aparecerá aquí.
-                </p>
-              </div>
+              <EmptyState
+                icon={MessageSquare}
+                title="Sin solicitudes"
+                description="Los nuevos prospectos aparecerán aquí."
+              />
             )}
           </div>
-        </div>
+        </AdminSection>
       </section>
 
-      <section className="mt-6 rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-              Actividad reciente
-            </p>
+      {/* Vehículos recientes */}
+      <section className="mt-6">
+        <AdminSection
+          eyebrow="Actividad reciente"
+          title="Últimas unidades actualizadas"
+          actionHref="/admin/inventario"
+          actionLabel="Ver inventario"
+        >
+          {recentVehicles.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+              {recentVehicles.map((vehicle) => {
+                const image =
+                  vehicle.mainImage ||
+                  vehicle.images[0]?.url ||
+                  "";
 
-            <h2 className="mt-2 text-2xl font-black">
-              Últimas unidades actualizadas
-            </h2>
-          </div>
-
-          <Link
-            href="/admin/inventario"
-            className="text-sm font-black text-[var(--rise-blue)] hover:underline"
-          >
-            Ver inventario
-          </Link>
-        </div>
-
-        <div className="mt-6 grid gap-4 lg:grid-cols-5">
-          {recentVehicles.map((vehicle) => {
-            const image = vehicle.mainImage || vehicle.images[0]?.url || "";
-
-            return (
-              <Link
-                key={vehicle.id}
-                href={`/admin/inventario/${vehicle.id}/editar`}
-                className="group overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 transition hover:bg-white hover:shadow-xl hover:shadow-slate-900/10"
-              >
-                <div className="h-36 bg-slate-200">
-                  {image ? (
-                    <img
-                      src={image}
-                      alt={`${vehicle.brand.name} ${vehicle.name}`}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="grid h-full place-items-center text-slate-400">
-                      <ImageIcon size={34} />
+                return (
+                  <Link
+                    key={vehicle.id}
+                    href={`/admin/inventario/${vehicle.id}/editar`}
+                    className="group overflow-hidden rounded-[18px] border border-slate-100 bg-[#f8fafb] transition hover:-translate-y-1 hover:border-[#192a3a]/25 hover:bg-white hover:shadow-[0_16px_35px_rgba(15,23,42,0.09)]"
+                  >
+                    <div className="h-36 overflow-hidden bg-slate-200">
+                      {image ? (
+                        <img
+                          src={image}
+                          alt={`${vehicle.brand.name} ${vehicle.name}`}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="grid h-full place-items-center text-slate-400">
+                          <ImageIcon size={34} />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                <div className="p-4">
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--rise-blue)]">
-                    {vehicle.brand.name}
-                  </p>
+                    <div className="p-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#192a3a]">
+                        {vehicle.brand.name}
+                      </p>
 
-                  <h3 className="mt-2 line-clamp-2 text-base font-black">
-                    {vehicle.name}
-                  </h3>
+                      <h3 className="mt-2 line-clamp-2 min-h-[40px] text-sm font-black leading-5">
+                        {vehicle.name}
+                      </h3>
 
-                  <p className="mt-2 text-xs font-bold text-slate-500">
-                    {getConditionLabel(vehicle.condition)} ·{" "}
-                    {getVehicleStatusLabel(vehicle.status)}
-                  </p>
+                      <p className="mt-2 text-[10px] font-bold text-slate-500">
+                        {getConditionLabel(
+                          vehicle.condition
+                        )}{" "}
+                        ·{" "}
+                        {getVehicleStatusLabel(
+                          vehicle.status
+                        )}
+                      </p>
 
-                  <p className="mt-3 text-lg font-black text-[var(--rise-blue)]">
-                    {formatCurrency(vehicle.price)}
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+                      <p className="mt-3 text-lg font-black tracking-[-0.03em] text-[#192a3a]">
+                        {formatCurrency(vehicle.price)}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Car}
+              title="Sin unidades registradas"
+              description="Las unidades actualizadas aparecerán en esta sección."
+            />
+          )}
+        </AdminSection>
       </section>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Link
+      {/* Accesos rápidos */}
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <QuickAction
           href="/admin/inventario/nuevo"
-          className="rounded-[2rem] border border-[var(--rise-border)] bg-[var(--rise-navy)] p-5 text-white shadow-sm transition hover:bg-[var(--rise-blue)]"
-        >
-          <Plus size={24} />
-          <h3 className="mt-4 text-xl font-black">Registrar unidad</h3>
-          <p className="mt-2 text-sm leading-6 text-white/70">
-            Alta de vehículo nuevo o seminuevo.
-          </p>
-        </Link>
+          icon={Plus}
+          title="Registrar unidad"
+          description="Alta de vehículo nuevo o seminuevo."
+          primary
+        />
 
-        <Link
+        <QuickAction
           href="/admin/inventario"
-          className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
-        >
-          <Car size={24} className="text-[var(--rise-blue)]" />
-          <h3 className="mt-4 text-xl font-black">Inventario</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            Administrar unidades, publicación, estado y galería.
-          </p>
-        </Link>
+          icon={Car}
+          title="Inventario"
+          description="Administrar estado, precio y galería."
+        />
 
-        <Link
+        <QuickAction
           href="/admin/leads"
-          className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
-        >
-          <MessageSquare size={24} className="text-[var(--rise-blue)]" />
-          <h3 className="mt-4 text-xl font-black">Solicitudes</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            CRM comercial para seguimiento de clientes.
-          </p>
-        </Link>
+          icon={MessageSquare}
+          title="Solicitudes"
+          description="Seguimiento comercial de prospectos."
+        />
 
-        <Link
+        <QuickAction
           href="/admin/sucursales"
-          className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10"
-        >
-          <Building2 size={24} className="text-[var(--rise-blue)]" />
-          <h3 className="mt-4 text-xl font-black">Sucursales</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            Revisar puntos de venta y datos de contacto.
-          </p>
-        </Link>
+          icon={Building2}
+          title="Sucursales"
+          description="Agencias, imágenes y contactos."
+        />
       </section>
     </div>
+  );
+}
+
+function MainStatCard({
+  label,
+  value,
+  description,
+  icon: Icon,
+  href,
+  tone,
+}: {
+  label: string;
+  value: number;
+  description: string;
+  icon: LucideIcon;
+  href: string;
+  tone: "blue" | "amber" | "emerald" | "red";
+}) {
+  const toneClasses = {
+    blue: "border-blue-100 bg-blue-50 text-blue-700",
+    amber:
+      "border-amber-100 bg-amber-50 text-amber-700",
+    emerald:
+      "border-emerald-100 bg-emerald-50 text-emerald-700",
+    red: "border-red-100 bg-red-50 text-red-700",
+  };
+
+  return (
+    <Link
+      href={href}
+      className="group rounded-[20px] border border-black/8 bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-1 hover:border-[#192a3a]/25 hover:shadow-[0_18px_45px_rgba(15,23,42,0.09)]"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <span
+          className={`grid h-11 w-11 place-items-center rounded-xl border ${toneClasses[tone]}`}
+        >
+          <Icon size={21} />
+        </span>
+
+        <ArrowRight
+          size={17}
+          className="text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[#192a3a]"
+        />
+      </div>
+
+      <p className="mt-5 text-4xl font-black tracking-[-0.05em] text-[#192a3a]">
+        {value}
+      </p>
+
+      <h2 className="mt-2 text-xs font-black uppercase tracking-[0.12em] text-slate-700">
+        {label}
+      </h2>
+
+      <p className="mt-2 text-xs font-medium leading-5 text-slate-500">
+        {description}
+      </p>
+    </Link>
+  );
+}
+
+function AdminSection({
+  eyebrow,
+  title,
+  actionHref,
+  actionLabel,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  actionHref: string;
+  actionLabel: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.04)] md:p-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <div className="flex items-center gap-3">
+            <span className="h-px w-7 bg-[#192a3a]" />
+
+            <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[#192a3a]">
+              {eyebrow}
+            </p>
+          </div>
+
+          <h2 className="mt-3 text-2xl font-black tracking-[-0.035em]">
+            {title}
+          </h2>
+        </div>
+
+        <Link
+          href={actionHref}
+          className="group inline-flex w-fit items-center gap-2 text-xs font-black text-[#192a3a]"
+        >
+          {actionLabel}
+
+          <ArrowRight
+            size={14}
+            className="transition-transform group-hover:translate-x-0.5"
+          />
+        </Link>
+      </div>
+
+      <div className="mt-6">{children}</div>
+    </section>
+  );
+}
+
+function SmallStatCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="rounded-[16px] border border-slate-100 bg-[#f8fafb] p-4">
+      <span className="grid h-9 w-9 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
+        <Icon size={17} />
+      </span>
+
+      <p className="mt-4 text-3xl font-black tracking-[-0.04em] text-[#192a3a]">
+        {value}
+      </p>
+
+      <p className="mt-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+function PublicInventoryCard({
+  label,
+  value,
+  description,
+}: {
+  label: string;
+  value: number;
+  description: string;
+}) {
+  return (
+    <div className="rounded-[18px] border border-[#192a3a]/10 bg-[#e7edf1] p-5">
+      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">
+        {label}
+      </p>
+
+      <p className="mt-2 text-3xl font-black tracking-[-0.04em] text-[#192a3a]">
+        {value}
+      </p>
+
+      <p className="mt-1 text-xs font-semibold text-slate-600">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  positive = false,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  positive?: boolean;
+}) {
+  return (
+    <div className="rounded-[18px] border border-dashed border-slate-300 bg-[#f8fafb] p-8 text-center">
+      <Icon
+        size={40}
+        className={`mx-auto ${positive
+            ? "text-emerald-600"
+            : "text-slate-400"
+          }`}
+      />
+
+      <h3 className="mt-3 text-lg font-black">
+        {title}
+      </h3>
+
+      <p className="mt-2 text-sm leading-6 text-slate-500">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+function QuickAction({
+  href,
+  icon: Icon,
+  title,
+  description,
+  primary = false,
+}: {
+  href: string;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  primary?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`group rounded-[20px] border p-5 transition duration-300 hover:-translate-y-1 ${primary
+          ? "border-[#192a3a] bg-[#192a3a] text-white hover:bg-[#29465c]"
+          : "border-black/8 bg-white text-[#0a0f14] hover:border-[#192a3a]/30 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]"
+        }`}
+    >
+      <div className="flex items-center justify-between">
+        <span
+          className={`grid h-11 w-11 place-items-center rounded-full ${primary
+              ? "bg-white/10 text-white"
+              : "bg-[#e7edf1] text-[#192a3a]"
+            }`}
+        >
+          <Icon size={20} />
+        </span>
+
+        <ArrowRight
+          size={17}
+          className={`transition-transform group-hover:translate-x-0.5 ${primary
+              ? "text-white/60"
+              : "text-slate-300"
+            }`}
+        />
+      </div>
+
+      <h3 className="mt-5 text-lg font-black">
+        {title}
+      </h3>
+
+      <p
+        className={`mt-2 text-sm leading-6 ${primary
+            ? "text-white/60"
+            : "text-slate-500"
+          }`}
+      >
+        {description}
+      </p>
+    </Link>
   );
 }

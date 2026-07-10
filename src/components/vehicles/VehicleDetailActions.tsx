@@ -3,13 +3,14 @@
 import { FormEvent, useState, useTransition } from "react";
 import {
   CalendarDays,
-  CheckCircle2,
   MessageCircle,
   Send,
-  X,
 } from "lucide-react";
 import { createLead } from "@/app/actions/lead-actions";
-import { LeadModal, type LeadModalType } from "@/components/leads/LeadModal";
+import {
+  LeadModal,
+  type LeadModalType,
+} from "@/components/leads/LeadModal";
 
 type VehicleDetailActionsProps = {
   vehicleId: number;
@@ -22,14 +23,19 @@ function cleanPhone(value?: string | null) {
   return value?.replace(/\D/g, "") ?? "";
 }
 
-function getWhatsAppUrl(whatsapp?: string | null, vehicleName?: string) {
+function getWhatsAppUrl(
+  whatsapp?: string | null,
+  vehicleName?: string
+) {
   const clean = cleanPhone(whatsapp);
 
   if (!clean) {
     return "#";
   }
 
-  const phoneWithCountryCode = clean.startsWith("52") ? clean : `52${clean}`;
+  const phoneWithCountryCode = clean.startsWith("52")
+    ? clean
+    : `52${clean}`;
 
   const message = encodeURIComponent(
     `Hola, me interesa recibir información sobre ${vehicleName}.`
@@ -46,7 +52,10 @@ function getModalTitle(type: LeadModalType) {
   return "Solicitar cotización";
 }
 
-function getModalDescription(type: LeadModalType, vehicleName: string) {
+function getModalDescription(
+  type: LeadModalType,
+  vehicleName: string
+) {
   if (type === "PRUEBA_MANEJO") {
     return `Déjanos tus datos para agendar una prueba de manejo de ${vehicleName}.`;
   }
@@ -60,12 +69,25 @@ export function VehicleDetailActions({
   vehicleName,
   whatsapp,
 }: VehicleDetailActionsProps) {
-  const [modalType, setModalType] = useState<LeadModalType | null>(null);
+  const [modalType, setModalType] =
+    useState<LeadModalType | null>(null);
+
   const [isPending, startTransition] = useTransition();
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const whatsappUrl = getWhatsAppUrl(whatsapp, vehicleName);
+  const whatsappUrl = getWhatsAppUrl(
+    whatsapp,
+    vehicleName
+  );
+
+  const hasWhatsapp = Boolean(cleanPhone(whatsapp));
+
+  function openModal(type: LeadModalType) {
+    setSuccessMessage("");
+    setErrorMessage("");
+    setModalType(type);
+  }
 
   function closeModal() {
     setModalType(null);
@@ -73,7 +95,9 @@ export function VehicleDetailActions({
     setErrorMessage("");
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     if (!modalType) {
@@ -105,36 +129,78 @@ export function VehicleDetailActions({
 
   return (
     <>
+      {/* Acciones normales */}
       <div className="grid gap-3">
         <button
           type="button"
-          onClick={() => setModalType("COTIZACION")}
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+          onClick={() => openModal("COTIZACION")}
+          className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white shadow-[0_8px_22px_rgba(25,42,58,0.18)] transition hover:-translate-y-0.5 hover:bg-[#29465c] active:scale-[0.98] active:bg-[#29465c]"
         >
-          <Send size={18} />
+          <Send
+            size={18}
+            className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
+          />
+
           Solicitar cotización
         </button>
 
         <button
           type="button"
-          onClick={() => setModalType("PRUEBA_MANEJO")}
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--rise-border)] bg-white px-5 text-sm font-black text-[var(--rise-navy)] transition hover:bg-[var(--rise-blue-soft)]"
+          onClick={() => openModal("PRUEBA_MANEJO")}
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98] active:border-[#192a3a] active:bg-[#e7edf1]"
         >
           <CalendarDays size={18} />
           Agendar prueba de manejo
         </button>
 
-        {cleanPhone(whatsapp) && (
+        {hasWhatsapp && (
           <a
             href={whatsappUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-50 px-5 text-sm font-black text-emerald-700 transition hover:bg-emerald-100"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-5 text-sm font-black text-emerald-700 transition hover:border-emerald-500 hover:bg-emerald-100 active:scale-[0.98] active:bg-emerald-100"
           >
             <MessageCircle size={18} />
-            WhatsApp
+            Solicitar información por WhatsApp
           </a>
         )}
+      </div>
+
+      {/* Espacio para que la barra móvil no cubra contenido */}
+      <div
+        aria-hidden="true"
+        className="h-24 lg:hidden"
+      />
+
+      {/* Barra fija en celular */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_35px_rgba(15,23,42,0.12)] backdrop-blur-md lg:hidden">
+        <div
+          className={`mx-auto grid max-w-xl gap-2 ${hasWhatsapp
+              ? "grid-cols-2"
+              : "grid-cols-1"
+            }`}
+        >
+          <button
+            type="button"
+            onClick={() => openModal("COTIZACION")}
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-4 text-xs font-black text-white transition active:scale-[0.98] active:bg-[#29465c]"
+          >
+            <Send size={17} />
+            Cotizar
+          </button>
+
+          {hasWhatsapp && (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-black text-white transition active:scale-[0.98] active:bg-emerald-700"
+            >
+              <MessageCircle size={17} />
+              WhatsApp
+            </a>
+          )}
+        </div>
       </div>
 
       <LeadModal
@@ -142,7 +208,12 @@ export function VehicleDetailActions({
         modalType={modalType}
         title={modalType ? getModalTitle(modalType) : ""}
         description={
-          modalType ? getModalDescription(modalType, vehicleName) : ""
+          modalType
+            ? getModalDescription(
+              modalType,
+              vehicleName
+            )
+            : ""
         }
         defaultMessage={
           modalType === "COTIZACION"

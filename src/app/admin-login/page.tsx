@@ -7,16 +7,14 @@ import {
   Building2,
   Car,
   LockKeyhole,
-  LogIn,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import {
-  //authenticateAdmin,
-  //createAdminSession,
   getAdminSession,
   hasAdminUsers,
 } from "@/lib/admin-auth";
+import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 
 export const dynamic = "force-dynamic";
 
@@ -26,45 +24,16 @@ type AdminLoginPageProps = {
   }>;
 };
 
-function getTextValue(formData: FormData, fieldName: string) {
-  return String(formData.get(fieldName) ?? "").trim();
-}
-
-/* async function loginAdmin(formData: FormData) {
-  "use server";
-
-  const email = getTextValue(formData, "email");
-  const password = getTextValue(formData, "password");
-
-  if (!email || !password) {
-    redirect(
-      `/admin-login?error=${encodeURIComponent(
-        "Ingresa correo y contraseña."
-      )}`
-    );
-  }
-
-  const admin = await authenticateAdmin(email, password);
-
-  if (!admin) {
-    redirect(
-      `/admin-login?error=${encodeURIComponent(
-        "Correo o contraseña incorrectos."
-      )}`
-    );
-  }
-
-  await createAdminSession(admin.id);
-
-  redirect("/admin");
-} */
-
 export default async function AdminLoginPage({
   searchParams,
 }: AdminLoginPageProps) {
   const params = await searchParams;
-  const session = await getAdminSession();
-  const hasAdmins = await hasAdminUsers();
+
+  const [session, hasAdmins] =
+    await Promise.all([
+      getAdminSession(),
+      hasAdminUsers(),
+    ]);
 
   if (!hasAdmins) {
     redirect("/admin-setup");
@@ -75,94 +44,98 @@ export default async function AdminLoginPage({
   }
 
   return (
-    <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
-      <section className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_500px]">
-        <aside className="relative hidden overflow-hidden bg-[var(--rise-navy)] text-white lg:flex lg:items-center">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.45),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.16),transparent_42%)]" />
-          <div className="absolute -left-32 top-24 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl" />
-          <div className="absolute -bottom-32 right-10 h-96 w-96 rounded-full bg-cyan-300/10 blur-3xl" />
+    <main className="min-h-screen bg-[#f4f6f7] text-[#0a0f14]">
+      <section className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_480px] xl:grid-cols-[minmax(0,1fr)_520px]">
+        {/* Presentación en escritorio */}
+        <aside className="relative hidden overflow-hidden bg-[#192a3a] text-white lg:flex lg:items-center">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.13),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(120,144,162,0.16),transparent_42%),linear-gradient(135deg,rgba(16,28,39,1),rgba(25,42,58,0.96))]" />
 
-          <div className="relative mx-auto w-full max-w-4xl px-10 py-8 xl:px-14">
+          <div className="absolute -left-32 top-20 h-80 w-80 rounded-full bg-white/[0.05] blur-3xl" />
+          <div className="absolute -bottom-36 right-0 h-96 w-96 rounded-full bg-[#7890a2]/10 blur-3xl" />
+
+          <div className="relative mx-auto w-full max-w-5xl px-10 py-10 xl:px-14">
             <div className="flex items-center justify-between gap-4">
               <Link
                 href="/"
-                className="inline-flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-black text-blue-100 backdrop-blur transition hover:bg-white/15"
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-xs font-black text-[#dfe7ec] backdrop-blur-sm transition hover:bg-white/15 active:scale-[0.98]"
               >
-                <ArrowLeft size={17} />
+                <ArrowLeft size={16} />
                 Volver al sitio
               </Link>
 
-              <span className="inline-flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-xs font-black uppercase tracking-[0.22em] text-blue-100 backdrop-blur">
+              <span className="inline-flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-[#dfe7ec] backdrop-blur-sm">
                 <ShieldCheck size={15} />
-                Admin
+                Área privada
               </span>
             </div>
 
             <div className="mt-12 max-w-3xl">
-              <div className="inline-flex rounded-[1.6rem] border border-white/15 bg-white p-4 shadow-2xl shadow-black/25">
+              <div className="inline-flex rounded-[20px] border border-white/70 bg-white p-4 shadow-[0_20px_55px_rgba(0,0,0,0.25)]">
                 <img
                   src="/brand/logo-rise.jpeg"
                   alt="Grupo Rise"
-                  className="h-14 w-auto max-w-[210px] object-contain"
+                  className="h-14 w-auto max-w-[220px] object-contain"
                 />
               </div>
 
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-blue-100 backdrop-blur">
-                  <Sparkles size={15} />
+              <div className="mt-8 flex flex-wrap gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-[#dfe7ec] backdrop-blur-sm">
+                  <Sparkles size={14} />
                   Panel administrativo
                 </span>
 
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-blue-100 backdrop-blur">
-                  <LockKeyhole size={15} />
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-[#dfe7ec] backdrop-blur-sm">
+                  <LockKeyhole size={14} />
                   Acceso seguro
                 </span>
               </div>
 
-              <h1 className="mt-6 max-w-3xl text-4xl font-black leading-[1.05] tracking-tight xl:text-5xl">
-                Control central para administrar Grupo Rise.
-              </h1>
+              <h2 className="mt-6 max-w-3xl text-4xl font-black leading-[1.08] tracking-[-0.045em] xl:text-5xl">
+                Control central para administrar Grupo
+                Rise.
+              </h2>
 
-              <p className="mt-5 max-w-2xl text-base font-medium leading-8 text-blue-100">
-                Gestiona inventario, catálogo, sucursales, servicios y
-                prospectos desde un panel protegido y diseñado para operación
-                diaria.
+              <p className="mt-5 max-w-2xl text-base font-medium leading-8 text-white/60">
+                Gestiona vehículos, marcas, sucursales,
+                servicios y solicitudes comerciales
+                desde un solo panel.
               </p>
 
               <div className="mt-8 grid max-w-3xl gap-3 md:grid-cols-3">
                 <FeatureCard
                   icon={<Car size={20} />}
                   title="Inventario"
-                  description="Nuevos y seminuevos"
+                  description="Unidades nuevas y seminuevas."
                 />
 
                 <FeatureCard
                   icon={<Building2 size={20} />}
                   title="Sucursales"
-                  description="Agencias y contactos"
+                  description="Agencias, imágenes y contactos."
                 />
 
                 <FeatureCard
                   icon={<BadgeCheck size={20} />}
                   title="Prospectos"
-                  description="CRM comercial"
+                  description="Solicitudes y seguimiento."
                 />
               </div>
 
-              <div className="mt-6 rounded-[1.75rem] border border-white/10 bg-white/10 p-4 backdrop-blur">
+              <div className="mt-6 max-w-3xl rounded-[20px] border border-white/10 bg-white/[0.06] p-5 backdrop-blur-sm">
                 <div className="flex items-start gap-4">
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/10 text-blue-100">
-                    <LockKeyhole size={21} />
-                  </div>
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/10 text-[#dfe7ec]">
+                    <LockKeyhole size={20} />
+                  </span>
 
                   <div>
-                    <h2 className="text-base font-black text-white">
-                      Seguridad de sesión
-                    </h2>
+                    <h3 className="text-sm font-black text-white">
+                      Sesión protegida
+                    </h3>
 
-                    <p className="mt-1 text-sm font-semibold leading-6 text-blue-100">
-                      Cookie httpOnly, expiración automática y contraseña
-                      protegida con hash.
+                    <p className="mt-1 text-sm font-medium leading-6 text-white/55">
+                      El acceso está restringido a
+                      usuarios administrativos
+                      autorizados.
                     </p>
                   </div>
                 </div>
@@ -171,110 +144,56 @@ export default async function AdminLoginPage({
           </div>
         </aside>
 
-        <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8">
-          <div className="absolute -right-24 top-12 h-72 w-72 rounded-full bg-blue-100 blur-3xl" />
-          <div className="absolute -bottom-28 left-10 h-80 w-80 rounded-full bg-slate-200 blur-3xl" />
+        {/* Formulario */}
+        <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-8 md:px-8">
+          <div className="absolute -right-28 top-10 h-80 w-80 rounded-full bg-[#e7edf1] blur-3xl" />
+          <div className="absolute -bottom-32 left-0 h-96 w-96 rounded-full bg-slate-200/70 blur-3xl" />
 
           <div className="relative w-full max-w-[420px]">
-            <div className="mb-6 flex justify-center lg:hidden">
-              <div className="rounded-[1.5rem] border border-[var(--rise-border)] bg-white p-4 shadow-lg shadow-slate-900/10">
-                <img
-                  src="/brand/logo-rise.jpeg"
-                  alt="Grupo Rise"
-                  className="h-14 w-auto max-w-[190px] object-contain"
-                />
+            {/* Encabezado móvil */}
+            <div className="mb-7 lg:hidden">
+              <div className="flex items-center justify-between gap-4">
+                <Link
+                  href="/"
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-slate-200 bg-white text-[#192a3a] shadow-sm transition active:scale-95"
+                  aria-label="Volver al sitio"
+                >
+                  <ArrowLeft size={18} />
+                </Link>
+
+                <div className="rounded-[18px] border border-black/8 bg-white p-3 shadow-[0_10px_35px_rgba(15,23,42,0.08)]">
+                  <img
+                    src="/brand/logo-rise.jpeg"
+                    alt="Grupo Rise"
+                    className="h-12 w-auto max-w-[170px] object-contain"
+                  />
+                </div>
+
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#192a3a] text-white">
+                  <ShieldCheck size={18} />
+                </span>
               </div>
+
+              <p className="mt-5 text-center text-[10px] font-black uppercase tracking-[0.24em] text-[#192a3a]">
+                Panel administrativo
+              </p>
             </div>
 
-            <div className="overflow-hidden rounded-[2.25rem] border border-[var(--rise-border)] bg-white shadow-2xl shadow-slate-900/10">
-              <div className="bg-gradient-to-br from-white to-slate-50 p-7">
-                <div className="flex items-start justify-between gap-5">
-                  <div>
-                    <p className="inline-flex items-center gap-2 rounded-full bg-[var(--rise-blue-soft)] px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-[var(--rise-blue)]">
-                      <ShieldCheck size={14} />
-                      Acceso seguro
-                    </p>
+            <AdminLoginForm
+              errorMessage={params.error}
+            />
 
-                    <h2 className="mt-5 text-3xl font-black tracking-tight">
-                      Iniciar sesión
-                    </h2>
-
-                    <p className="mt-2 text-sm leading-6 text-slate-500">
-                      Ingresa tus credenciales para acceder al panel
-                      administrativo.
-                    </p>
-                  </div>
-
-                  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[var(--rise-navy)] text-white shadow-lg shadow-slate-900/20">
-                    <LockKeyhole size={26} />
-                  </div>
-                </div>
-
-                {params.error && (
-                  <div className="mt-6 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
-                    {params.error}
-                  </div>
-                )}
-              </div>
-
-              <form
-                action="/api/admin/login"
-                method="post"
-                className="space-y-5 border-t border-slate-100 p-7"
+            <div className="mt-6 text-center">
+              <Link
+                href="/"
+                className="group inline-flex items-center gap-2 text-sm font-black text-[#192a3a]"
               >
-                <label className="block">
-                  <span className="mb-2 block text-sm font-black text-slate-700">
-                    Correo electrónico
-                  </span>
-
-                  <input
-                    name="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-[var(--rise-navy)] outline-none transition placeholder:text-slate-400 focus:border-[var(--rise-blue)] focus:bg-white focus:ring-4 focus:ring-blue-100"
-                    placeholder="admin@gruporise.com"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-sm font-black text-slate-700">
-                    Contraseña
-                  </span>
-
-                  <input
-                    name="password"
-                    type="password"
-                    required
-                    autoComplete="current-password"
-                    className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-[var(--rise-navy)] outline-none transition placeholder:text-slate-400 focus:border-[var(--rise-blue)] focus:bg-white focus:ring-4 focus:ring-blue-100"
-                    placeholder="Tu contraseña"
-                  />
-                </label>
-
-                <button
-                  type="submit"
-                  className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white shadow-lg shadow-slate-900/15 transition hover:-translate-y-0.5 hover:bg-[var(--rise-blue)] hover:shadow-xl"
-                >
-                  <LogIn size={18} />
-                  Entrar al panel
-                </button>
-
-                <div className="rounded-2xl bg-slate-50 px-4 py-4">
-                  <p className="text-center text-xs font-bold leading-5 text-slate-500">
-                    Acceso exclusivo para personal autorizado de Grupo Rise.
-                  </p>
-                </div>
-
-                <div className="text-center">
-                  <Link
-                    href="/"
-                    className="text-sm font-black text-[var(--rise-blue)] transition hover:text-[var(--rise-navy)]"
-                  >
-                    Volver al sitio público
-                  </Link>
-                </div>
-              </form>
+                <ArrowLeft
+                  size={15}
+                  className="transition-transform group-hover:-translate-x-0.5 group-active:-translate-x-0.5"
+                />
+                Volver al sitio público
+              </Link>
             </div>
           </div>
         </section>
@@ -293,16 +212,18 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="rounded-[1.35rem] border border-white/10 bg-white/10 p-4 backdrop-blur">
-      <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/10 text-blue-100">
+    <article className="rounded-[18px] border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
+      <span className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-[#dfe7ec]">
         {icon}
-      </div>
+      </span>
 
-      <h3 className="mt-4 text-sm font-black text-white">{title}</h3>
+      <h3 className="mt-4 text-sm font-black text-white">
+        {title}
+      </h3>
 
-      <p className="mt-1 text-xs font-semibold leading-5 text-blue-100">
+      <p className="mt-1 text-xs font-medium leading-5 text-white/50">
         {description}
       </p>
-    </div>
+    </article>
   );
 }

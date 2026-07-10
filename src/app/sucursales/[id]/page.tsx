@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import {
     ArrowLeft,
     ArrowRight,
@@ -15,7 +16,7 @@ import {
     MessageCircle,
     Phone,
     ShieldCheck,
-    Tags,
+    Sparkles,
 } from "lucide-react";
 import {
     VehicleCondition,
@@ -27,7 +28,6 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
-import { BranchCoverViewer } from "@/components/branches/BranchCoverViewer";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +41,10 @@ function cleanPhone(value?: string | null) {
     return value?.replace(/\D/g, "") ?? "";
 }
 
-function getWhatsAppHref(phone?: string | null, message?: string) {
+function getWhatsAppHref(
+    phone?: string | null,
+    message?: string
+) {
     const phoneNumber = cleanPhone(phone);
 
     if (!phoneNumber) {
@@ -52,7 +55,9 @@ function getWhatsAppHref(phone?: string | null, message?: string) {
         ? phoneNumber
         : `52${phoneNumber}`;
 
-    const text = message ? `?text=${encodeURIComponent(message)}` : "";
+    const text = message
+        ? `?text=${encodeURIComponent(message)}`
+        : "";
 
     return `https://wa.me/${finalPhone}${text}`;
 }
@@ -69,7 +74,13 @@ function getBranchLocationText(branch: {
     city: string;
     state: string;
 }) {
-    return `${branch.address}, ${branch.city}, ${branch.state}`;
+    return [
+        branch.address,
+        branch.city,
+        branch.state,
+    ]
+        .filter(Boolean)
+        .join(", ");
 }
 
 function getMapEmbedUrl(branch: {
@@ -78,7 +89,8 @@ function getMapEmbedUrl(branch: {
     state: string;
     googleMapsUrl?: string | null;
 }) {
-    const googleMapsUrl = branch.googleMapsUrl?.trim();
+    const googleMapsUrl =
+        branch.googleMapsUrl?.trim();
 
     if (googleMapsUrl?.includes("/embed")) {
         return googleMapsUrl;
@@ -104,18 +116,12 @@ function getMapExternalUrl(branch: {
     )}`;
 }
 
-function getCategoryLabel(category: string) {
-    const labels: Record<string, string> = {
-        AUTO: "Auto",
-        MOTO: "Moto",
-        TODOTERRENO: "Todo terreno",
-    };
-
-    return labels[category] ?? category;
-}
-
-function getConditionLabel(condition: VehicleCondition) {
-    return condition === VehicleCondition.NUEVO ? "Nuevo" : "Seminuevo";
+function getConditionLabel(
+    condition: VehicleCondition
+) {
+    return condition === VehicleCondition.NUEVO
+        ? "Nuevo"
+        : "Seminuevo";
 }
 
 function formatMileage(value: number | null) {
@@ -123,7 +129,9 @@ function formatMileage(value: number | null) {
         return "Km por confirmar";
     }
 
-    return `${new Intl.NumberFormat("es-MX").format(value)} km`;
+    return `${new Intl.NumberFormat("es-MX").format(
+        value
+    )} km`;
 }
 
 export default async function BranchDetailPage({
@@ -141,30 +149,38 @@ export default async function BranchDetailPage({
             id: branchId,
             active: true,
         },
+
         include: {
             vehicles: {
                 where: {
                     active: true,
                     status: VehicleStatus.DISPONIBLE,
+
                     brand: {
                         active: true,
                     },
                 },
+
                 include: {
                     brand: true,
+
                     images: {
                         where: {
                             type: VehicleMediaType.IMAGE,
                         },
+
                         orderBy: {
                             order: "asc",
                         },
+
                         take: 1,
                     },
                 },
+
                 orderBy: {
                     updatedAt: "desc",
                 },
+
                 take: 9,
             },
         },
@@ -178,363 +194,409 @@ export default async function BranchDetailPage({
     const mapEmbedUrl = getMapEmbedUrl(branch);
     const mapExternalUrl = getMapExternalUrl(branch);
 
+    const whatsappMessage =
+        `Hola, me gustaría recibir información de ${branch.name}.`;
+
     const whatsappHref = getWhatsAppHref(
         branch.whatsapp,
-        `Hola, me gustaría recibir información de ${branch.name}.`
+        whatsappMessage
     );
 
     const phone = cleanPhone(branch.phone);
 
     const newVehicles = branch.vehicles.filter(
-        (vehicle) => vehicle.condition === VehicleCondition.NUEVO
+        (vehicle) =>
+            vehicle.condition === VehicleCondition.NUEVO
     );
 
     const usedVehicles = branch.vehicles.filter(
-        (vehicle) => vehicle.condition === VehicleCondition.SEMINUEVO
+        (vehicle) =>
+            vehicle.condition === VehicleCondition.SEMINUEVO
     );
 
     return (
-        <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
+        <>
             <Header />
 
-            <section className="relative overflow-hidden bg-[var(--rise-navy)] text-white">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.45),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(15,23,42,0.8),transparent_40%)]" />
-
-                <div className="relative h-[420px] overflow-hidden">
-                    {branch.coverImageUrl ? (
-                        <img
-                            src={branch.coverImageUrl}
-                            alt={`Fachada de ${branch.name}`}
-                            className="h-full w-full object-cover opacity-70"
-                        />
-                    ) : (
-                        <div className="flex h-full items-center justify-center bg-[var(--rise-navy)]">
-                            <Building2 size={90} className="text-white/20" />
-                        </div>
-                    )}
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--rise-navy)] via-[var(--rise-navy)]/40 to-transparent" />
-
-                    <Container>
-                        <div className="absolute bottom-10 left-4 right-4 mx-auto max-w-7xl">
-                            <Link
-                                href="/sucursales"
-                                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-black text-blue-100 backdrop-blur transition hover:bg-white/15"
-                            >
-                                <ArrowLeft size={18} />
-                                Volver a sucursales
-                            </Link>
-
-                            <div className="mt-6 flex flex-wrap items-end justify-between gap-6">
-                                <div className="max-w-3xl">
-                                    <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-blue-100 backdrop-blur">
-                                        Agencia Grupo Rise
-                                    </p>
-
-                                    <h1 className="mt-5 text-4xl font-black tracking-tight md:text-6xl">
-                                        {branch.name}
-                                    </h1>
-
-                                    <p className="mt-4 flex items-center gap-2 text-base font-bold text-blue-100">
-                                        <MapPin size={19} />
-                                        {branch.city}, {branch.state}
-                                    </p>
-                                </div>
-
-                                {branch.logoUrl && (
-                                    <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[2rem] border border-white/50 bg-white p-3 shadow-xl">
-                                        <img
-                                            src={branch.logoUrl}
-                                            alt={`Logo ${branch.name}`}
-                                            className="max-h-full max-w-full object-contain"
-                                        />
-                                    </div>
-                                )}
+            <main className="min-h-screen bg-[#f4f6f7] pb-24 text-[#0a0f14] lg:pb-0">
+                {/* Portada */}
+                <section className="relative overflow-hidden bg-[#192a3a] text-white">
+                    <div className="relative h-[390px] md:h-[470px]">
+                        {branch.coverImageUrl ? (
+                            <img
+                                src={branch.coverImageUrl}
+                                alt={`Fachada de ${branch.name}`}
+                                className="h-full w-full object-cover"
+                            />
+                        ) : (
+                            <div className="grid h-full place-items-center bg-[#192a3a]">
+                                <Building2
+                                    size={92}
+                                    strokeWidth={1.1}
+                                    className="text-white/15"
+                                />
                             </div>
-                        </div>
-                    </Container>
-                </div>
-            </section>
+                        )}
 
-            <section className="relative z-10 -mt-8 px-4 pb-16 md:-mt-12 md:pb-20">
-                <Container>
-                    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_420px]">
-                        <div className="space-y-8">
-                            <section className="rounded-[2.5rem] border border-[var(--rise-border)] bg-white p-5 shadow-xl shadow-slate-900/10 md:p-8">
-                                <div className="flex flex-wrap items-start justify-between gap-5">
-                                    <div>
-                                        <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                                            Información
-                                        </p>
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#101c27]/95 via-[#192a3a]/65 to-[#192a3a]/15" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#101c27] via-transparent to-transparent" />
+                        <div className="absolute inset-x-0 bottom-0">
+                            <Container>
+                                <div className="pb-8 md:pb-10">
+                                    <Link
+                                        href="/sucursales"
+                                        className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-4 py-2 text-xs font-black text-white backdrop-blur-sm transition hover:bg-white/15 active:scale-[0.98]"
+                                    >
+                                        <ArrowLeft size={16} />
+                                        Volver a sucursales
+                                    </Link>
 
-                                        <h2 className="mt-3 text-3xl font-black">
-                                            Datos de la agencia
-                                        </h2>
-                                    </div>
+                                    <div className="mt-6 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+                                        <div className="max-w-4xl">
+                                            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.23em] text-[#dfe7ec] backdrop-blur-sm">
+                                                <Sparkles size={14} />
+                                                Agencia Grupo Rise
+                                            </div>
 
-                                    <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--rise-blue-soft)] text-[var(--rise-blue)]">
-                                        <Building2 size={24} />
-                                    </div>
-                                </div>
+                                            <h1 className="mt-4 text-4xl font-black leading-tight tracking-[-0.045em] md:text-5xl lg:text-6xl">
+                                                {branch.name}
+                                            </h1>
 
-                                <div className="mt-7 grid gap-4 md:grid-cols-2">
-                                    <InfoBox
-                                        icon={<MapPin size={20} />}
-                                        title="Dirección"
-                                        value={branch.address}
-                                        description={`${branch.city}, ${branch.state}`}
-                                    />
+                                            <p className="mt-4 flex items-center gap-2 text-sm font-bold text-white/75 md:text-base">
+                                                <MapPin
+                                                    size={18}
+                                                    className="shrink-0"
+                                                />
 
-                                    {branch.phone && (
-                                        <InfoBox
-                                            icon={<Phone size={20} />}
-                                            title="Teléfono"
-                                            value={branch.phone}
-                                            href={phone ? `tel:${phone}` : undefined}
-                                        />
-                                    )}
-
-                                    {branch.whatsapp && (
-                                        <InfoBox
-                                            icon={<MessageCircle size={20} />}
-                                            title="WhatsApp"
-                                            value={branch.whatsapp}
-                                            href={whatsappHref}
-                                            external
-                                        />
-                                    )}
-
-                                    {branch.email && (
-                                        <InfoBox
-                                            icon={<Mail size={20} />}
-                                            title="Correo"
-                                            value={branch.email}
-                                            href={`mailto:${branch.email}`}
-                                        />
-                                    )}
-
-                                    {branch.schedule && (
-                                        <InfoBox
-                                            icon={<Clock size={20} />}
-                                            title="Horario"
-                                            value={branch.schedule}
-                                        />
-                                    )}
-
-                                    <InfoBox
-                                        icon={<Car size={20} />}
-                                        title="Inventario disponible"
-                                        value={`${branch.vehicles.length} unidad(es)`}
-                                        description={`${newVehicles.length} nuevos · ${usedVehicles.length} seminuevos`}
-                                    />
-                                </div>
-
-                                {services.length > 0 && (
-                                    <div className="mt-8">
-                                        <h3 className="text-xl font-black">
-                                            Servicios disponibles
-                                        </h3>
-
-                                        <div className="mt-4 flex flex-wrap gap-2">
-                                            {services.map((service) => (
-                                                <span
-                                                    key={service}
-                                                    className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-4 py-2 text-sm font-black text-slate-600"
-                                                >
-                                                    <ShieldCheck
-                                                        size={15}
-                                                        className="text-[var(--rise-blue)]"
-                                                    />
-                                                    {service}
-                                                </span>
-                                            ))}
+                                                {branch.city}, {branch.state}
+                                            </p>
                                         </div>
-                                    </div>
-                                )}
 
-                                <div className="mt-8 flex flex-wrap gap-3">
-                                    {whatsappHref && (
+                                        {branch.logoUrl && (
+                                            <div className="flex h-20 w-28 items-center justify-center rounded-2xl border border-white/70 bg-white p-3 shadow-xl md:h-24 md:w-32">
+                                                <img
+                                                    src={branch.logoUrl}
+                                                    alt={`Logo ${branch.name}`}
+                                                    className="max-h-full max-w-full object-contain"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </Container>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Contenido */}
+                <section className="py-8 md:py-10 lg:py-12">
+                    <Container>
+                        <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_390px] xl:items-start">
+                            <div className="space-y-7">
+                                {/* Información */}
+                                <section className="rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.05)] md:p-7">
+                                    <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
+                                        <div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="h-px w-8 bg-[#192a3a]" />
+
+                                                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#192a3a]">
+                                                    Información
+                                                </p>
+                                            </div>
+
+                                            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em]">
+                                                Datos de la agencia
+                                            </h2>
+
+                                            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+                                                Consulta los medios de contacto,
+                                                dirección y horarios disponibles.
+                                            </p>
+                                        </div>
+
+                                        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
+                                            <Building2 size={22} />
+                                        </span>
+                                    </div>
+
+                                    <div className="mt-7 grid gap-4 md:grid-cols-2">
+                                        <InfoBox
+                                            icon={<MapPin size={19} />}
+                                            title="Dirección"
+                                            value={branch.address}
+                                            description={`${branch.city}, ${branch.state}`}
+                                        />
+
+                                        {branch.phone && (
+                                            <InfoBox
+                                                icon={<Phone size={19} />}
+                                                title="Teléfono"
+                                                value={branch.phone}
+                                                href={
+                                                    phone
+                                                        ? `tel:${phone}`
+                                                        : undefined
+                                                }
+                                            />
+                                        )}
+
+                                        {branch.whatsapp &&
+                                            whatsappHref && (
+                                                <InfoBox
+                                                    icon={
+                                                        <MessageCircle size={19} />
+                                                    }
+                                                    title="WhatsApp"
+                                                    value={branch.whatsapp}
+                                                    href={whatsappHref}
+                                                    external
+                                                />
+                                            )}
+
+                                        {branch.email && (
+                                            <InfoBox
+                                                icon={<Mail size={19} />}
+                                                title="Correo electrónico"
+                                                value={branch.email}
+                                                href={`mailto:${branch.email}`}
+                                            />
+                                        )}
+
+                                        {branch.schedule && (
+                                            <InfoBox
+                                                icon={<Clock size={19} />}
+                                                title="Horario"
+                                                value={branch.schedule}
+                                            />
+                                        )}
+
+                                        <InfoBox
+                                            icon={<Car size={19} />}
+                                            title="Inventario"
+                                            value={`${branch.vehicles.length} unidades`}
+                                            description={`${newVehicles.length} nuevas · ${usedVehicles.length} seminuevas`}
+                                        />
+                                    </div>
+
+                                    {services.length > 0 && (
+                                        <div className="mt-8 border-t border-slate-100 pt-7">
+                                            <h3 className="text-xl font-black tracking-[-0.025em]">
+                                                Servicios disponibles
+                                            </h3>
+
+                                            <div className="mt-4 flex flex-wrap gap-2">
+                                                {services.map((service) => (
+                                                    <span
+                                                        key={service}
+                                                        className="inline-flex items-center gap-2 rounded-full bg-[#e7edf1] px-4 py-2 text-xs font-black text-[#192a3a]"
+                                                    >
+                                                        <ShieldCheck size={15} />
+                                                        {service}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="mt-8 flex flex-col gap-3 border-t border-slate-100 pt-7 sm:flex-row sm:flex-wrap">
+                                        {whatsappHref && (
+                                            <a
+                                                href={whatsappHref}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+                                            >
+                                                <MessageCircle size={18} />
+                                                Contactar por WhatsApp
+                                            </a>
+                                        )}
+
                                         <a
-                                            href={whatsappHref}
+                                            href={mapExternalUrl}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+                                            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
                                         >
-                                            <MessageCircle size={18} />
-                                            Contactar por WhatsApp
+                                            <MapPin size={18} />
+                                            Abrir ubicación
                                         </a>
+
+                                        <Link
+                                            href="/servicios"
+                                            className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+                                        >
+                                            Solicitar servicio
+
+                                            <ArrowRight
+                                                size={17}
+                                                className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
+                                            />
+                                        </Link>
+                                    </div>
+                                </section>
+
+                                {/* Vehículos */}
+                                <section
+                                    id="inventario-sucursal"
+                                    className="rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.05)] md:p-7"
+                                >
+                                    <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+                                        <div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="h-px w-8 bg-[#192a3a]" />
+
+                                                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#192a3a]">
+                                                    Inventario
+                                                </p>
+                                            </div>
+
+                                            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em]">
+                                                Vehículos disponibles
+                                            </h2>
+
+                                            <p className="mt-3 text-sm leading-6 text-slate-500">
+                                                Unidades publicadas actualmente en
+                                                esta agencia.
+                                            </p>
+                                        </div>
+
+                                        <span className="w-fit rounded-full bg-[#e7edf1] px-4 py-2 text-xs font-black text-[#192a3a]">
+                                            {branch.vehicles.length} unidades
+                                        </span>
+                                    </div>
+
+                                    {branch.vehicles.length > 0 ? (
+                                        <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                                            {branch.vehicles.map(
+                                                (vehicle) => (
+                                                    <BranchVehicleCard
+                                                        key={vehicle.id}
+                                                        vehicle={vehicle}
+                                                    />
+                                                )
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="mt-7 rounded-[20px] border border-dashed border-slate-300 bg-[#f8fafb] p-10 text-center">
+                                            <Car
+                                                size={46}
+                                                className="mx-auto text-slate-400"
+                                            />
+
+                                            <h3 className="mt-4 text-xl font-black">
+                                                Sin vehículos publicados
+                                            </h3>
+
+                                            <p className="mt-2 text-sm text-slate-500">
+                                                Esta sucursal todavía no tiene
+                                                unidades disponibles en el sitio.
+                                            </p>
+
+                                            <Link
+                                                href="/catalogo"
+                                                className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+                                            >
+                                                Ver catálogo general
+                                            </Link>
+                                        </div>
                                     )}
-
-                                    <a
-                                        href={mapExternalUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
-                                    >
-                                        <MapPin size={18} />
-                                        Abrir ubicación
-                                    </a>
-
-                                    <Link
-                                        href="/servicios"
-                                        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
-                                    >
-                                        Solicitar servicio
-                                        <ArrowRight size={18} />
-                                    </Link>
-                                </div>
-                            </section>
-
-                            <section className="overflow-hidden rounded-[2.5rem] border border-[var(--rise-border)] bg-white shadow-xl shadow-slate-900/10">
-                                <BranchCoverViewer
-                                    coverImageUrl={branch.coverImageUrl}
-                                    logoUrl={branch.logoUrl}
-                                    branchName={branch.name}
-                                    heightClassName="h-[420px]"
-                                />
-                            </section>
-
-                            <section className="rounded-[2.5rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-8">
-                                <div className="flex flex-wrap items-end justify-between gap-5">
-                                    <div>
-                                        <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                                            Inventario
-                                        </p>
-
-                                        <h2 className="mt-3 text-3xl font-black">
-                                            Vehículos en esta sucursal
-                                        </h2>
-
-                                        <p className="mt-2 text-sm leading-6 text-slate-600">
-                                            Consulta unidades disponibles relacionadas con esta
-                                            agencia.
-                                        </p>
-                                    </div>
-
-                                    <div className="rounded-full bg-slate-50 px-4 py-2 text-sm font-black text-slate-500">
-                                        {branch.vehicles.length} disponible(s)
-                                    </div>
-                                </div>
-
-                                {branch.vehicles.length > 0 ? (
-                                    <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                                        {branch.vehicles.map((vehicle) => {
-                                            const image =
-                                                vehicle.mainImage || vehicle.images[0]?.url || "";
-                                            const vehicleTitle = `${vehicle.brand.name} ${vehicle.name}`;
-
-                                            return (
-                                                <Link
-                                                    key={vehicle.id}
-                                                    href={`/vehiculos/${vehicle.id}`}
-                                                    className="group overflow-hidden rounded-[2rem] border border-slate-100 bg-slate-50 transition hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-slate-900/10"
-                                                >
-                                                    <div className="relative h-44 overflow-hidden bg-slate-100">
-                                                        {image ? (
-                                                            <img
-                                                                src={image}
-                                                                alt={vehicleTitle}
-                                                                className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                                                            />
-                                                        ) : (
-                                                            <div className="grid h-full place-items-center text-slate-400">
-                                                                <ImageIcon size={40} />
-                                                            </div>
-                                                        )}
-
-                                                        <div className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-xs font-black text-[var(--rise-blue)] shadow-sm">
-                                                            {getConditionLabel(vehicle.condition)}
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="p-4">
-                                                        <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--rise-blue)]">
-                                                            {vehicle.brand.name}
-                                                        </p>
-
-                                                        <h3 className="mt-2 line-clamp-2 text-lg font-black text-[var(--rise-navy)]">
-                                                            {vehicle.name}
-                                                        </h3>
-
-                                                        <div className="mt-3 grid gap-2 text-xs font-bold text-slate-500">
-                                                            <span className="flex items-center gap-2">
-                                                                <CalendarDays size={14} />
-                                                                {vehicle.year}
-                                                            </span>
-
-                                                            <span className="flex items-center gap-2">
-                                                                <Tags size={14} />
-                                                                {getCategoryLabel(vehicle.category)}
-                                                            </span>
-
-                                                            <span className="flex items-center gap-2">
-                                                                <Gauge size={14} />
-                                                                {formatMileage(vehicle.mileage)}
-                                                            </span>
-                                                        </div>
-
-                                                        <p className="mt-4 text-xl font-black text-[var(--rise-blue)]">
-                                                            {formatCurrency(vehicle.price)}
-                                                        </p>
-                                                    </div>
-                                                </Link>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className="mt-7 rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
-                                        <Car size={46} className="mx-auto text-slate-400" />
-
-                                        <h3 className="mt-4 text-xl font-black">
-                                            Sin vehículos publicados
-                                        </h3>
-
-                                        <p className="mt-2 text-sm text-slate-500">
-                                            Esta sucursal aún no tiene unidades disponibles en el
-                                            sitio.
-                                        </p>
-                                    </div>
-                                )}
-                            </section>
-                        </div>
-
-                        <aside className="xl:sticky xl:top-6 xl:self-start">
-                            <div className="overflow-hidden rounded-[2.5rem] border border-[var(--rise-border)] bg-white shadow-xl shadow-slate-900/10">
-                                <div className="h-80 bg-slate-100">
-                                    <iframe
-                                        src={mapEmbedUrl}
-                                        title={`Mapa de ${branch.name}`}
-                                        className="h-full w-full"
-                                        loading="lazy"
-                                        referrerPolicy="no-referrer-when-downgrade"
-                                    />
-                                </div>
-
-                                <div className="p-5 md:p-6">
-                                    <h2 className="text-2xl font-black">Ubicación</h2>
-
-                                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                                        {branch.address}, {branch.city}, {branch.state}
-                                    </p>
-
-                                    <a
-                                        href={mapExternalUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-                                    >
-                                        Abrir en Google Maps
-                                        <ExternalLink size={17} />
-                                    </a>
-                                </div>
+                                </section>
                             </div>
-                        </aside>
+
+                            {/* Mapa */}
+                            <aside className="xl:sticky xl:top-[120px] xl:self-start">
+                                <div className="overflow-hidden rounded-[22px] border border-black/8 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.1)]">
+                                    <div className="h-[330px] bg-slate-100">
+                                        <iframe
+                                            src={mapEmbedUrl}
+                                            title={`Mapa de ${branch.name}`}
+                                            className="h-full w-full"
+                                            loading="lazy"
+                                            referrerPolicy="no-referrer-when-downgrade"
+                                        />
+                                    </div>
+
+                                    <div className="p-5 md:p-6">
+                                        <div className="flex items-center gap-3">
+                                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
+                                                <MapPin size={18} />
+                                            </span>
+
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                                                    Ubicación
+                                                </p>
+
+                                                <h2 className="mt-1 text-xl font-black">
+                                                    Cómo llegar
+                                                </h2>
+                                            </div>
+                                        </div>
+
+                                        <p className="mt-4 text-sm leading-7 text-slate-600">
+                                            {getBranchLocationText(branch)}
+                                        </p>
+
+                                        <a
+                                            href={mapExternalUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+                                        >
+                                            Abrir en Google Maps
+                                            <ExternalLink size={17} />
+                                        </a>
+
+                                        <a
+                                            href="#inventario-sucursal"
+                                            className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+                                        >
+                                            Ver inventario
+                                            <ArrowRight size={17} />
+                                        </a>
+                                    </div>
+                                </div>
+                            </aside>
+                        </div>
+                    </Container>
+                </section>
+
+                {/* Barra fija móvil */}
+                <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_35px_rgba(15,23,42,0.12)] backdrop-blur-sm lg:hidden">
+                    <div
+                        className={`mx-auto grid max-w-xl gap-2 ${whatsappHref
+                            ? "grid-cols-2"
+                            : "grid-cols-1"
+                            }`}
+                    >
+                        {whatsappHref && (
+                            <a
+                                href={whatsappHref}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-black text-white transition active:scale-[0.98] active:bg-emerald-700"
+                            >
+                                <MessageCircle size={17} />
+                                WhatsApp
+                            </a>
+                        )}
+
+                        <a
+                            href={mapExternalUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-4 text-xs font-black text-white transition active:scale-[0.98] active:bg-[#29465c]"
+                        >
+                            <MapPin size={17} />
+                            Cómo llegar
+                        </a>
                     </div>
-                </Container>
-            </section>
+                </div>
+            </main>
 
             <Footer />
-        </main>
+        </>
     );
 }
 
@@ -546,7 +608,7 @@ function InfoBox({
     href,
     external = false,
 }: {
-    icon: React.ReactNode;
+    icon: ReactNode;
     title: string;
     value: string;
     description?: string;
@@ -554,16 +616,18 @@ function InfoBox({
     external?: boolean;
 }) {
     const content = (
-        <div className="rounded-2xl bg-slate-50 p-4 transition hover:bg-slate-100">
+        <div className="h-full rounded-2xl border border-slate-100 bg-[#f8fafb] p-4 transition hover:border-[#192a3a]/30 hover:bg-white active:border-[#192a3a]/30">
             <div className="flex gap-3">
-                <div className="mt-0.5 shrink-0 text-[var(--rise-blue)]">{icon}</div>
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
+                    {icon}
+                </span>
 
-                <div>
-                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+                <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
                         {title}
                     </p>
 
-                    <p className="mt-1 text-sm font-black leading-6 text-[var(--rise-navy)]">
+                    <p className="mt-1 break-words text-sm font-black leading-6 text-[#192a3a]">
                         {value}
                     </p>
 
@@ -586,9 +650,106 @@ function InfoBox({
             href={href}
             target={external ? "_blank" : undefined}
             rel={external ? "noreferrer" : undefined}
-            className="block"
+            className="block h-full"
         >
             {content}
         </a>
+    );
+}
+
+function BranchVehicleCard({
+    vehicle,
+}: {
+    vehicle: {
+        id: number;
+        name: string;
+        year: number;
+        price: number;
+        mileage: number | null;
+        condition: VehicleCondition;
+        mainImage: string | null;
+
+        brand: {
+            name: string;
+        };
+
+        images: {
+            url: string;
+        }[];
+    };
+}) {
+    const image =
+        vehicle.mainImage ||
+        vehicle.images[0]?.url ||
+        "";
+
+    const title =
+        `${vehicle.brand.name} ${vehicle.name}`;
+
+    return (
+        <Link
+            href={`/vehiculos/${vehicle.id}`}
+            className="group block overflow-hidden rounded-[20px] border border-black/8 bg-white shadow-[0_8px_28px_rgba(15,23,42,0.045)] transition duration-300 hover:-translate-y-1 hover:border-[#192a3a]/45 hover:shadow-[0_18px_45px_rgba(15,23,42,0.1)] active:border-[#192a3a]/45"
+        >
+            <div className="relative h-[190px] overflow-hidden bg-[#e8ecef]">
+                {image ? (
+                    <img
+                        src={image}
+                        alt={title}
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.045] group-active:scale-[1.045]"
+                    />
+                ) : (
+                    <div className="grid h-full place-items-center text-slate-400">
+                        <ImageIcon size={40} />
+                    </div>
+                )}
+
+                <span className="absolute left-3 top-3 rounded-full border border-white/70 bg-white/90 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#192a3a] shadow-sm backdrop-blur-sm">
+                    {getConditionLabel(vehicle.condition)}
+                </span>
+
+                <div className="absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full bg-white text-[#192a3a] shadow-lg transition group-hover:bg-[#192a3a] group-hover:text-white group-active:bg-[#192a3a] group-active:text-white">
+                    <ArrowRight
+                        size={15}
+                        className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
+                    />
+                </div>
+            </div>
+
+            <div className="p-4">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#192a3a]">
+                    {vehicle.brand.name}
+                </p>
+
+                <h3 className="mt-2 line-clamp-2 min-h-[48px] text-lg font-black leading-tight tracking-[-0.025em]">
+                    {vehicle.name}
+                </h3>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e7edf1] px-3 py-1.5 text-[10px] font-black text-[#192a3a]">
+                        <CalendarDays size={13} />
+                        {vehicle.year}
+                    </span>
+
+                    {vehicle.condition ===
+                        VehicleCondition.SEMINUEVO && (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-black text-slate-600">
+                                <Gauge size={13} />
+                                {formatMileage(vehicle.mileage)}
+                            </span>
+                        )}
+                </div>
+
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                    <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+                        Precio
+                    </p>
+
+                    <p className="mt-1 text-xl font-black tracking-[-0.03em]">
+                        {formatCurrency(vehicle.price)}
+                    </p>
+                </div>
+            </div>
+        </Link>
     );
 }

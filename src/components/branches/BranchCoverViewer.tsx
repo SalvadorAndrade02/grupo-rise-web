@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Building2, Maximize2, X } from "lucide-react";
+import {
+  Building2,
+  Maximize2,
+  X,
+} from "lucide-react";
 
 type BranchCoverViewerProps = {
   coverImageUrl?: string | null;
@@ -54,14 +58,14 @@ export function BranchCoverViewer({
   }, [open]);
 
   function handleOpen() {
-    if (!hasImage) {
-      return;
+    if (hasImage) {
+      setOpen(true);
     }
-
-    setOpen(true);
   }
 
-  function handleBackdropClick(event: React.MouseEvent<HTMLDivElement>) {
+  function handleBackdropClick(
+    event: React.MouseEvent<HTMLDivElement>
+  ) {
     if (event.target === event.currentTarget) {
       setOpen(false);
     }
@@ -73,54 +77,62 @@ export function BranchCoverViewer({
         type="button"
         onClick={handleOpen}
         disabled={!hasImage}
-        className={`group relative block w-full overflow-hidden bg-slate-200 text-left ${heightClassName} ${hasImage ? "cursor-zoom-in" : "cursor-default"
-          }`}
         aria-label={
           hasImage
-            ? `Ver foto de ${branchName} en grande`
-            : `Sin foto de ${branchName}`
+            ? `Ver fotografía de ${branchName}`
+            : `Sin fotografía de ${branchName}`
         }
+        className={`group relative block w-full overflow-hidden bg-[#e8ecef] text-left ${heightClassName} ${hasImage
+            ? "cursor-zoom-in"
+            : "cursor-default"
+          }`}
       >
         {coverImageUrl ? (
           <img
             src={coverImageUrl}
             alt={`Fachada de ${branchName}`}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
             draggable={false}
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.045] group-active:scale-[1.045]"
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-slate-100">
-            <Building2 size={46} className="text-slate-400" />
+          <div className="flex h-full items-center justify-center bg-[#eef1f3]">
+            <Building2
+              size={46}
+              strokeWidth={1.4}
+              className="text-slate-400"
+            />
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
 
         {hasImage && (
-          <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/35 px-3 py-2 text-xs font-black text-white backdrop-blur transition group-hover:bg-black/50">
-            <Maximize2 size={15} />
-            Ver foto
+          <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/35 px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-white backdrop-blur-sm transition group-hover:bg-[#192a3a] group-active:bg-[#192a3a]">
+            <Maximize2 size={14} />
+            Ampliar
           </div>
         )}
 
         {showLogo && logoUrl && (
-          <div className="absolute right-4 top-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/70 bg-white p-2 shadow-lg">
+          <div className="absolute right-4 top-4 flex h-14 w-20 items-center justify-center overflow-hidden rounded-xl border border-white/70 bg-white p-2 shadow-lg">
             <img
               src={logoUrl}
               alt={`Logo ${branchName}`}
-              className="max-h-full max-w-full object-contain"
               draggable={false}
+              className="max-h-full max-w-full object-contain"
             />
           </div>
         )}
 
         {showTitle && (
           <div className="absolute bottom-4 left-4 right-4">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-100">
-              Agencia
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#dfe7ec]">
+              Agencia Grupo Rise
             </p>
 
-            <p className="mt-1 text-xl font-black text-white">{branchName}</p>
+            <p className="mt-1 line-clamp-2 text-xl font-black leading-tight text-white">
+              {branchName}
+            </p>
           </div>
         )}
       </button>
@@ -130,37 +142,42 @@ export function BranchCoverViewer({
         coverImageUrl &&
         createPortal(
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm"
             role="dialog"
             aria-modal="true"
+            aria-label={`Fotografía de ${branchName}`}
             onMouseDown={handleBackdropClick}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#071019]/95 p-4 backdrop-blur-sm"
           >
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="absolute right-4 top-4 z-20 grid h-12 w-12 place-items-center rounded-full bg-white text-slate-900 shadow-xl transition hover:bg-slate-100"
               aria-label="Cerrar imagen"
+              className="absolute right-4 top-4 z-20 grid h-12 w-12 place-items-center rounded-full bg-white text-[#192a3a] shadow-xl transition hover:bg-[#e7edf1] active:scale-95 active:bg-[#e7edf1]"
             >
-              <X size={24} />
+              <X size={23} />
             </button>
 
             <div
               className="relative z-10 w-full max-w-6xl"
-              onMouseDown={(event) => event.stopPropagation()}
+              onMouseDown={(event) =>
+                event.stopPropagation()
+              }
             >
               <img
                 src={coverImageUrl}
                 alt={`Fachada de ${branchName}`}
-                className="mx-auto max-h-[82vh] w-auto max-w-full rounded-[2rem] object-contain shadow-2xl"
                 draggable={false}
+                className="mx-auto max-h-[82vh] w-auto max-w-full rounded-[20px] object-contain shadow-2xl"
               />
 
-              <div className="mx-auto mt-4 max-w-3xl rounded-2xl border border-white/10 bg-white/10 px-5 py-4 text-center text-white backdrop-blur">
-                <p className="text-xs font-black uppercase tracking-[0.25em] text-blue-100">
-                  Foto de agencia
+              <div className="mx-auto mt-4 max-w-3xl rounded-2xl border border-white/10 bg-white/10 px-5 py-4 text-center text-white backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#dfe7ec]">
+                  Agencia Grupo Rise
                 </p>
 
-                <p className="mt-1 text-xl font-black">{branchName}</p>
+                <p className="mt-1 text-xl font-black">
+                  {branchName}
+                </p>
               </div>
             </div>
           </div>,

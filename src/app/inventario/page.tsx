@@ -1,4 +1,10 @@
-import { BadgeCheck, Gauge, MapPin, Sparkles, Tags } from "lucide-react";
+import {
+  BadgeCheck,
+  Gauge,
+  MapPin,
+  Sparkles,
+  Tags,
+} from "lucide-react";
 import {
   VehicleCondition,
   VehicleMediaType,
@@ -11,6 +17,16 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+const excludedBrandNames = [
+  "Aprilia",
+  "Moto Guzzi",
+  "Moto Guzzy",
+  "Plex",
+  "Motoplex",
+  "MotoPlex",
+  "MOTOPLEX",
+];
+
 function formatMoney(value: number) {
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
@@ -20,34 +36,52 @@ function formatMoney(value: number) {
 }
 
 export default async function InventoryPage() {
-  const vehicles = await prisma.vehicle.findMany({
-    where: {
-      active: true,
-      condition: VehicleCondition.SEMINUEVO,
-      status: VehicleStatus.DISPONIBLE,
-      brand: {
+  const [vehicles, brands] = await Promise.all([
+    prisma.vehicle.findMany({
+      where: {
         active: true,
-      },
-      branch: {
-        active: true,
-      },
-    },
-    include: {
-      brand: true,
-      branch: true,
-      images: {
-        where: {
-          type: VehicleMediaType.IMAGE,
+        condition: VehicleCondition.SEMINUEVO,
+        status: VehicleStatus.DISPONIBLE,
+        brand: {
+          active: true,
+          name: {
+            notIn: excludedBrandNames,
+          },
         },
-        orderBy: {
-          order: "asc",
+        branch: {
+          active: true,
         },
       },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+      include: {
+        brand: true,
+        branch: true,
+        images: {
+          where: {
+            type: VehicleMediaType.IMAGE,
+          },
+          orderBy: {
+            order: "asc",
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+
+    prisma.brand.findMany({
+      where: {
+        active: true,
+        name: {
+          notIn: excludedBrandNames,
+        },
+      },
+
+      orderBy: {
+        name: "asc",
+      },
+    }),
+  ]);
 
   const formattedVehicles = vehicles.map((vehicle) => ({
     id: vehicle.id,
@@ -63,102 +97,104 @@ export default async function InventoryPage() {
     branchName: vehicle.branch.name,
     branchCity: vehicle.branch.city,
     branchWhatsapp: vehicle.branch.whatsapp,
-    mainImage: vehicle.mainImage || vehicle.images[0]?.url || "",
+    mainImage:
+      vehicle.mainImage ||
+      vehicle.images[0]?.url ||
+      "",
   }));
 
-  const uniqueBrands = new Set(vehicles.map((vehicle) => vehicle.brand.name));
-  const uniqueBranches = new Set(vehicles.map((vehicle) => vehicle.branch.id));
+  const formattedBrands = brands.map((brand) => ({
+    id: brand.id,
+    name: brand.name,
+  }));
+
+  const uniqueBrands = new Set(
+    vehicles.map((vehicle) => vehicle.brand.name)
+  );
+
+  const uniqueBranches = new Set(
+    vehicles.map((vehicle) => vehicle.branch.id)
+  );
 
   const minPrice =
     vehicles.length > 0
-      ? Math.min(...vehicles.map((vehicle) => vehicle.price))
+      ? Math.min(
+        ...vehicles.map((vehicle) => vehicle.price)
+      )
       : 0;
 
   const maxYear =
     vehicles.length > 0
-      ? Math.max(...vehicles.map((vehicle) => vehicle.year))
+      ? Math.max(
+        ...vehicles.map((vehicle) => vehicle.year)
+      )
       : 0;
 
   return (
-    <main className="min-h-screen bg-[var(--rise-bg)] text-[var(--rise-navy)]">
+    <>
       <Header />
 
-      <section className="relative overflow-hidden bg-[var(--rise-navy)] px-4 py-16 text-white md:py-24">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.45),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(15,23,42,0.8),transparent_40%)]" />
+      <main className="min-h-screen bg-[#f4f6f7] text-[#0a0f14]">
+        {/* Encabezado */}
+        <section className="relative overflow-hidden bg-[#192a3a] text-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_30%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
 
-        <div className="relative mx-auto max-w-7xl">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-blue-100 backdrop-blur">
-              <Sparkles size={16} />
-              Inventario seminuevo
-            </div>
+          <div className="relative mx-auto w-full max-w-[1440px] px-5 py-12 md:px-8 lg:px-10 lg:py-16">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#dfe7ec] backdrop-blur-sm">
+                <Sparkles size={15} />
+                Inventario Grupo Rise
+              </div>
 
-            <h1 className="mt-6 text-4xl font-black tracking-tight md:text-6xl">
-              Seminuevos disponibles
-            </h1>
+              <h1 className="mt-5 text-4xl font-black leading-tight tracking-[-0.045em] md:text-5xl lg:text-6xl">
+                Seminuevos disponibles
+              </h1>
 
-            <p className="mt-5 max-w-2xl text-base leading-8 text-blue-100 md:text-lg">
-              Explora unidades seminuevas disponibles en Grupo Rise, revisa
-              precio, sucursal, kilometraje y solicita información directamente
-              con un asesor.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-4">
-            <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 backdrop-blur">
-              <BadgeCheck size={24} className="text-blue-100" />
-
-              <p className="mt-4 text-4xl font-black">{vehicles.length}</p>
-
-              <p className="mt-1 text-sm font-bold text-blue-100">
-                Unidades disponibles
-              </p>
-            </div>
-
-            <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 backdrop-blur">
-              <Tags size={24} className="text-blue-100" />
-
-              <p className="mt-4 text-4xl font-black">{uniqueBrands.size}</p>
-
-              <p className="mt-1 text-sm font-bold text-blue-100">
-                Marcas con seminuevos
-              </p>
-            </div>
-
-            <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 backdrop-blur">
-              <MapPin size={24} className="text-blue-100" />
-
-              <p className="mt-4 text-4xl font-black">{uniqueBranches.size}</p>
-
-              <p className="mt-1 text-sm font-bold text-blue-100">
-                Sucursales disponibles
-              </p>
-            </div>
-
-            <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 backdrop-blur">
-              <Gauge size={24} className="text-blue-100" />
-
-              <p className="mt-4 text-4xl font-black">
-                {minPrice ? formatMoney(minPrice) : "$0"}
-              </p>
-
-              <p className="mt-1 text-sm font-bold text-blue-100">
-                Precio inicial
+              <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-white/65 md:text-base">
+                Encuentra unidades seminuevas disponibles en
+                nuestras agencias, compara precios y consulta los
+                detalles de cada vehículo.
               </p>
             </div>
           </div>
+        </section>
 
-          {maxYear > 0 && (
-            <div className="mt-6 inline-flex rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-black text-blue-100 backdrop-blur">
-              Modelos hasta año {maxYear}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <InventoryClient vehicles={formattedVehicles} />
+        <InventoryClient
+          vehicles={formattedVehicles}
+          brands={formattedBrands}
+        />
+      </main>
 
       <Footer />
-    </main>
+    </>
+  );
+}
+
+function InventoryMetric({
+  icon: Icon,
+  value,
+  label,
+}: {
+  icon: typeof BadgeCheck;
+  value: string;
+  label: string;
+}) {
+  return (
+    <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 backdrop-blur-sm">
+      <Icon
+        size={17}
+        className="shrink-0 text-[#dfe7ec]"
+      />
+
+      <div className="flex items-baseline gap-2">
+        <span className="text-sm font-black text-white">
+          {value}
+        </span>
+
+        <span className="text-[10px] font-black uppercase tracking-[0.13em] text-white/55">
+          {label}
+        </span>
+      </div>
+    </div>
   );
 }

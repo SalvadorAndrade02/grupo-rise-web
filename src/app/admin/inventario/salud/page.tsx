@@ -1,17 +1,19 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import type { LucideIcon } from "lucide-react";
 import {
+  AlertCircle,
   AlertTriangle,
   ArrowLeft,
-  BadgeCheck,
-  Building2,
+  ArrowRight,
   Car,
   CheckCircle2,
   Eye,
   EyeOff,
   ImageIcon,
   Pencil,
+  Plus,
   Search,
   ShieldAlert,
   Trash2,
@@ -49,18 +51,51 @@ type IssueKey =
   | "VENDIDO_APARTADO"
   | "SIN_GALERIA";
 
-const issueOptions: { value: IssueKey | "TODOS"; label: string }[] = [
-  { value: "TODOS", label: "Todos" },
-  { value: "SIN_IMAGEN", label: "Sin imagen" },
-  { value: "SIN_DESCRIPCION", label: "Sin descripción" },
-  { value: "SIN_PRECIO", label: "Sin precio válido" },
-  { value: "OCULTO", label: "Ocultos" },
-  { value: "VISIBLE_NO_DISPONIBLE", label: "Visible no disponible" },
-  { value: "MARCA_INACTIVA", label: "Marca inactiva" },
-  { value: "SUCURSAL_INACTIVA", label: "Sucursal inactiva" },
-  { value: "VENDIDO_APARTADO", label: "Vendido / apartado" },
-  { value: "SIN_GALERIA", label: "Sin galería" },
-];
+const issueOptions: {
+  value: IssueKey | "TODOS";
+  label: string;
+}[] = [
+    {
+      value: "TODOS",
+      label: "Todos",
+    },
+    {
+      value: "SIN_IMAGEN",
+      label: "Sin imagen",
+    },
+    {
+      value: "SIN_DESCRIPCION",
+      label: "Sin descripción",
+    },
+    {
+      value: "SIN_PRECIO",
+      label: "Sin precio válido",
+    },
+    {
+      value: "OCULTO",
+      label: "Ocultos",
+    },
+    {
+      value: "VISIBLE_NO_DISPONIBLE",
+      label: "Visible no disponible",
+    },
+    {
+      value: "MARCA_INACTIVA",
+      label: "Marca inactiva",
+    },
+    {
+      value: "SUCURSAL_INACTIVA",
+      label: "Sucursal inactiva",
+    },
+    {
+      value: "VENDIDO_APARTADO",
+      label: "Vendido / apartado",
+    },
+    {
+      value: "SIN_GALERIA",
+      label: "Sin galería",
+    },
+  ];
 
 function getIssueLabel(issue: IssueKey) {
   const labels: Record<IssueKey, string> = {
@@ -68,7 +103,8 @@ function getIssueLabel(issue: IssueKey) {
     SIN_DESCRIPCION: "Sin descripción",
     SIN_PRECIO: "Sin precio válido",
     OCULTO: "Oculto",
-    VISIBLE_NO_DISPONIBLE: "Visible pero no disponible",
+    VISIBLE_NO_DISPONIBLE:
+      "Visible pero no disponible",
     MARCA_INACTIVA: "Marca inactiva",
     SUCURSAL_INACTIVA: "Sucursal inactiva",
     VENDIDO_APARTADO: "Vendido / apartado",
@@ -80,22 +116,44 @@ function getIssueLabel(issue: IssueKey) {
 
 function getIssueClasses(issue: IssueKey) {
   const classes: Record<IssueKey, string> = {
-    SIN_IMAGEN: "bg-amber-50 text-amber-700",
-    SIN_DESCRIPCION: "bg-amber-50 text-amber-700",
-    SIN_PRECIO: "bg-red-50 text-red-700",
-    OCULTO: "bg-slate-200 text-slate-700",
-    VISIBLE_NO_DISPONIBLE: "bg-red-50 text-red-700",
-    MARCA_INACTIVA: "bg-purple-50 text-purple-700",
-    SUCURSAL_INACTIVA: "bg-purple-50 text-purple-700",
-    VENDIDO_APARTADO: "bg-blue-50 text-blue-700",
-    SIN_GALERIA: "bg-amber-50 text-amber-700",
+    SIN_IMAGEN:
+      "border-amber-200 bg-amber-50 text-amber-700",
+
+    SIN_DESCRIPCION:
+      "border-amber-200 bg-amber-50 text-amber-700",
+
+    SIN_PRECIO:
+      "border-red-200 bg-red-50 text-red-700",
+
+    OCULTO:
+      "border-slate-200 bg-slate-100 text-slate-700",
+
+    VISIBLE_NO_DISPONIBLE:
+      "border-red-200 bg-red-50 text-red-700",
+
+    MARCA_INACTIVA:
+      "border-violet-200 bg-violet-50 text-violet-700",
+
+    SUCURSAL_INACTIVA:
+      "border-violet-200 bg-violet-50 text-violet-700",
+
+    VENDIDO_APARTADO:
+      "border-blue-200 bg-blue-50 text-blue-700",
+
+    SIN_GALERIA:
+      "border-amber-200 bg-amber-50 text-amber-700",
   };
 
   return classes[issue];
 }
 
-function getConditionLabel(condition: VehicleCondition) {
-  const labels: Record<VehicleCondition, string> = {
+function getConditionLabel(
+  condition: VehicleCondition
+) {
+  const labels: Record<
+    VehicleCondition,
+    string
+  > = {
     NUEVO: "Nuevo",
     SEMINUEVO: "Seminuevo",
   };
@@ -103,18 +161,28 @@ function getConditionLabel(condition: VehicleCondition) {
   return labels[condition];
 }
 
-function getCategoryLabel(category: VehicleCategory) {
-  const labels: Record<VehicleCategory, string> = {
+function getCategoryLabel(
+  category: VehicleCategory
+) {
+  const labels: Record<
+    VehicleCategory,
+    string
+  > = {
     AUTO: "Auto",
     MOTO: "Moto",
-    TODOTERRENO: "Todo terreno",
+    TODOTERRENO: "Todoterreno",
   };
 
   return labels[category];
 }
 
-function getStatusLabel(status: VehicleStatus) {
-  const labels: Record<VehicleStatus, string> = {
+function getStatusLabel(
+  status: VehicleStatus
+) {
+  const labels: Record<
+    VehicleStatus,
+    string
+  > = {
     DISPONIBLE: "Disponible",
     APARTADO: "Apartado",
     VENDIDO: "Vendido",
@@ -130,12 +198,19 @@ function getVehiclePublicTarget(vehicle: {
   active: boolean;
   condition: VehicleCondition;
   status: VehicleStatus;
-  brand: { active: boolean };
-  branch: { active: boolean };
+
+  brand: {
+    active: boolean;
+  };
+
+  branch: {
+    active: boolean;
+  };
 }) {
   const canAppearPublicly =
     vehicle.active &&
-    vehicle.status === VehicleStatus.DISPONIBLE &&
+    vehicle.status ===
+    VehicleStatus.DISPONIBLE &&
     vehicle.brand.active &&
     vehicle.branch.active;
 
@@ -143,11 +218,14 @@ function getVehiclePublicTarget(vehicle: {
     return "No publicado";
   }
 
-  if (vehicle.condition === VehicleCondition.NUEVO) {
+  if (
+    vehicle.condition ===
+    VehicleCondition.NUEVO
+  ) {
     return "Catálogo";
   }
 
-  return "Inventario";
+  return "Seminuevos";
 }
 
 function getVehicleIssues(vehicle: {
@@ -156,12 +234,15 @@ function getVehicleIssues(vehicle: {
   price: number;
   active: boolean;
   status: VehicleStatus;
+
   brand: {
     active: boolean;
   };
+
   branch: {
     active: boolean;
   };
+
   images: {
     type: VehicleMediaType;
   }[];
@@ -170,11 +251,16 @@ function getVehicleIssues(vehicle: {
 
   const hasImage =
     Boolean(vehicle.mainImage) ||
-    vehicle.images.some((image) => image.type === VehicleMediaType.IMAGE);
+    vehicle.images.some(
+      (image) =>
+        image.type === VehicleMediaType.IMAGE
+    );
 
-  const hasGalleryImage = vehicle.images.some(
-    (image) => image.type === VehicleMediaType.IMAGE
-  );
+  const hasGalleryImage =
+    vehicle.images.some(
+      (image) =>
+        image.type === VehicleMediaType.IMAGE
+    );
 
   if (!hasImage) {
     issues.push("SIN_IMAGEN");
@@ -192,7 +278,10 @@ function getVehicleIssues(vehicle: {
     issues.push("OCULTO");
   }
 
-  if (vehicle.active && vehicle.status !== VehicleStatus.DISPONIBLE) {
+  if (
+    vehicle.active &&
+    vehicle.status !== VehicleStatus.DISPONIBLE
+  ) {
     issues.push("VISIBLE_NO_DISPONIBLE");
   }
 
@@ -218,7 +307,10 @@ function getVehicleIssues(vehicle: {
   return issues;
 }
 
-function buildHealthHref(issue: string, search = "") {
+function buildHealthHref(
+  issue: string,
+  search = ""
+) {
   const params = new URLSearchParams();
 
   if (issue !== "TODOS") {
@@ -231,13 +323,19 @@ function buildHealthHref(issue: string, search = "") {
 
   const query = params.toString();
 
-  return query ? `/admin/inventario/salud?${query}` : "/admin/inventario/salud";
+  return query
+    ? `/admin/inventario/salud?${query}`
+    : "/admin/inventario/salud";
 }
 
-async function hideVehicle(formData: FormData) {
+async function hideVehicle(
+  formData: FormData
+) {
   "use server";
 
-  const vehicleId = Number(formData.get("vehicleId"));
+  const vehicleId = Number(
+    formData.get("vehicleId")
+  );
 
   if (!vehicleId) {
     return;
@@ -247,6 +345,7 @@ async function hideVehicle(formData: FormData) {
     where: {
       id: vehicleId,
     },
+
     data: {
       active: false,
     },
@@ -257,12 +356,17 @@ async function hideVehicle(formData: FormData) {
   revalidatePath("/admin/inventario/salud");
   revalidatePath("/catalogo");
   revalidatePath("/inventario");
+  revalidatePath(`/vehiculos/${vehicleId}`);
 }
 
-async function markVehicleInactive(formData: FormData) {
+async function markVehicleInactive(
+  formData: FormData
+) {
   "use server";
 
-  const vehicleId = Number(formData.get("vehicleId"));
+  const vehicleId = Number(
+    formData.get("vehicleId")
+  );
 
   if (!vehicleId) {
     return;
@@ -272,6 +376,7 @@ async function markVehicleInactive(formData: FormData) {
     where: {
       id: vehicleId,
     },
+
     data: {
       active: false,
       status: VehicleStatus.INACTIVO,
@@ -283,13 +388,21 @@ async function markVehicleInactive(formData: FormData) {
   revalidatePath("/admin/inventario/salud");
   revalidatePath("/catalogo");
   revalidatePath("/inventario");
+  revalidatePath(`/vehiculos/${vehicleId}`);
 }
 
-async function deleteVehicle(formData: FormData) {
+async function deleteVehicle(
+  formData: FormData
+) {
   "use server";
 
-  const vehicleId = Number(formData.get("vehicleId"));
-  const confirmText = String(formData.get("confirmText") || "").trim();
+  const vehicleId = Number(
+    formData.get("vehicleId")
+  );
+
+  const confirmText = String(
+    formData.get("confirmText") || ""
+  ).trim();
 
   if (!vehicleId) {
     redirect(
@@ -307,11 +420,12 @@ async function deleteVehicle(formData: FormData) {
     );
   }
 
-  const leadCount = await prisma.lead.count({
-    where: {
-      vehicleId,
-    },
-  });
+  const leadCount =
+    await prisma.lead.count({
+      where: {
+        vehicleId,
+      },
+    });
 
   if (leadCount > 0) {
     redirect(
@@ -321,14 +435,16 @@ async function deleteVehicle(formData: FormData) {
     );
   }
 
-  const vehicle = await prisma.vehicle.findUnique({
-    where: {
-      id: vehicleId,
-    },
-    include: {
-      images: true,
-    },
-  });
+  const vehicle =
+    await prisma.vehicle.findUnique({
+      where: {
+        id: vehicleId,
+      },
+
+      include: {
+        images: true,
+      },
+    });
 
   if (!vehicle) {
     redirect(
@@ -341,8 +457,13 @@ async function deleteVehicle(formData: FormData) {
   const urlsToDelete = new Set(
     [
       vehicle.mainImage,
-      ...vehicle.images.map((image) => image.url),
-    ].filter((url): url is string => Boolean(url))
+
+      ...vehicle.images.map(
+        (image) => image.url
+      ),
+    ].filter(
+      (url): url is string => Boolean(url)
+    )
   );
 
   await prisma.$transaction([
@@ -370,7 +491,10 @@ async function deleteVehicle(formData: FormData) {
       try {
         await deletePublicFile(url);
       } catch (error) {
-        console.error(`No se pudo eliminar el archivo ${url}`, error);
+        console.error(
+          `No se pudo eliminar el archivo ${url}`,
+          error
+        );
       }
     }
   }
@@ -380,6 +504,7 @@ async function deleteVehicle(formData: FormData) {
   revalidatePath("/admin/inventario/salud");
   revalidatePath("/catalogo");
   revalidatePath("/inventario");
+  revalidatePath(`/vehiculos/${vehicleId}`);
 
   redirect(
     `/admin/inventario/salud?success=${encodeURIComponent(
@@ -394,30 +519,42 @@ export default async function InventoryHealthPage({
   const params = await searchParams;
 
   const search = params.q?.trim() ?? "";
-  const normalizedSearch = search.toLowerCase();
-  const issueFilter = params.problema ?? "TODOS";
 
-  const vehicles = await prisma.vehicle.findMany({
-    include: {
-      brand: true,
-      branch: true,
-      images: {
-        orderBy: {
-          order: "asc",
+  const normalizedSearch =
+    search.toLowerCase();
+
+  const issueFilter =
+    params.problema ?? "TODOS";
+
+  const vehicles =
+    await prisma.vehicle.findMany({
+      include: {
+        brand: true,
+        branch: true,
+
+        images: {
+          orderBy: {
+            order: "asc",
+          },
         },
       },
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-  });
+
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
 
   const rows = vehicles
     .map((vehicle) => {
-      const issues = getVehicleIssues(vehicle);
+      const issues =
+        getVehicleIssues(vehicle);
+
       const image =
-        vehicle.images.find((item) => item.type === VehicleMediaType.IMAGE)
-          ?.url ||
+        vehicle.images.find(
+          (item) =>
+            item.type ===
+            VehicleMediaType.IMAGE
+        )?.url ||
         vehicle.mainImage ||
         "";
 
@@ -425,438 +562,710 @@ export default async function InventoryHealthPage({
         vehicle,
         issues,
         image,
-        publicTarget: getVehiclePublicTarget(vehicle),
+
+        publicTarget:
+          getVehiclePublicTarget(vehicle),
       };
     })
-    .filter((row) => row.issues.length > 0);
+    .filter(
+      (row) => row.issues.length > 0
+    );
 
-  const filteredRows = rows.filter((row) => {
-    const matchesIssue =
-      issueFilter === "TODOS" || row.issues.includes(issueFilter as IssueKey);
+  const filteredRows = rows.filter(
+    (row) => {
+      const matchesIssue =
+        issueFilter === "TODOS" ||
+        row.issues.includes(
+          issueFilter as IssueKey
+        );
 
-    if (!matchesIssue) {
-      return false;
+      if (!matchesIssue) {
+        return false;
+      }
+
+      if (!normalizedSearch) {
+        return true;
+      }
+
+      const searchableText = [
+        row.vehicle.id,
+        row.vehicle.name,
+        row.vehicle.model,
+        row.vehicle.brand.name,
+        row.vehicle.branch.name,
+        row.vehicle.branch.city,
+        row.vehicle.year,
+        row.publicTarget,
+
+        getConditionLabel(
+          row.vehicle.condition
+        ),
+
+        getStatusLabel(
+          row.vehicle.status
+        ),
+
+        ...row.issues.map(getIssueLabel),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(
+        normalizedSearch
+      );
     }
-
-    if (!normalizedSearch) {
-      return true;
-    }
-
-    const searchableText = [
-      row.vehicle.id,
-      row.vehicle.name,
-      row.vehicle.model,
-      row.vehicle.brand.name,
-      row.vehicle.branch.name,
-      row.vehicle.branch.city,
-      row.vehicle.year,
-      row.publicTarget,
-      getConditionLabel(row.vehicle.condition),
-      getStatusLabel(row.vehicle.status),
-      ...row.issues.map(getIssueLabel),
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return searchableText.includes(normalizedSearch);
-  });
+  );
 
   const issueStats = issueOptions
-    .filter((option) => option.value !== "TODOS")
+    .filter(
+      (option) => option.value !== "TODOS"
+    )
     .map((option) => ({
       ...option,
-      count: rows.filter((row) => row.issues.includes(option.value as IssueKey))
-        .length,
+
+      count: rows.filter((row) =>
+        row.issues.includes(
+          option.value as IssueKey
+        )
+      ).length,
     }));
 
+  const withoutImage =
+    issueStats.find(
+      (item) => item.value === "SIN_IMAGEN"
+    )?.count ?? 0;
+
+  const hiddenVehicles =
+    issueStats.find(
+      (item) => item.value === "OCULTO"
+    )?.count ?? 0;
+
+  const visibleUnavailable =
+    issueStats.find(
+      (item) =>
+        item.value ===
+        "VISIBLE_NO_DISPONIBLE"
+    )?.count ?? 0;
+
+  const hasFilters =
+    Boolean(search) ||
+    issueFilter !== "TODOS";
+
   return (
-    <div>
-      <div className="flex flex-wrap items-start justify-between gap-5">
-        <div>
+    <div className="pb-10">
+      {/* Encabezado */}
+      <section className="relative overflow-hidden rounded-[22px] bg-[#192a3a] px-5 py-7 text-white shadow-[0_18px_50px_rgba(15,23,42,0.14)] md:px-7 md:py-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_32%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
+
+        <div className="relative flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
+          <div className="max-w-3xl">
+            <Link
+              href="/admin/inventario"
+              className="inline-flex items-center gap-2 text-xs font-black text-white/60 transition hover:text-white"
+            >
+              <ArrowLeft size={16} />
+              Volver al inventario
+            </Link>
+
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#dfe7ec] backdrop-blur-sm">
+              <ShieldAlert size={15} />
+              Salud del inventario
+            </div>
+
+            <h1 className="mt-4 text-3xl font-black tracking-[-0.045em] md:text-4xl lg:text-5xl">
+              Revisión de registros
+            </h1>
+
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-white/60 md:text-base">
+              Detecta unidades incompletas,
+              ocultas, sin imágenes o con problemas
+              que impiden su publicación.
+            </p>
+          </div>
+
           <Link
-            href="/admin/inventario"
-            className="inline-flex items-center gap-2 text-sm font-black text-slate-500 transition hover:text-[var(--rise-blue)]"
+            href="/admin/inventario/nuevo"
+            className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
           >
-            <ArrowLeft size={18} />
-            Volver al inventario
+            <Plus size={18} />
+            Registrar unidad
+
+            <ArrowRight
+              size={16}
+              className="transition-transform group-hover:translate-x-0.5"
+            />
           </Link>
-
-          <p className="mt-6 text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-            Salud del inventario
-          </p>
-
-          <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">
-            Revisión de registros
-          </h1>
-
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
-            Detecta unidades incompletas, ocultas, sin imagen, sin descripción
-            o que ya no aparecen públicamente.
-          </p>
         </div>
+      </section>
 
-        <Link
-          href="/admin/inventario/nuevo"
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-        >
-          <Car size={18} />
-          Registrar unidad
-        </Link>
-      </div>
-
+      {/* Mensajes */}
       {params.error && (
-        <div className="mt-6 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-700">
-          {params.error}
+        <div
+          role="alert"
+          className="mt-5 flex items-start gap-3 rounded-[16px] border border-red-200 bg-red-50 px-4 py-4 text-sm font-bold text-red-700"
+        >
+          <AlertCircle
+            size={20}
+            className="mt-0.5 shrink-0"
+          />
+
+          <span>{params.error}</span>
         </div>
       )}
 
       {params.success && (
-        <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
-          {params.success}
+        <div
+          role="status"
+          className="mt-5 flex items-start gap-3 rounded-[16px] border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm font-bold text-emerald-700"
+        >
+          <CheckCircle2
+            size={20}
+            className="mt-0.5 shrink-0"
+          />
+
+          <span>{params.success}</span>
         </div>
       )}
 
-      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm">
-          <AlertTriangle size={24} className="text-amber-600" />
-          <p className="mt-4 text-4xl font-black">{rows.length}</p>
-          <p className="mt-1 text-sm font-black uppercase tracking-wider text-slate-500">
-            Con alertas
-          </p>
-        </div>
+      {/* Estadísticas */}
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <HealthStatCard
+          icon={AlertTriangle}
+          value={rows.length}
+          label="Con alertas"
+          description="Unidades con uno o más problemas."
+          tone="amber"
+        />
 
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm">
-          <ImageIcon size={24} className="text-[var(--rise-blue)]" />
-          <p className="mt-4 text-4xl font-black">
-            {issueStats.find((item) => item.value === "SIN_IMAGEN")?.count ?? 0}
-          </p>
-          <p className="mt-1 text-sm font-black uppercase tracking-wider text-slate-500">
-            Sin imagen
-          </p>
-        </div>
+        <HealthStatCard
+          icon={ImageIcon}
+          value={withoutImage}
+          label="Sin imagen"
+          description="No cuentan con imagen principal."
+          tone="navy"
+        />
 
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm">
-          <EyeOff size={24} className="text-slate-600" />
-          <p className="mt-4 text-4xl font-black">
-            {issueStats.find((item) => item.value === "OCULTO")?.count ?? 0}
-          </p>
-          <p className="mt-1 text-sm font-black uppercase tracking-wider text-slate-500">
-            Ocultos
-          </p>
-        </div>
+        <HealthStatCard
+          icon={EyeOff}
+          value={hiddenVehicles}
+          label="Ocultas"
+          description="No aparecen actualmente en público."
+          tone="slate"
+        />
 
-        <div className="rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm">
-          <ShieldAlert size={24} className="text-red-600" />
-          <p className="mt-4 text-4xl font-black">
-            {issueStats.find((item) => item.value === "VISIBLE_NO_DISPONIBLE")
-              ?.count ?? 0}
-          </p>
-          <p className="mt-1 text-sm font-black uppercase tracking-wider text-slate-500">
-            Visibles no disponibles
-          </p>
-        </div>
+        <HealthStatCard
+          icon={ShieldAlert}
+          value={visibleUnavailable}
+          label="No disponibles"
+          description="Visibles pero con otro estado."
+          tone="red"
+        />
       </section>
 
-      <section className="mt-6 rounded-[2rem] border border-[var(--rise-border)] bg-white p-5 shadow-sm md:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Filtros */}
+      <section className="mt-6 rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.04)] md:p-6">
+        <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
-            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-              Filtros
-            </p>
+            <div className="flex items-center gap-3">
+              <span className="h-px w-7 bg-[#192a3a]" />
 
-            <h2 className="mt-2 text-2xl font-black">
-              Buscar registros problemáticos
+              <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[#192a3a]">
+                Buscar y revisar
+              </p>
+            </div>
+
+            <h2 className="mt-3 text-2xl font-black tracking-[-0.035em]">
+              Registros problemáticos
             </h2>
+
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Busca por vehículo, marca,
+              sucursal o tipo de problema.
+            </p>
           </div>
 
-          {(search || issueFilter !== "TODOS") && (
-            <Link
-              href="/admin/inventario/salud"
-              className="rounded-xl border border-[var(--rise-border)] bg-white px-5 py-3 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-50"
-            >
-              Limpiar filtros
-            </Link>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full border border-slate-200 bg-[#f8fafb] px-4 py-2 text-xs font-black text-slate-600">
+              {filteredRows.length} resultado
+              {filteredRows.length === 1
+                ? ""
+                : "s"}
+            </span>
+
+            {hasFilters && (
+              <Link
+                href="/admin/inventario/salud"
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+              >
+                Limpiar filtros
+              </Link>
+            )}
+          </div>
         </div>
 
         <form
           action="/admin/inventario/salud"
-          className="mt-5 grid gap-3 lg:grid-cols-[1fr_280px_auto]"
+          className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px_auto]"
         >
-          <div className="relative">
-            <Search
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-            />
+          <label className="block">
+            <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+              Buscar
+            </span>
 
-            <input
-              name="q"
-              defaultValue={search}
-              placeholder="Buscar por unidad, marca, sucursal, año o problema..."
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-            />
-          </div>
+            <div className="relative">
+              <Search
+                size={17}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
 
-          <select
-            name="problema"
-            defaultValue={issueFilter}
-            className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black text-slate-700 outline-none transition focus:border-[var(--rise-blue)] focus:bg-white"
-          >
-            {issueOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+              <input
+                name="q"
+                defaultValue={search}
+                placeholder="Unidad, marca, sucursal, año..."
+                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
+              />
+            </div>
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+              Tipo de problema
+            </span>
+
+            <select
+              name="problema"
+              defaultValue={issueFilter}
+              className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
+            >
+              {issueOptions.map((option) => (
+                <option
+                  key={option.value}
+                  value={option.value}
+                >
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <button
             type="submit"
-            className="h-12 rounded-2xl bg-[var(--rise-navy)] px-6 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-6 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] lg:self-end"
           >
+            <Search size={17} />
             Buscar
           </button>
         </form>
 
-        <div className="mt-5 flex flex-wrap gap-2">
-          {issueOptions.map((option) => (
-            <Link
-              key={option.value}
-              href={buildHealthHref(option.value, search)}
-              className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider transition ${issueFilter === option.value
-                ? "bg-[var(--rise-navy)] text-white"
-                : "bg-slate-50 text-slate-500 hover:bg-slate-100"
-                }`}
-            >
-              {option.label}
-            </Link>
-          ))}
+        {/* Accesos por problema */}
+        <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
+          {issueOptions.map((option) => {
+            const stat =
+              issueStats.find(
+                (item) =>
+                  item.value === option.value
+              );
+
+            const count =
+              option.value === "TODOS"
+                ? rows.length
+                : stat?.count ?? 0;
+
+            return (
+              <Link
+                key={option.value}
+                href={buildHealthHref(
+                  option.value,
+                  search
+                )}
+                className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition ${issueFilter === option.value
+                    ? "border-[#192a3a] bg-[#192a3a] text-white"
+                    : "border-slate-200 bg-white text-slate-500 hover:border-[#192a3a] hover:text-[#192a3a]"
+                  }`}
+              >
+                {option.label}
+
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[9px] ${issueFilter === option.value
+                      ? "bg-white/15 text-white"
+                      : "bg-slate-100 text-slate-500"
+                    }`}
+                >
+                  {count}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
+      {/* Resultados */}
       <section className="mt-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
+        <div className="mb-4">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-7 bg-[#192a3a]" />
+
+            <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[#192a3a]">
               Resultados
             </p>
-
-            <h2 className="mt-2 text-2xl font-black">
-              {filteredRows.length} registro(s)
-            </h2>
           </div>
+
+          <h2 className="mt-3 text-2xl font-black tracking-[-0.035em]">
+            Unidades que requieren revisión
+          </h2>
         </div>
 
-        <div className="grid gap-4">
-          {filteredRows.length > 0 ? (
-            filteredRows.map(({ vehicle, issues, image, publicTarget }) => (
-              <article
-                key={vehicle.id}
-                className="overflow-hidden rounded-[2rem] border border-[var(--rise-border)] bg-white shadow-sm"
-              >
-                <div className="grid xl:grid-cols-[170px_minmax(0,1fr)_320px]">
-                  <div className="relative h-48 bg-slate-100 xl:h-full">
-                    {image ? (
-                      <img
-                        src={image}
-                        alt={`${vehicle.brand.name} ${vehicle.name}`}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="grid h-full place-items-center text-slate-400">
-                        <div className="text-center">
-                          <ImageIcon className="mx-auto" size={42} />
-                          <p className="mt-2 text-xs font-black uppercase tracking-wider">
-                            Sin imagen
-                          </p>
+        {filteredRows.length > 0 ? (
+          <div className="grid gap-5">
+            {filteredRows.map(
+              ({
+                vehicle,
+                issues,
+                image,
+                publicTarget,
+              }) => (
+                <article
+                  key={vehicle.id}
+                  className="overflow-hidden rounded-[22px] border border-black/8 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)] transition duration-300 hover:border-[#192a3a]/25 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
+                >
+                  <div className="grid xl:grid-cols-[200px_minmax(0,1fr)_290px]">
+                    {/* Imagen */}
+                    <div className="relative h-[220px] overflow-hidden bg-slate-100 sm:h-[280px] xl:h-full xl:min-h-[320px]">
+                      {image ? (
+                        <img
+                          src={image}
+                          alt={`${vehicle.brand.name} ${vehicle.name}`}
+                          className="h-full w-full object-cover transition duration-700 hover:scale-105"
+                        />
+                      ) : (
+                        <div className="grid h-full place-items-center text-slate-400">
+                          <div className="text-center">
+                            <ImageIcon
+                              size={42}
+                              className="mx-auto"
+                            />
+
+                            <p className="mt-2 text-[10px] font-black uppercase tracking-[0.16em]">
+                              Sin imagen
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[var(--rise-blue)] shadow-sm">
-                      ID #{vehicle.id}
-                    </span>
-                  </div>
-
-                  <div className="p-5 md:p-6">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
-                          {vehicle.brand.name}
-                        </p>
-
-                        <h3 className="mt-2 text-2xl font-black text-[var(--rise-navy)]">
-                          {vehicle.name}
-                        </h3>
-
-                        <p className="mt-2 text-sm font-bold text-slate-500">
-                          {vehicle.year} · {getCategoryLabel(vehicle.category)} ·{" "}
-                          {getConditionLabel(vehicle.condition)}
-                        </p>
-                      </div>
-
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${publicTarget === "Catálogo" ||
-                          publicTarget === "Inventario"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-slate-200 text-slate-700"
-                          }`}
-                      >
-                        {publicTarget}
+                      <span className="absolute left-3 top-3 rounded-full border border-white/50 bg-white/90 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#192a3a] shadow-sm backdrop-blur-sm">
+                        ID #{vehicle.id}
                       </span>
                     </div>
 
-                    <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                      <div className="rounded-2xl bg-slate-50 p-3">
-                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                          Precio
-                        </p>
-
-                        <p className="mt-1 text-sm font-black text-[var(--rise-blue)]">
-                          {formatCurrency(vehicle.price)}
-                        </p>
-                      </div>
-
-                      <div className="rounded-2xl bg-slate-50 p-3">
-                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                          Estado
-                        </p>
-
-                        <p className="mt-1 text-sm font-black text-slate-700">
-                          {getStatusLabel(vehicle.status)}
-                        </p>
-                      </div>
-
-                      <div className="rounded-2xl bg-slate-50 p-3">
-                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                          Sucursal
-                        </p>
-
-                        <p className="mt-1 text-sm font-black text-slate-700">
-                          {vehicle.branch.city}
-                        </p>
-                      </div>
-
-                      <div className="rounded-2xl bg-slate-50 p-3">
-                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                          Visibilidad
-                        </p>
-
-                        <p className="mt-1 text-sm font-black text-slate-700">
-                          {vehicle.active ? "Visible" : "Oculto"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {issues.map((issue) => (
-                        <span
-                          key={issue}
-                          className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${getIssueClasses(
-                            issue
-                          )}`}
-                        >
-                          {getIssueLabel(issue)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <aside className="border-t border-slate-100 bg-slate-50 p-5 xl:border-l xl:border-t-0">
-                    <div className="grid gap-3">
-                      <Link
-                        href={`/admin/inventario/${vehicle.id}/editar`}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--rise-navy)] px-5 text-sm font-black text-white transition hover:bg-[var(--rise-blue)]"
-                      >
-                        <Pencil size={17} />
-                        Editar
-                      </Link>
-
-                      <Link
-                        href={`/vehiculos/${vehicle.id}`}
-                        target="_blank"
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-black text-[var(--rise-navy)] transition hover:bg-slate-100"
-                      >
-                        <Eye size={17} />
-                        Ver público
-                      </Link>
-
-                      <form action={hideVehicle}>
-                        <input type="hidden" name="vehicleId" value={vehicle.id} />
-
-                        <button
-                          type="submit"
-                          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-black text-slate-700 transition hover:bg-slate-100"
-                        >
-                          <EyeOff size={17} />
-                          Ocultar
-                        </button>
-                      </form>
-
-                      <form action={markVehicleInactive}>
-                        <input type="hidden" name="vehicleId" value={vehicle.id} />
-
-                        <button
-                          type="submit"
-                          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-black text-slate-700 transition hover:bg-slate-100"
-                        >
-                          <XCircle size={17} />
-                          Marcar inactivo
-                        </button>
-                      </form>
-
-                      <details className="rounded-2xl border border-red-100 bg-red-50 p-4">
-                        <summary className="flex cursor-pointer items-center gap-2 text-xs font-black uppercase tracking-wider text-red-700">
-                          <Trash2 size={16} />
-                          Eliminar
-                        </summary>
-
-                        <div className="mt-4">
-                          <p className="text-xs leading-5 text-red-700">
-                            Solo se eliminará si no tiene solicitudes asociadas.
+                    {/* Datos */}
+                    <div className="min-w-0 p-5 md:p-6">
+                      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                        <div className="min-w-0">
+                          <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#192a3a]">
+                            {vehicle.brand.name}
                           </p>
 
-                          <form action={deleteVehicle} className="mt-3 grid gap-2">
-                            <input
-                              type="hidden"
-                              name="vehicleId"
-                              value={vehicle.id}
-                            />
+                          <h3 className="mt-2 text-2xl font-black leading-tight tracking-[-0.035em] md:text-3xl">
+                            {vehicle.name}
+                          </h3>
 
-                            <input
-                              name="confirmText"
-                              placeholder="Escribe ELIMINAR"
-                              className="h-10 rounded-2xl border border-red-100 bg-white px-4 text-xs font-black text-red-700 outline-none"
-                            />
-
-                            <button
-                              type="submit"
-                              className="h-10 rounded-2xl bg-red-600 px-4 text-xs font-black uppercase tracking-wider text-white transition hover:bg-red-700"
-                            >
-                              Eliminar definitivamente
-                            </button>
-                          </form>
+                          <p className="mt-2 text-sm font-semibold text-slate-500">
+                            {vehicle.year} ·{" "}
+                            {getCategoryLabel(
+                              vehicle.category
+                            )}{" "}
+                            ·{" "}
+                            {getConditionLabel(
+                              vehicle.condition
+                            )}
+                          </p>
                         </div>
-                      </details>
+
+                        <span
+                          className={`w-fit rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${publicTarget ===
+                              "Catálogo" ||
+                              publicTarget ===
+                              "Seminuevos"
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-slate-200 bg-slate-100 text-slate-600"
+                            }`}
+                        >
+                          {publicTarget}
+                        </span>
+                      </div>
+
+                      <div className="mt-5 grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+                        <RecordDetail
+                          label="Precio"
+                          value={formatCurrency(
+                            vehicle.price
+                          )}
+                        />
+
+                        <RecordDetail
+                          label="Estado"
+                          value={getStatusLabel(
+                            vehicle.status
+                          )}
+                        />
+
+                        <RecordDetail
+                          label="Sucursal"
+                          value={`${vehicle.branch.name} · ${vehicle.branch.city}`}
+                        />
+
+                        <RecordDetail
+                          label="Visibilidad"
+                          value={
+                            vehicle.active
+                              ? "Visible"
+                              : "Oculto"
+                          }
+                        />
+                      </div>
+
+                      <div className="mt-5 border-t border-slate-100 pt-5">
+                        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+                          Problemas detectados
+                        </p>
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {issues.map((issue) => (
+                            <span
+                              key={issue}
+                              className={`rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] ${getIssueClasses(
+                                issue
+                              )}`}
+                            >
+                              {getIssueLabel(issue)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                  </aside>
-                </div>
-              </article>
-            ))
-          ) : (
-            <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center">
-              <CheckCircle2 size={48} className="mx-auto text-emerald-600" />
 
-              <h3 className="mt-4 text-2xl font-black">
-                No hay registros con ese criterio
-              </h3>
+                    {/* Acciones */}
+                    <HealthActions
+                      vehicleId={vehicle.id}
+                    />
+                  </div>
+                </article>
+              )
+            )}
+          </div>
+        ) : (
+          <div className="rounded-[22px] border border-dashed border-slate-300 bg-white p-10 text-center">
+            <CheckCircle2
+              size={50}
+              className="mx-auto text-emerald-600"
+            />
 
-              <p className="mt-2 text-sm text-slate-500">
-                Cambia los filtros o limpia la búsqueda para ver más resultados.
-              </p>
-            </div>
-          )}
-        </div>
+            <h3 className="mt-4 text-2xl font-black">
+              No hay registros con ese criterio
+            </h3>
+
+            <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
+              Cambia los filtros o limpia la
+              búsqueda para mostrar más resultados.
+            </p>
+
+            {hasFilters && (
+              <Link
+                href="/admin/inventario/salud"
+                className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+              >
+                Limpiar filtros
+              </Link>
+            )}
+          </div>
+        )}
       </section>
     </div>
+  );
+}
+
+function HealthStatCard({
+  icon: Icon,
+  value,
+  label,
+  description,
+  tone,
+}: {
+  icon: LucideIcon;
+  value: number;
+  label: string;
+  description: string;
+  tone: "navy" | "amber" | "slate" | "red";
+}) {
+  const tones = {
+    navy: "border-[#192a3a]/10 bg-[#e7edf1] text-[#192a3a]",
+
+    amber:
+      "border-amber-100 bg-amber-50 text-amber-700",
+
+    slate:
+      "border-slate-200 bg-slate-100 text-slate-700",
+
+    red: "border-red-100 bg-red-50 text-red-700",
+  };
+
+  return (
+    <article className="rounded-[20px] border border-black/8 bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)]">
+      <span
+        className={`grid h-11 w-11 place-items-center rounded-xl border ${tones[tone]}`}
+      >
+        <Icon size={21} />
+      </span>
+
+      <p className="mt-5 text-4xl font-black tracking-[-0.05em] text-[#192a3a]">
+        {value}
+      </p>
+
+      <h2 className="mt-2 text-sm font-black">
+        {label}
+      </h2>
+
+      <p className="mt-1 text-xs font-medium leading-5 text-slate-500">
+        {description}
+      </p>
+    </article>
+  );
+}
+
+function RecordDetail({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="min-w-0 rounded-[16px] border border-slate-100 bg-[#f8fafb] p-4">
+      <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+        {label}
+      </p>
+
+      <p className="mt-2 truncate text-xs font-black text-slate-700">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function HealthActions({
+  vehicleId,
+}: {
+  vehicleId: number;
+}) {
+  return (
+    <aside className="border-t border-slate-100 bg-[#f8fafb] p-5 xl:border-l xl:border-t-0">
+      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+        Acciones
+      </p>
+
+      <div className="mt-4 grid gap-3">
+        <Link
+          href={`/admin/inventario/${vehicleId}/editar`}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-4 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+        >
+          <Pencil size={16} />
+          Corregir unidad
+        </Link>
+
+        <Link
+          href={`/vehiculos/${vehicleId}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+        >
+          <Eye size={16} />
+          Ver en sitio
+        </Link>
+
+        <form action={hideVehicle}>
+          <input
+            type="hidden"
+            name="vehicleId"
+            value={vehicleId}
+          />
+
+          <button
+            type="submit"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a] active:scale-[0.98]"
+          >
+            <EyeOff size={16} />
+            Ocultar unidad
+          </button>
+        </form>
+
+        <form action={markVehicleInactive}>
+          <input
+            type="hidden"
+            name="vehicleId"
+            value={vehicleId}
+          />
+
+          <button
+            type="submit"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a] active:scale-[0.98]"
+          >
+            <XCircle size={16} />
+            Marcar inactiva
+          </button>
+        </form>
+
+        <details className="group rounded-xl border border-red-200 bg-red-50">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-red-700">
+            <Trash2 size={15} />
+            Eliminar unidad
+          </summary>
+
+          <div className="border-t border-red-100 p-4">
+            <div className="flex gap-3">
+              <AlertTriangle
+                size={18}
+                className="mt-0.5 shrink-0 text-red-600"
+              />
+
+              <div>
+                <p className="text-xs font-black text-red-700">
+                  Acción irreversible
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Solo podrá eliminarse cuando no
+                  tenga solicitudes asociadas.
+                </p>
+              </div>
+            </div>
+
+            <form
+              action={deleteVehicle}
+              className="mt-4 grid gap-3"
+            >
+              <input
+                type="hidden"
+                name="vehicleId"
+                value={vehicleId}
+              />
+
+              <input
+                name="confirmText"
+                placeholder="Escribe ELIMINAR"
+                autoComplete="off"
+                className="h-11 rounded-xl border border-red-200 bg-white px-4 text-xs font-black text-red-700 outline-none placeholder:text-red-300 focus:border-red-400"
+              />
+
+              <button
+                type="submit"
+                className="h-11 rounded-xl bg-red-600 px-4 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-red-700 active:scale-[0.98]"
+              >
+                Eliminar definitivamente
+              </button>
+            </form>
+          </div>
+        </details>
+      </div>
+    </aside>
   );
 }
