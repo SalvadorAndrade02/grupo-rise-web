@@ -25,6 +25,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
 import { deletePublicFile } from "@/lib/uploads";
+import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -87,10 +88,22 @@ type AdminInventoryPageProps = {
     estado?: string;
     visibilidad?: string;
     sucursal?: string;
+    pagina?: string;
     error?: string;
     success?: string;
   }>;
 };
+
+type InventoryQueryState = {
+  search: string;
+  brandId: number;
+  branchId: number;
+  condition: ConditionFilter;
+  status: StatusFilter;
+  visibility: VisibilityFilter;
+};
+
+const PAGE_SIZE = 6;
 
 function getConditionLabel(condition: string) {
   const labels: Record<string, string> = {
@@ -201,6 +214,102 @@ function parseVisibilityFilter(
   )
     ? (value as VisibilityFilter)
     : "TODOS";
+}
+
+function parsePage(value?: string) {
+  const page = Number(value);
+
+  return Number.isInteger(page) && page > 0
+    ? page
+    : 1;
+}
+
+function buildInventoryHref(
+  page: number,
+  filters: InventoryQueryState
+) {
+  const query = new URLSearchParams();
+
+  if (filters.search) {
+    query.set("q", filters.search);
+  }
+
+  if (filters.brandId) {
+    query.set(
+      "marca",
+      String(filters.brandId)
+    );
+  }
+
+  if (filters.branchId) {
+    query.set(
+      "sucursal",
+      String(filters.branchId)
+    );
+  }
+
+  if (filters.condition !== "TODAS") {
+    query.set(
+      "condicion",
+      filters.condition
+    );
+  }
+
+  if (filters.status !== "TODOS") {
+    query.set("estado", filters.status);
+  }
+
+  if (filters.visibility !== "TODOS") {
+    query.set(
+      "visibilidad",
+      filters.visibility
+    );
+  }
+
+  if (page > 1) {
+    query.set("pagina", String(page));
+  }
+
+  const queryString = query.toString();
+
+  return queryString
+    ? `/admin/inventario?${queryString}`
+    : "/admin/inventario";
+}
+
+function getPaginationPages(
+  currentPage: number,
+  totalPages: number
+) {
+  const visiblePages = 5;
+
+  let startPage = Math.max(
+    1,
+    currentPage - 2
+  );
+
+  const endPage = Math.min(
+    totalPages,
+    startPage + visiblePages - 1
+  );
+
+  if (
+    endPage - startPage + 1 <
+    visiblePages
+  ) {
+    startPage = Math.max(
+      1,
+      endPage - visiblePages + 1
+    );
+  }
+
+  return Array.from(
+    {
+      length:
+        endPage - startPage + 1,
+    },
+    (_, index) => startPage + index
+  );
 }
 
 function isVehicleCondition(
@@ -471,7 +580,11 @@ export default async function AdminInventoryPage({
       params.visibilidad
     );
 
-  const where = {
+  const requestedPage = parsePage(
+    params.pagina
+  );
+
+  const where: Prisma.VehicleWhereInput = {
     ...(search
       ? {
         OR: [
@@ -542,6 +655,26 @@ export default async function AdminInventoryPage({
       : {}),
   };
 
+  const filteredVehicleCount =
+    await prisma.vehicle.count({
+      where,
+    });
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(
+      filteredVehicleCount / PAGE_SIZE
+    )
+  );
+
+  const currentPage = Math.min(
+    requestedPage,
+    totalPages
+  );
+
+  const paginationSkip =
+    (currentPage - 1) * PAGE_SIZE;
+
   const [
     vehicles,
     brands,
@@ -554,7 +687,8 @@ export default async function AdminInventoryPage({
   ] = await Promise.all([
     prisma.vehicle.findMany({
       where,
-
+      skip: paginationSkip,
+      take: PAGE_SIZE,
       include: {
         brand: true,
         branch: true,
@@ -630,6 +764,46 @@ export default async function AdminInventoryPage({
     }),
   ]);
 
+  const inventoryQueryState: InventoryQueryState =
+  {
+    search,
+    brandId: selectedBrandId,
+    branchId: selectedBranchId,
+    condition: selectedCondition,
+    status: selectedStatus,
+    visibility: selectedVisibility,
+  };
+
+  const hasAdvancedFilters =
+    Boolean(selectedBrandId) ||
+    Boolean(selectedBranchId) ||
+    selectedCondition !== "TODAS" ||
+    selectedStatus !== "TODOS" ||
+    selectedVisibility !== "TODOS";
+
+  const hasFilters =
+    Boolean(search) ||
+    hasAdvancedFilters;
+
+  const activeFilterCount = [
+    Boolean(search),
+    Boolean(selectedBrandId),
+    Boolean(selectedBranchId),
+    selectedCondition !== "TODAS",
+    selectedStatus !== "TODOS",
+    selectedVisibility !== "TODOS",
+  ].filter(Boolean).length;
+
+  const firstVisibleVehicle =
+    filteredVehicleCount === 0
+      ? 0
+      : paginationSkip + 1;
+
+  const lastVisibleVehicle = Math.min(
+    paginationSkip + vehicles.length,
+    filteredVehicleCount
+  );
+
   const stats = [
     {
       title: "Unidades registradas",
@@ -664,14 +838,6 @@ export default async function AdminInventoryPage({
       tone: "amber" as const,
     },
   ];
-
-  const hasFilters =
-    Boolean(search) ||
-    Boolean(selectedBrandId) ||
-    Boolean(selectedBranchId) ||
-    selectedCondition !== "TODAS" ||
-    selectedStatus !== "TODOS" ||
-    selectedVisibility !== "TODOS";
 
   return (
     <div className="pb-10">
@@ -752,7 +918,7 @@ export default async function AdminInventoryPage({
       </section>
 
       {/* Filtros */}
-      <section className="mt-6 rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.04)] md:p-6">
+      <section className="mt-6 rounded-[22px] border border-black/[0.08] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.04)] md:p-6">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
             <div className="flex items-center gap-3">
@@ -765,155 +931,239 @@ export default async function AdminInventoryPage({
 
             <h2 className="mt-3 flex items-center gap-2 text-2xl font-black tracking-[-0.035em]">
               <SlidersHorizontal size={21} />
-              Filtros del inventario
+              Inventario
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Filtra por marca, condición, estado,
-              visibilidad o sucursal.
+              Busca directamente o despliega los
+              filtros secundarios.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full border border-slate-200 bg-[#f8fafb] px-4 py-2 text-xs font-black text-slate-600">
-              {vehicles.length} resultado
-              {vehicles.length === 1 ? "" : "s"}
-            </span>
-
-            {hasFilters && (
-              <Link
-                href="/admin/inventario"
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
-              >
-                Limpiar filtros
-              </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            {activeFilterCount > 0 && (
+              <span className="rounded-full border border-[#192a3a]/10 bg-[#e7edf1] px-4 py-2 text-xs font-black text-[#192a3a]">
+                {activeFilterCount} filtro
+                {activeFilterCount === 1
+                  ? ""
+                  : "s"}{" "}
+                activo
+                {activeFilterCount === 1
+                  ? ""
+                  : "s"}
+              </span>
             )}
+
+            <span className="rounded-full border border-slate-200 bg-[#f8fafb] px-4 py-2 text-xs font-black text-slate-600">
+              {filteredVehicleCount} resultado
+              {filteredVehicleCount === 1
+                ? ""
+                : "s"}
+            </span>
           </div>
         </div>
 
         <form
           action="/admin/inventario"
-          className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(220px,1.4fr)_repeat(5,minmax(135px,1fr))_auto]"
+          className="mt-6"
         >
-          <FilterSearchInput
-            defaultValue={search}
-          />
+          {/* Búsqueda principal */}
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+            <label className="block">
+              <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+                Buscar unidad
+              </span>
 
-          <FilterSelect
-            label="Marca"
-            name="marca"
-            defaultValue={
-              selectedBrandId || ""
-            }
-          >
-            <option value="">Todas</option>
+              <div className="relative">
+                <Search
+                  size={17}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                />
 
-            {brands.map((brand) => (
-              <option
-                key={brand.id}
-                value={brand.id}
+                <input
+                  name="q"
+                  defaultValue={search}
+                  placeholder="Modelo, marca, ciudad o sucursal"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
+                />
+              </div>
+            </label>
+
+            <button
+              type="submit"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-6 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] lg:self-end"
+            >
+              <Search size={17} />
+              Buscar
+            </button>
+
+            {hasFilters && (
+              <Link
+                href="/admin/inventario"
+                className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98] lg:self-end"
               >
-                {brand.name}
-              </option>
-            ))}
-          </FilterSelect>
+                Limpiar
+              </Link>
+            )}
+          </div>
 
-          <FilterSelect
-            label="Condición"
-            name="condicion"
-            defaultValue={selectedCondition}
+          {/* Filtros secundarios */}
+          <details
+            open={hasAdvancedFilters}
+            className="group mt-4 overflow-hidden rounded-[16px] border border-slate-200 bg-[#f8fafb]"
           >
-            <option value="TODAS">
-              Todas
-            </option>
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3">
+              <span className="flex items-center gap-2 text-xs font-black text-[#192a3a]">
+                <SlidersHorizontal size={16} />
+                Más filtros
+              </span>
 
-            <option value="NUEVO">
-              Nuevo
-            </option>
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-[#192a3a] transition group-open:rotate-90">
+                <ArrowRight size={14} />
+              </span>
+            </summary>
 
-            <option value="SEMINUEVO">
-              Seminuevo
-            </option>
-          </FilterSelect>
+            <div className="border-t border-slate-200 p-4">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                <FilterSelect
+                  label="Marca"
+                  name="marca"
+                  defaultValue={
+                    selectedBrandId || ""
+                  }
+                >
+                  <option value="">Todas</option>
 
-          <FilterSelect
-            label="Estado"
-            name="estado"
-            defaultValue={selectedStatus}
-          >
-            <option value="TODOS">
-              Todos
-            </option>
+                  {brands.map((brand) => (
+                    <option
+                      key={brand.id}
+                      value={brand.id}
+                    >
+                      {brand.name}
+                    </option>
+                  ))}
+                </FilterSelect>
 
-            <option value="DISPONIBLE">
-              Disponible
-            </option>
+                <FilterSelect
+                  label="Condición"
+                  name="condicion"
+                  defaultValue={
+                    selectedCondition
+                  }
+                >
+                  <option value="TODAS">
+                    Todas
+                  </option>
 
-            <option value="APARTADO">
-              Apartado
-            </option>
+                  <option value="NUEVO">
+                    Nuevo
+                  </option>
 
-            <option value="VENDIDO">
-              Vendido
-            </option>
+                  <option value="SEMINUEVO">
+                    Seminuevo
+                  </option>
+                </FilterSelect>
 
-            <option value="EN_TRANSITO">
-              En tránsito
-            </option>
+                <FilterSelect
+                  label="Estado"
+                  name="estado"
+                  defaultValue={selectedStatus}
+                >
+                  <option value="TODOS">
+                    Todos
+                  </option>
 
-            <option value="PROXIMAMENTE">
-              Próximamente
-            </option>
+                  <option value="DISPONIBLE">
+                    Disponible
+                  </option>
 
-            <option value="INACTIVO">
-              Inactivo
-            </option>
-          </FilterSelect>
+                  <option value="APARTADO">
+                    Apartado
+                  </option>
 
-          <FilterSelect
-            label="Visibilidad"
-            name="visibilidad"
-            defaultValue={selectedVisibility}
-          >
-            <option value="TODOS">
-              Todas
-            </option>
+                  <option value="VENDIDO">
+                    Vendido
+                  </option>
 
-            <option value="ACTIVO">
-              Visibles
-            </option>
+                  <option value="EN_TRANSITO">
+                    En tránsito
+                  </option>
 
-            <option value="OCULTO">
-              Ocultas
-            </option>
-          </FilterSelect>
+                  <option value="PROXIMAMENTE">
+                    Próximamente
+                  </option>
 
-          <FilterSelect
-            label="Sucursal"
-            name="sucursal"
-            defaultValue={
-              selectedBranchId || ""
-            }
-          >
-            <option value="">Todas</option>
+                  <option value="INACTIVO">
+                    Inactivo
+                  </option>
+                </FilterSelect>
 
-            {branches.map((branch) => (
-              <option
-                key={branch.id}
-                value={branch.id}
-              >
-                {branch.name} · {branch.city}
-              </option>
-            ))}
-          </FilterSelect>
+                <FilterSelect
+                  label="Visibilidad"
+                  name="visibilidad"
+                  defaultValue={
+                    selectedVisibility
+                  }
+                >
+                  <option value="TODOS">
+                    Todas
+                  </option>
 
-          <button
-            type="submit"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] xl:self-end"
-          >
-            <Search size={17} />
-            Filtrar
-          </button>
+                  <option value="ACTIVO">
+                    Visibles
+                  </option>
+
+                  <option value="OCULTO">
+                    Ocultas
+                  </option>
+                </FilterSelect>
+
+                <FilterSelect
+                  label="Sucursal"
+                  name="sucursal"
+                  defaultValue={
+                    selectedBranchId || ""
+                  }
+                >
+                  <option value="">Todas</option>
+
+                  {branches.map((branch) => (
+                    <option
+                      key={branch.id}
+                      value={branch.id}
+                    >
+                      {branch.name} ·{" "}
+                      {branch.city}
+                    </option>
+                  ))}
+                </FilterSelect>
+              </div>
+
+              <div className="mt-4 flex flex-col justify-end gap-3 sm:flex-row">
+                {hasAdvancedFilters && (
+                  <Link
+                    href={
+                      search
+                        ? `/admin/inventario?q=${encodeURIComponent(
+                          search
+                        )}`
+                        : "/admin/inventario"
+                    }
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:text-[#192a3a] active:scale-[0.98]"
+                  >
+                    Limpiar secundarios
+                  </Link>
+                )}
+
+                <button
+                  type="submit"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+                >
+                  Aplicar filtros
+                </button>
+              </div>
+            </div>
+          </details>
         </form>
       </section>
 
@@ -969,8 +1219,8 @@ export default async function AdminInventoryPage({
 
                       <span
                         className={`absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] backdrop-blur-sm ${vehicle.active
-                            ? "border-emerald-200 bg-emerald-50/95 text-emerald-700"
-                            : "border-slate-200 bg-white/95 text-slate-600"
+                          ? "border-emerald-200 bg-emerald-50/95 text-emerald-700"
+                          : "border-slate-200 bg-white/95 text-slate-600"
                           }`}
                       >
                         {vehicle.active ? (
@@ -1053,8 +1303,8 @@ export default async function AdminInventoryPage({
 
                         <div
                           className={`rounded-[16px] border p-4 ${publicVisible
-                              ? "border-emerald-200 bg-emerald-50"
-                              : "border-slate-100 bg-[#f8fafb]"
+                            ? "border-emerald-200 bg-emerald-50"
+                            : "border-slate-100 bg-[#f8fafb]"
                             }`}
                         >
                           <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
@@ -1063,8 +1313,8 @@ export default async function AdminInventoryPage({
 
                           <p
                             className={`mt-2 flex items-center gap-2 text-xs font-black ${publicVisible
-                                ? "text-emerald-700"
-                                : "text-slate-500"
+                              ? "text-emerald-700"
+                              : "text-slate-500"
                               }`}
                           >
                             <Tags size={15} />
@@ -1097,6 +1347,14 @@ export default async function AdminInventoryPage({
                 </article>
               );
             })}
+            <InventoryPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredVehicleCount}
+              firstItem={firstVisibleVehicle}
+              lastItem={lastVisibleVehicle}
+              filters={inventoryQueryState}
+            />
           </div>
         ) : (
           <div className="rounded-[22px] border border-dashed border-slate-300 bg-white p-10 text-center">
@@ -1498,5 +1756,103 @@ function VehicleActions({
         </details>
       </div>
     </aside>
+  );
+}
+function InventoryPagination({
+  currentPage,
+  totalPages,
+  totalItems,
+  firstItem,
+  lastItem,
+  filters,
+}: {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  firstItem: number;
+  lastItem: number;
+  filters: InventoryQueryState;
+}) {
+  if (totalItems === 0) {
+    return null;
+  }
+
+  const pages = getPaginationPages(
+    currentPage,
+    totalPages
+  );
+
+  return (
+    <nav
+      aria-label="Paginación del inventario"
+      className="mt-6 flex flex-col gap-4 rounded-[18px] border border-black/[0.08] bg-white p-4 shadow-[0_8px_28px_rgba(15,23,42,0.04)] sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p className="text-xs font-semibold text-slate-500">
+        Mostrando{" "}
+        <strong className="text-[#192a3a]">
+          {firstItem}–{lastItem}
+        </strong>{" "}
+        de{" "}
+        <strong className="text-[#192a3a]">
+          {totalItems}
+        </strong>{" "}
+        unidades
+      </p>
+
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+        {currentPage > 1 ? (
+          <Link
+            href={buildInventoryHref(
+              currentPage - 1,
+              filters
+            )}
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+          >
+            Anterior
+          </Link>
+        ) : (
+          <span className="inline-flex h-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl border border-slate-100 bg-slate-50 px-4 text-xs font-black text-slate-300">
+            Anterior
+          </span>
+        )}
+
+        {pages.map((page) => (
+          <Link
+            key={page}
+            href={buildInventoryHref(
+              page,
+              filters
+            )}
+            aria-current={
+              page === currentPage
+                ? "page"
+                : undefined
+            }
+            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-xs font-black transition active:scale-[0.98] ${page === currentPage
+                ? "border-[#192a3a] bg-[#192a3a] text-white"
+                : "border-slate-200 bg-white text-slate-600 hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a]"
+              }`}
+          >
+            {page}
+          </Link>
+        ))}
+
+        {currentPage < totalPages ? (
+          <Link
+            href={buildInventoryHref(
+              currentPage + 1,
+              filters
+            )}
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+          >
+            Siguiente
+          </Link>
+        ) : (
+          <span className="inline-flex h-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl border border-slate-100 bg-slate-50 px-4 text-xs font-black text-slate-300">
+            Siguiente
+          </span>
+        )}
+      </div>
+    </nav>
   );
 }
