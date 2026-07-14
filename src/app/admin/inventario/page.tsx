@@ -26,6 +26,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
 import { deletePublicFile } from "@/lib/uploads";
 import type { Prisma } from "@prisma/client";
+import { ConfirmSubmitButton } from "@/components/admin/ui/ConfirmSubmitButton";
 
 export const dynamic = "force-dynamic";
 
@@ -1703,57 +1704,22 @@ function VehicleActions({
           </button>
         </form>
 
-        <details className="group rounded-xl border border-red-200 bg-red-50">
-          <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-red-700">
-            <Trash2 size={15} />
+        <form action={deleteVehicle}>
+          <input
+            type="hidden"
+            name="vehicleId"
+            value={vehicle.id}
+          />
+
+          <ConfirmSubmitButton
+            confirmMessage={`¿Seguro que deseas eliminar esta unidad? Esta acción no se puede deshacer.`}
+            pendingText="Eliminando unidad..."
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-xs font-black text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Trash2 size={16} />
             Eliminar unidad
-          </summary>
-
-          <div className="border-t border-red-100 p-4">
-            <div className="flex gap-3">
-              <AlertTriangle
-                size={18}
-                className="mt-0.5 shrink-0 text-red-600"
-              />
-
-              <div>
-                <p className="text-xs font-black text-red-700">
-                  Acción irreversible
-                </p>
-
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  No podrá eliminarse si tiene
-                  solicitudes relacionadas.
-                </p>
-              </div>
-            </div>
-
-            <form
-              action={deleteVehicle}
-              className="mt-4 grid gap-3"
-            >
-              <input
-                type="hidden"
-                name="vehicleId"
-                value={vehicle.id}
-              />
-
-              <input
-                name="confirmText"
-                placeholder="Escribe ELIMINAR"
-                autoComplete="off"
-                className="h-11 rounded-xl border border-red-200 bg-white px-4 text-xs font-black text-red-700 outline-none placeholder:text-red-300 focus:border-red-400"
-              />
-
-              <button
-                type="submit"
-                className="h-11 rounded-xl bg-red-600 px-4 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-red-700 active:scale-[0.98]"
-              >
-                Eliminar definitivamente
-              </button>
-            </form>
-          </div>
-        </details>
+          </ConfirmSubmitButton>
+        </form>
       </div>
     </aside>
   );
@@ -1829,8 +1795,8 @@ function InventoryPagination({
                 : undefined
             }
             className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-xs font-black transition active:scale-[0.98] ${page === currentPage
-                ? "border-[#192a3a] bg-[#192a3a] text-white"
-                : "border-slate-200 bg-white text-slate-600 hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a]"
+              ? "border-[#192a3a] bg-[#192a3a] text-white"
+              : "border-slate-200 bg-white text-slate-600 hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a]"
               }`}
           >
             {page}

@@ -17,6 +17,7 @@ import {
   Search,
   SlidersHorizontal,
   Tags,
+  Trash2,
 } from "lucide-react";
 import {
   VehicleCategory,
@@ -26,6 +27,9 @@ import type { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
+import { redirect } from "next/navigation";
+import { deletePublicFile } from "@/lib/uploads";
+import { ConfirmSubmitButton } from "@/components/admin/ui/ConfirmSubmitButton";
 
 export const dynamic = "force-dynamic";
 
@@ -275,6 +279,192 @@ async function toggleCatalogModelActive(
   revalidateCatalogPaths();
 }
 
+async function deleteCatalogModel(
+  formData: FormData
+) {
+  "use server";
+
+  await requireAdmin();
+
+  const modelId = Number(
+    formData.get("modelId")
+  );
+
+  if (
+    !Number.isInteger(modelId) ||
+    modelId <= 0
+  ) {
+    redirect(
+      `/admin/catalogo?error=${encodeURIComponent(
+        "No se pudo identificar el modelo."
+      )}`
+    );
+  }
+
+  const catalogModel =
+    await prisma.catalogModel.findUnique({
+      where: {
+        id: modelId,
+      },
+
+      include: {
+        brand: {
+          select: {
+            name: true,
+          },
+        },
+
+        images: {
+          select: {
+            id: true,
+            url: true,
+          },
+        },
+      },
+    });
+
+  if (!catalogModel) {
+    redirect(
+      `/admin/catalogo?error=${encodeURIComponent(
+        "El modelo ya no existe o fue eliminado previamente."
+      )}`
+    );
+  }
+
+  /*
+   * Las unidades creadas desde una plantilla
+   * pueden conservar las mismas URLs.
+   */
+  const catalogUrls = Array.from(
+    new Set(
+      [
+        catalogModel.mainImage,
+        ...catalogModel.images.map(
+          (image) => image.url
+        ),
+      ].filter(
+        (url): url is string =>
+          Boolean(url?.trim())
+      )
+    )
+  );
+
+  const [
+    vehicleImageReferences,
+    vehicleMainImageReferences,
+  ] =
+    catalogUrls.length > 0
+      ? await Promise.all([
+        prisma.vehicleImage.findMany({
+          where: {
+            url: {
+              in: catalogUrls,
+            },
+          },
+
+          select: {
+            url: true,
+          },
+        }),
+
+        prisma.vehicle.findMany({
+          where: {
+            mainImage: {
+              in: catalogUrls,
+            },
+          },
+
+          select: {
+            mainImage: true,
+          },
+        }),
+      ])
+      : [[], []];
+
+  const referencedUrls = new Set<string>();
+
+  vehicleImageReferences.forEach(
+    (image) => {
+      referencedUrls.add(image.url);
+    }
+  );
+
+  vehicleMainImageReferences.forEach(
+    (vehicle) => {
+      if (vehicle.mainImage) {
+        referencedUrls.add(
+          vehicle.mainImage
+        );
+      }
+    }
+  );
+
+  try {
+    await prisma.$transaction([
+      prisma.catalogImage.deleteMany({
+        where: {
+          catalogModelId: modelId,
+        },
+      }),
+
+      prisma.catalogModel.delete({
+        where: {
+          id: modelId,
+        },
+      }),
+    ]);
+  } catch (error) {
+    console.error(
+      "Error eliminando modelo del catálogo:",
+      error
+    );
+
+    redirect(
+      `/admin/catalogo?error=${encodeURIComponent(
+        "No se pudo eliminar el modelo del catálogo."
+      )}`
+    );
+  }
+
+  /*
+   * Borra solo archivos locales que no estén
+   * siendo usados por unidades del inventario.
+   */
+  for (const url of catalogUrls) {
+    if (
+      !url.startsWith("/uploads/") ||
+      referencedUrls.has(url)
+    ) {
+      continue;
+    }
+
+    try {
+      await deletePublicFile(url);
+    } catch (error) {
+      console.error(
+        `El modelo fue eliminado, pero no se pudo borrar el archivo ${url}:`,
+        error
+      );
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/catalogo");
+  revalidatePath(
+    "/admin/catalogo/nuevo"
+  );
+  revalidatePath(
+    "/admin/inventario/nuevo"
+  );
+  revalidatePath("/catalogo");
+
+  redirect(
+    `/admin/catalogo?success=${encodeURIComponent(
+      `El modelo ${catalogModel.brand.name} ${catalogModel.name} fue eliminado correctamente.`
+    )}`
+  );
+}
+
 export default async function AdminCatalogPage({
   searchParams,
 }: AdminCatalogPageProps) {
@@ -307,9 +497,9 @@ export default async function AdminCatalogPage({
 
   const searchYear =
     search &&
-    Number.isInteger(numericSearch) &&
-    numericSearch >= 1900 &&
-    numericSearch <= 2100
+      Number.isInteger(numericSearch) &&
+      numericSearch >= 1900 &&
+      numericSearch <= 2100
       ? numericSearch
       : null;
 
@@ -371,36 +561,36 @@ export default async function AdminCatalogPage({
   }
 
   const where: Prisma.CatalogModelWhereInput =
-    {
-      ...(searchConditions.length > 0
-        ? {
-            OR: searchConditions,
-          }
-        : {}),
+  {
+    ...(searchConditions.length > 0
+      ? {
+        OR: searchConditions,
+      }
+      : {}),
 
-      ...(selectedBrandId > 0
-        ? {
-            brandId: selectedBrandId,
-          }
-        : {}),
+    ...(selectedBrandId > 0
+      ? {
+        brandId: selectedBrandId,
+      }
+      : {}),
 
-      ...(typeFilter !== "TODOS"
-        ? {
-            categoryType:
-              typeFilter,
-          }
-        : {}),
+    ...(typeFilter !== "TODOS"
+      ? {
+        categoryType:
+          typeFilter,
+      }
+      : {}),
 
-      ...(statusFilter === "ACTIVOS"
+    ...(statusFilter === "ACTIVOS"
+      ? {
+        active: true,
+      }
+      : statusFilter === "OCULTOS"
         ? {
-            active: true,
-          }
-        : statusFilter === "OCULTOS"
-          ? {
-              active: false,
-            }
-          : {}),
-    };
+          active: false,
+        }
+        : {}),
+  };
 
   const [
     brands,
@@ -529,47 +719,47 @@ export default async function AdminCatalogPage({
     icon: LucideIcon;
     tone: CatalogStatTone;
   }> = [
-    {
-      label: "Modelos",
-      value: totalModels,
-      description:
-        "Plantillas comerciales registradas.",
-      icon: Layers3,
-      tone: "navy",
-    },
-    {
-      label: "Activos",
-      value: activeModels,
-      description:
-        "Disponibles para crear unidades.",
-      icon: BadgeCheck,
-      tone: "emerald",
-    },
-    {
-      label: "Ocultos",
-      value: hiddenModels,
-      description:
-        "Modelos fuera de publicación.",
-      icon: EyeOff,
-      tone: "amber",
-    },
-    {
-      label: "Marcas",
-      value: brandsWithCatalog,
-      description:
-        "Marcas con modelos registrados.",
-      icon: Tags,
-      tone: "blue",
-    },
-    {
-      label: "Sin imagen",
-      value: modelsWithoutImage,
-      description:
-        "Modelos que necesitan portada.",
-      icon: ImageIcon,
-      tone: "red",
-    },
-  ];
+      {
+        label: "Modelos",
+        value: totalModels,
+        description:
+          "Plantillas comerciales registradas.",
+        icon: Layers3,
+        tone: "navy",
+      },
+      {
+        label: "Activos",
+        value: activeModels,
+        description:
+          "Disponibles para crear unidades.",
+        icon: BadgeCheck,
+        tone: "emerald",
+      },
+      {
+        label: "Ocultos",
+        value: hiddenModels,
+        description:
+          "Modelos fuera de publicación.",
+        icon: EyeOff,
+        tone: "amber",
+      },
+      {
+        label: "Marcas",
+        value: brandsWithCatalog,
+        description:
+          "Marcas con modelos registrados.",
+        icon: Tags,
+        tone: "blue",
+      },
+      {
+        label: "Sin imagen",
+        value: modelsWithoutImage,
+        description:
+          "Modelos que necesitan portada.",
+        icon: ImageIcon,
+        tone: "red",
+      },
+    ];
 
   const hasAdvancedFilters =
     brandFilter !== "TODAS" ||
@@ -594,17 +784,17 @@ export default async function AdminCatalogPage({
 
   const lastVisibleModel = Math.min(
     paginationSkip +
-      catalogModels.length,
+    catalogModels.length,
     filteredModelCount
   );
 
   const catalogQueryState: CatalogQueryState =
-    {
-      search,
-      brand: brandFilter,
-      type: typeFilter,
-      status: statusFilter,
-    };
+  {
+    search,
+    brand: brandFilter,
+    type: typeFilter,
+    status: statusFilter,
+  };
 
   return (
     <div className="pb-10">
@@ -878,8 +1068,8 @@ export default async function AdminCatalogPage({
                     href={
                       search
                         ? `/admin/catalogo?q=${encodeURIComponent(
-                            search
-                          )}`
+                          search
+                        )}`
                         : "/admin/catalogo"
                     }
                     className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:text-[#192a3a]"
@@ -1024,11 +1214,10 @@ export default async function AdminCatalogPage({
                         </span>
 
                         <span
-                          className={`absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] backdrop-blur-sm ${
-                            model.active
-                              ? "border-emerald-200 bg-emerald-50/95 text-emerald-700"
-                              : "border-slate-200 bg-white/95 text-slate-600"
-                          }`}
+                          className={`absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] backdrop-blur-sm ${model.active
+                            ? "border-emerald-200 bg-emerald-50/95 text-emerald-700"
+                            : "border-slate-200 bg-white/95 text-slate-600"
+                            }`}
                         >
                           {model.active ? (
                             <Eye size={13} />
@@ -1074,11 +1263,10 @@ export default async function AdminCatalogPage({
                           </div>
 
                           <span
-                            className={`w-fit rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${
-                              model.active
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                : "border-slate-200 bg-slate-100 text-slate-600"
-                            }`}
+                            className={`w-fit rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${model.active
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-slate-200 bg-slate-100 text-slate-600"
+                              }`}
                           >
                             {model.active
                               ? "Publicado"
@@ -1114,9 +1302,9 @@ export default async function AdminCatalogPage({
                             value={
                               hasPrice
                                 ? formatCurrency(
-                                    model.priceFrom ??
-                                      0
-                                  )
+                                  model.priceFrom ??
+                                  0
+                                )
                                 : "Sin precio"
                             }
                             highlighted
@@ -1168,6 +1356,8 @@ export default async function AdminCatalogPage({
                       <CatalogModelActions
                         modelId={model.id}
                         active={model.active}
+                        modelName={model.name}
+                        brandName={model.brand.name}
                       />
                     </div>
                   </article>
@@ -1340,11 +1530,10 @@ function CatalogTypeLink({
   return (
     <Link
       href={href}
-      className={`shrink-0 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition ${
-        active
-          ? "border-[#192a3a] bg-[#192a3a] text-white"
-          : "border-slate-200 bg-white text-slate-500 hover:border-[#192a3a] hover:text-[#192a3a]"
-      }`}
+      className={`shrink-0 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition ${active
+        ? "border-[#192a3a] bg-[#192a3a] text-white"
+        : "border-slate-200 bg-white text-slate-500 hover:border-[#192a3a] hover:text-[#192a3a]"
+        }`}
     >
       {label}
     </Link>
@@ -1362,22 +1551,20 @@ function CatalogDetail({
 }) {
   return (
     <div
-      className={`rounded-[16px] border p-4 ${
-        highlighted
-          ? "border-[#192a3a]/10 bg-[#e7edf1]"
-          : "border-slate-100 bg-[#f8fafb]"
-      }`}
+      className={`rounded-[16px] border p-4 ${highlighted
+        ? "border-[#192a3a]/10 bg-[#e7edf1]"
+        : "border-slate-100 bg-[#f8fafb]"
+        }`}
     >
       <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
         {label}
       </p>
 
       <p
-        className={`mt-2 text-xs font-black ${
-          highlighted
-            ? "text-[#192a3a]"
-            : "text-slate-700"
-        }`}
+        className={`mt-2 text-xs font-black ${highlighted
+          ? "text-[#192a3a]"
+          : "text-slate-700"
+          }`}
       >
         {value}
       </p>
@@ -1400,9 +1587,13 @@ function IssueBadge({
 function CatalogModelActions({
   modelId,
   active,
+  modelName,
+  brandName,
 }: {
   modelId: number;
   active: boolean;
+  modelName: string;
+  brandName: string;
 }) {
   return (
     <aside className="border-t border-slate-100 bg-[#f8fafb] p-5 xl:border-l xl:border-t-0">
@@ -1462,6 +1653,26 @@ function CatalogModelActions({
               </>
             )}
           </button>
+        </form>
+
+        <form action={deleteCatalogModel}>
+          <input
+            type="hidden"
+            name="modelId"
+            value={modelId}
+          />
+
+          <ConfirmSubmitButton
+            title="Eliminar modelo del catálogo"
+            confirmMessage={`Estás por eliminar "${brandName} ${modelName}" del catálogo base. Las unidades que ya fueron creadas permanecerán en el inventario.`}
+            confirmText="Eliminar definitivamente"
+            cancelText="Conservar modelo"
+            pendingText="Eliminando modelo..."
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-xs font-black text-red-700 transition hover:bg-red-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Trash2 size={16} />
+            Eliminar modelo
+          </ConfirmSubmitButton>
         </form>
       </div>
     </aside>
@@ -1540,11 +1751,10 @@ function CatalogPagination({
                 ? "page"
                 : undefined
             }
-            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-xs font-black transition ${
-              page === currentPage
-                ? "border-[#192a3a] bg-[#192a3a] text-white"
-                : "border-slate-200 bg-white text-slate-600 hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a]"
-            }`}
+            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-xs font-black transition ${page === currentPage
+              ? "border-[#192a3a] bg-[#192a3a] text-white"
+              : "border-slate-200 bg-white text-slate-600 hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a]"
+              }`}
           >
             {page}
           </Link>

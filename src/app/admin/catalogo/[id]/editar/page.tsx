@@ -38,6 +38,7 @@ import {
   saveVehicleMediaFiles,
 } from "@/lib/uploads";
 import { BrandCategorySelects } from "@/components/admin/catalog/BrandCategorySelects";
+import { ConfirmSubmitButton } from "@/components/admin/ui/ConfirmSubmitButton";
 
 export const dynamic = "force-dynamic";
 
@@ -674,6 +675,7 @@ async function setCatalogMainImage(
     )}`
   );
 }
+
 
 async function deleteCatalogImage(
   modelId: number,
@@ -1501,19 +1503,24 @@ export default async function EditCatalogModelPage({
                                 </button>
                               )}
 
-                            <button
-                              type="submit"
+                            <ConfirmSubmitButton
                               formAction={deleteCatalogImage.bind(
                                 null,
                                 catalogModel.id,
                                 image.id
                               )}
                               formNoValidate
-                              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-[10px] font-black text-red-700 transition hover:bg-red-100 active:scale-[0.98]"
+                              confirmMessage={
+                                image.type === VehicleMediaType.VIDEO
+                                  ? "¿Seguro que deseas eliminar este video? Esta acción no se puede deshacer."
+                                  : "¿Seguro que deseas eliminar esta imagen? Esta acción no se puede deshacer."
+                              }
+                              pendingText="Eliminando..."
+                              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-[10px] font-black text-red-700 transition hover:bg-red-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               <Trash2 size={14} />
                               Eliminar archivo
-                            </button>
+                            </ConfirmSubmitButton>
                           </div>
                         </article>
                       );

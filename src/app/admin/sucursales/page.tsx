@@ -27,6 +27,8 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
+import { ConfirmSubmitButton } from "@/components/admin/ui/ConfirmSubmitButton";
+import { deleteBranchImageFile } from "@/lib/branch-uploads";
 
 export const dynamic = "force-dynamic";
 
@@ -212,34 +214,17 @@ async function toggleBranchActive(
 }
 
 async function deleteBranch(
-  formData: FormData
+  branchId: number
 ) {
   "use server";
 
   await requireAdmin();
 
-  const branchId = Number(
-    formData.get("branchId")
-  );
-
-  const confirmText = String(
-    formData.get("confirmText") || ""
-  ).trim();
-
-  if (!branchId) {
-    redirect(
-      `/admin/sucursales?error=${encodeURIComponent(
-        "No se pudo identificar la sucursal."
-      )}`
-    );
-  }
-
-  if (confirmText !== "ELIMINAR") {
-    redirect(
-      `/admin/sucursales?error=${encodeURIComponent(
-        "Para eliminar la sucursal debes escribir ELIMINAR."
-      )}`
-    );
+  if (
+    !Number.isInteger(branchId) ||
+    branchId <= 0
+  ) {
+    return;
   }
 
   const branch =
@@ -250,7 +235,8 @@ async function deleteBranch(
 
       select: {
         id: true,
-        name: true,
+        logoUrl: true,
+        coverImageUrl: true,
 
         _count: {
           select: {
@@ -262,25 +248,16 @@ async function deleteBranch(
     });
 
   if (!branch) {
-    redirect(
-      `/admin/sucursales?error=${encodeURIComponent(
-        "La sucursal ya no existe."
-      )}`
-    );
+    return;
   }
 
-  if (branch._count.vehicles > 0) {
+  if (
+    branch._count.vehicles > 0 ||
+    branch._count.leads > 0
+  ) {
     redirect(
       `/admin/sucursales?error=${encodeURIComponent(
-        `No se puede eliminar "${branch.name}" porque tiene ${branch._count.vehicles} vehículo(s) asociado(s). Primero reasigna o elimina esas unidades.`
-      )}`
-    );
-  }
-
-  if (branch._count.leads > 0) {
-    redirect(
-      `/admin/sucursales?error=${encodeURIComponent(
-        `No se puede eliminar "${branch.name}" porque tiene ${branch._count.leads} solicitud(es) asociada(s). Puedes ocultarla en lugar de eliminarla.`
+        "No se puede eliminar la sucursal porque tiene unidades o solicitudes relacionadas."
       )}`
     );
   }
@@ -291,7 +268,29 @@ async function deleteBranch(
     },
   });
 
-  revalidateBranchPaths(branchId);
+  if (branch.logoUrl) {
+    try {
+      await deleteBranchImageFile(
+        branch.logoUrl
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  if (branch.coverImageUrl) {
+    try {
+      await deleteBranchImageFile(
+        branch.coverImageUrl
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/sucursales");
+  revalidatePath("/sucursales");
 
   redirect(
     `/admin/sucursales?success=${encodeURIComponent(
@@ -1080,11 +1079,10 @@ function BranchActions({
         >
           <button
             type="submit"
-            className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-3 text-xs font-black transition active:scale-[0.98] ${
-              active
-                ? "border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200"
-                : "border-[#192a3a]/10 bg-[#e7edf1] text-[#192a3a] hover:bg-[#d9e2e8]"
-            }`}
+            className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-3 text-xs font-black transition active:scale-[0.98] ${active
+              ? "border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200"
+              : "border-[#192a3a]/10 bg-[#e7edf1] text-[#192a3a] hover:bg-[#d9e2e8]"
+              }`}
           >
             {active ? (
               <>
@@ -1099,65 +1097,23 @@ function BranchActions({
             )}
           </button>
         </form>
-      </div>
 
-      <details className="group mt-3 rounded-xl border border-red-200 bg-red-50">
-        <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-red-700">
-          <Trash2 size={15} />
-          Eliminar sucursal
-        </summary>
-
-        <div className="border-t border-red-100 p-4">
-          <div className="flex gap-3">
-            <AlertTriangle
-              size={18}
-              className="mt-0.5 shrink-0 text-red-600"
-            />
-
-            <div>
-              <p className="text-xs font-black text-red-700">
-                {hasRelations
-                  ? "Eliminación bloqueada"
-                  : "Acción irreversible"}
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                {hasRelations
-                  ? `La sucursal tiene ${relatedVehicles} vehículo(s) y ${relatedLeads} solicitud(es) asociada(s). Primero debes reasignar o eliminar esos registros.`
-                  : "La sucursal no tiene vehículos ni solicitudes asociadas. Escribe ELIMINAR para confirmar."}
-              </p>
-            </div>
-          </div>
-
-          <form
-            action={deleteBranch}
-            className="mt-4 grid gap-3"
+        <form
+          action={deleteBranch.bind(
+            null,
+            branchId,
+          )}
+        >
+          <ConfirmSubmitButton
+            confirmMessage={`¿Seguro que deseas eliminar esta sucursal"? No podrá eliminarse si tiene unidades o solicitudes relacionadas.`}
+            pendingText="Eliminando sucursal..."
+            className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-xs font-black text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <input
-              type="hidden"
-              name="branchId"
-              value={branchId}
-            />
-
-            <input
-              name="confirmText"
-              placeholder="Escribe ELIMINAR"
-              autoComplete="off"
-              disabled={hasRelations}
-              className="h-11 rounded-xl border border-red-200 bg-white px-4 text-xs font-black text-red-700 outline-none placeholder:text-red-300 focus:border-red-400 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-            />
-
-            <button
-              type="submit"
-              disabled={hasRelations}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-red-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45"
-            >
-              <Trash2 size={15} />
-              Eliminar definitivamente
-            </button>
-          </form>
-        </div>
-      </details>
+            <Trash2 size={15} />
+            Eliminar sucursal
+          </ConfirmSubmitButton>
+        </form>
+      </div>
     </div>
   );
 }

@@ -19,6 +19,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-auth";
+import { ConfirmSubmitButton } from "@/components/admin/ui/ConfirmSubmitButton";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +85,9 @@ async function createCatalogCategory(
   formData: FormData
 ) {
   "use server";
+
+  await requireAdmin();
+
 
   const brandId = getNumberValue(
     formData,
@@ -175,6 +180,8 @@ async function toggleCatalogCategoryActive(
 ) {
   "use server";
 
+  await requireAdmin();
+
   const categoryId = Number(
     formData.get("categoryId")
   );
@@ -214,26 +221,19 @@ async function deleteCatalogCategory(
 ) {
   "use server";
 
+  await requireAdmin();
+
   const categoryId = Number(
     formData.get("categoryId")
   );
 
-  const confirmText = String(
-    formData.get("confirmText") || ""
-  ).trim();
-
-  if (!categoryId) {
+  if (
+    !Number.isInteger(categoryId) ||
+    categoryId <= 0
+  ) {
     redirect(
       `/admin/catalogo/categorias?error=${encodeURIComponent(
         "No se pudo identificar la categoría."
-      )}`
-    );
-  }
-
-  if (confirmText !== "ELIMINAR") {
-    redirect(
-      `/admin/catalogo/categorias?error=${encodeURIComponent(
-        "Para eliminar la categoría debes escribir ELIMINAR."
       )}`
     );
   }
@@ -245,8 +245,17 @@ async function deleteCatalogCategory(
       },
 
       include: {
-        children: true,
-        models: true,
+        children: {
+          select: {
+            id: true,
+          },
+        },
+
+        models: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
 
@@ -269,7 +278,7 @@ async function deleteCatalogCategory(
   if (category.models.length > 0) {
     redirect(
       `/admin/catalogo/categorias?error=${encodeURIComponent(
-        `No se puede eliminar "${category.name}" porque tiene ${category.models.length} modelo(s) asociado(s). Primero edita esos modelos y cambia su categoría.`
+        `No se puede eliminar "${category.name}" porque tiene ${category.models.length} modelo(s) asociado(s). Primero cambia la categoría de esos modelos.`
       )}`
     );
   }
@@ -302,6 +311,8 @@ async function deleteCatalogCategory(
 export default async function CatalogCategoriesPage({
   searchParams,
 }: CatalogCategoriesPageProps) {
+
+  await requireAdmin();
   const params = await searchParams;
 
   const [brands, categories] =
@@ -856,8 +867,8 @@ function CategoryCard({
 
         <span
           className={`shrink-0 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] ${category.active
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-slate-200 bg-slate-100 text-slate-600"
+            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+            : "border-slate-200 bg-slate-100 text-slate-600"
             }`}
         >
           {category.active
@@ -919,60 +930,52 @@ function CategoryCard({
           </button>
         </form>
 
-        <details className="group mt-3 rounded-xl border border-red-200 bg-red-50">
-          <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-red-700">
-            <Trash2 size={15} />
-            Eliminar categoría
-          </summary>
+        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-4">
+          <div className="flex gap-3">
+            <AlertTriangle
+              size={18}
+              className="mt-0.5 shrink-0 text-red-600"
+            />
 
-          <div className="border-t border-red-100 p-4">
-            <div className="flex gap-3">
-              <AlertTriangle
-                size={18}
-                className="mt-0.5 shrink-0 text-red-600"
-              />
+            <div>
+              <p className="text-xs font-black text-red-700">
+                {canDelete
+                  ? "Eliminar categoría"
+                  : "Categoría relacionada"}
+              </p>
 
-              <div>
-                <p className="text-xs font-black text-red-700">
-                  {canDelete
-                    ? "Acción irreversible"
-                    : "Categoría relacionada"}
-                </p>
-
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  {canDelete
-                    ? "Esta categoría no tiene modelos ni subcategorías relacionadas."
-                    : "No podrá eliminarse mientras tenga modelos o subcategorías relacionadas."}
-                </p>
-              </div>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                {canDelete
+                  ? "Se solicitará una confirmación antes de eliminarla definitivamente."
+                  : `No puede eliminarse porque tiene ${category.models.length} modelo(s) y ${category.children.length} subcategoría(s) relacionadas.`}
+              </p>
             </div>
-
-            <form
-              action={deleteCatalogCategory}
-              className="mt-4 grid gap-3"
-            >
-              <input
-                type="hidden"
-                name="categoryId"
-                value={category.id}
-              />
-
-              <input
-                name="confirmText"
-                placeholder="Escribe ELIMINAR"
-                autoComplete="off"
-                className="h-11 rounded-xl border border-red-200 bg-white px-4 text-xs font-black text-red-700 outline-none placeholder:text-red-300 focus:border-red-400"
-              />
-
-              <button
-                type="submit"
-                className="h-11 rounded-xl bg-red-600 px-4 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-red-700 active:scale-[0.98]"
-              >
-                Eliminar definitivamente
-              </button>
-            </form>
           </div>
-        </details>
+
+          <form
+            action={deleteCatalogCategory}
+            className="mt-4"
+          >
+            <input
+              type="hidden"
+              name="categoryId"
+              value={category.id}
+            />
+
+            <ConfirmSubmitButton
+              confirmMessage={`¿Seguro que deseas eliminar la categoría "${category.name}"? Esta acción no se puede deshacer.`}
+              pendingText="Eliminando categoría..."
+              disabled={!canDelete}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-red-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-red-200 disabled:text-red-400"
+            >
+              <Trash2 size={15} />
+
+              {canDelete
+                ? "Eliminar categoría"
+                : "No se puede eliminar"}
+            </ConfirmSubmitButton>
+          </form>
+        </div>
       </div>
     </article>
   );
