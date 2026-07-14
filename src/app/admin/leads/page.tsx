@@ -1,9 +1,7 @@
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import type { LucideIcon } from "lucide-react";
 import {
-  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   BadgeCheck,
@@ -34,6 +32,13 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { formatCurrency } from "@/lib/formatters";
+import {
+  AdminHero,
+  AdminInput,
+  AdminPagination,
+  AdminSelect,
+  AdminSummaryCard,
+} from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -242,41 +247,6 @@ function getExclusiveEndDate(
   date.setDate(date.getDate() + 1);
 
   return date;
-}
-
-function getPaginationPages(
-  currentPage: number,
-  totalPages: number
-) {
-  const visiblePages = 5;
-
-  let startPage = Math.max(
-    1,
-    currentPage - 2
-  );
-
-  const endPage = Math.min(
-    totalPages,
-    startPage + visiblePages - 1
-  );
-
-  if (
-    endPage - startPage + 1 <
-    visiblePages
-  ) {
-    startPage = Math.max(
-      1,
-      endPage - visiblePages + 1
-    );
-  }
-
-  return Array.from(
-    {
-      length:
-        endPage - startPage + 1,
-    },
-    (_, index) => startPage + index
-  );
 }
 
 function getBusinessAreaWhere(
@@ -780,32 +750,6 @@ function getMailHref(
     : `mailto:${email}`;
 }
 
-function buildFilterHref(
-  type: string,
-  status: string,
-  search = ""
-) {
-  const params = new URLSearchParams();
-
-  if (type !== "TODOS") {
-    params.set("tipo", type);
-  }
-
-  if (status !== "TODOS") {
-    params.set("estado", status);
-  }
-
-  if (search.trim()) {
-    params.set("q", search.trim());
-  }
-
-  const query = params.toString();
-
-  return query
-    ? `/admin/leads?${query}`
-    : "/admin/leads";
-}
-
 function buildExportHref(
   type: string,
   status: string,
@@ -1282,28 +1226,13 @@ export default async function AdminLeadsPage({
   return (
     <div className="pb-10">
       {/* Encabezado */}
-      <section className="relative overflow-hidden rounded-[22px] bg-[#192a3a] px-5 py-7 text-white shadow-[0_18px_50px_rgba(15,23,42,0.14)] md:px-7 md:py-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_32%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
-
-        <div className="relative flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#dfe7ec] backdrop-blur-sm">
-              <MessageSquare size={15} />
-              CRM comercial
-            </div>
-
-            <h1 className="mt-4 text-3xl font-black tracking-[-0.045em] md:text-4xl lg:text-5xl">
-              Solicitudes
-            </h1>
-
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-white/60 md:text-base">
-              Gestiona cotizaciones, pruebas de
-              manejo, citas, servicios,
-              financiamientos y contactos recibidos.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
+      <AdminHero
+        eyebrow="CRM comercial"
+        title="Solicitudes"
+        description="Gestiona cotizaciones, pruebas de manejo, citas, servicios, financiamientos y contactos recibidos."
+        icon={MessageSquare}
+        actions={
+          <>
             <a
               href={buildExportHref(
                 typeFilter,
@@ -1323,17 +1252,25 @@ export default async function AdminLeadsPage({
               <Car size={17} />
               Inventario
             </Link>
-          </div>
-        </div>
-      </section>
+          </>
+        }
+      />
 
       {/* Estadísticas */}
       <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
         {stats.map((stat) => (
-          <LeadStatCard
+          <Link
             key={stat.title}
-            {...stat}
-          />
+            href={stat.href}
+            className="group transition hover:-translate-y-1"
+          >
+            <AdminSummaryCard
+              icon={stat.icon}
+              label={stat.title}
+              value={stat.value}
+              tone={stat.tone}
+            />
+          </Link>
         ))}
       </section>
 
@@ -1443,7 +1380,7 @@ export default async function AdminLeadsPage({
 
             <div className="border-t border-slate-200 p-4">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <LeadFilterSelect
+                <AdminSelect
                   label="Tipo técnico"
                   name="tipo"
                   defaultValue={typeFilter}
@@ -1456,9 +1393,9 @@ export default async function AdminLeadsPage({
                       {option.label}
                     </option>
                   ))}
-                </LeadFilterSelect>
+                </AdminSelect>
 
-                <LeadFilterSelect
+                <AdminSelect
                   label="Estado"
                   name="estado"
                   defaultValue={statusFilter}
@@ -1471,9 +1408,9 @@ export default async function AdminLeadsPage({
                       {option.label}
                     </option>
                   ))}
-                </LeadFilterSelect>
+                </AdminSelect>
 
-                <LeadFilterSelect
+                <AdminSelect
                   label="Área comercial"
                   name="area"
                   defaultValue={businessFilter}
@@ -1513,9 +1450,9 @@ export default async function AdminLeadsPage({
                   <option value="CONTACTO">
                     Contacto
                   </option>
-                </LeadFilterSelect>
+                </AdminSelect>
 
-                <LeadFilterSelect
+                <AdminSelect
                   label="Sucursal"
                   name="sucursal"
                   defaultValue={
@@ -1541,17 +1478,19 @@ export default async function AdminLeadsPage({
                         : ""}
                     </option>
                   ))}
-                </LeadFilterSelect>
+                </AdminSelect>
 
-                <LeadDateInput
+                <AdminInput
                   label="Recibidas desde"
                   name="desde"
+                  type="date"
                   defaultValue={dateFromValue}
                 />
 
-                <LeadDateInput
+                <AdminInput
                   label="Recibidas hasta"
                   name="hasta"
+                  type="date"
                   defaultValue={dateToValue}
                 />
               </div>
@@ -1968,113 +1907,23 @@ export default async function AdminLeadsPage({
             </Link>
           </div>
         )}
-        <LeadsPagination
+        <AdminPagination
           currentPage={currentPage}
           totalPages={totalPages}
           totalItems={filteredLeadCount}
           firstItem={firstVisibleLead}
           lastItem={lastVisibleLead}
-          filters={leadQueryState}
+          itemLabel="solicitud"
+          itemLabelPlural="solicitudes"
+          hrefForPage={(page) =>
+            buildLeadsHref({
+              ...leadQueryState,
+              page,
+            })
+          }
         />
       </section>
     </div>
-  );
-}
-
-function LeadStatCard({
-  title,
-  value,
-  icon: Icon,
-  tone,
-  href,
-}: {
-  title: string;
-  value: number;
-  icon: LucideIcon;
-  tone:
-  | "navy"
-  | "blue"
-  | "violet"
-  | "amber"
-  | "emerald"
-  | "red";
-  href: string;
-}) {
-  const tones = {
-    navy: "border-[#192a3a]/10 bg-[#e7edf1] text-[#192a3a]",
-    blue:
-      "border-blue-100 bg-blue-50 text-blue-700",
-    violet:
-      "border-violet-100 bg-violet-50 text-violet-700",
-    amber:
-      "border-amber-100 bg-amber-50 text-amber-700",
-    emerald:
-      "border-emerald-100 bg-emerald-50 text-emerald-700",
-    red:
-      "border-red-100 bg-red-50 text-red-700",
-  };
-
-  return (
-    <Link
-      href={href}
-      className="group rounded-[20px] border border-black/[0.08] bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)] transition hover:-translate-y-1 hover:border-[#192a3a]/25 hover:shadow-[0_16px_35px_rgba(15,23,42,0.08)]"
-    >
-      <span
-        className={`grid h-11 w-11 place-items-center rounded-xl border ${tones[tone]}`}
-      >
-        <Icon size={20} />
-      </span>
-
-      <p className="mt-5 text-3xl font-black tracking-[-0.05em] text-[#192a3a]">
-        {value}
-      </p>
-
-      <p className="mt-1 text-xs font-black uppercase tracking-[0.1em] text-slate-500">
-        {title}
-      </p>
-    </Link>
-  );
-}
-
-function FilterGroup({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <p className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
-        {title}
-      </p>
-
-      <div className="flex flex-wrap gap-2">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function FilterPill({
-  href,
-  active,
-  label,
-}: {
-  href: string;
-  active: boolean;
-  label: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.08em] transition ${active
-        ? "border-[#192a3a] bg-[#192a3a] text-white"
-        : "border-slate-200 bg-white text-slate-500 hover:border-[#192a3a] hover:text-[#192a3a]"
-        }`}
-    >
-      {label}
-    </Link>
   );
 }
 
@@ -2169,37 +2018,31 @@ function LeadActions({
         )}
         className="mt-4 grid gap-3"
       >
-        <label>
-          <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-            Estado
-          </span>
+        <AdminSelect
+          label="Estado"
+          name="status"
+          defaultValue={status}
+        >
+          <option value="NUEVO">
+            Nuevo
+          </option>
 
-          <select
-            name="status"
-            defaultValue={status}
-            className="h-11 w-full rounded-xl border border-slate-200 bg-[#f8fafb] px-3 text-xs font-black text-slate-700 outline-none transition focus:border-[#192a3a] focus:bg-white"
-          >
-            <option value="NUEVO">
-              Nuevo
-            </option>
+          <option value="CONTACTADO">
+            Contactado
+          </option>
 
-            <option value="CONTACTADO">
-              Contactado
-            </option>
+          <option value="EN_SEGUIMIENTO">
+            En seguimiento
+          </option>
 
-            <option value="EN_SEGUIMIENTO">
-              En seguimiento
-            </option>
+          <option value="CERRADO">
+            Cerrado
+          </option>
 
-            <option value="CERRADO">
-              Cerrado
-            </option>
-
-            <option value="PERDIDO">
-              Perdido
-            </option>
-          </select>
-        </label>
+          <option value="PERDIDO">
+            Perdido
+          </option>
+        </AdminSelect>
 
         <button
           type="submit"
@@ -2252,58 +2095,6 @@ function LeadActions({
     </aside>
   );
 }
-function LeadFilterSelect({
-  label,
-  name,
-  defaultValue,
-  children,
-}: {
-  label: string;
-  name: string;
-  defaultValue: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-        {label}
-      </span>
-
-      <select
-        name={name}
-        defaultValue={defaultValue}
-        className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-[#192a3a] focus:ring-2 focus:ring-[#192a3a]/10"
-      >
-        {children}
-      </select>
-    </label>
-  );
-}
-
-function LeadDateInput({
-  label,
-  name,
-  defaultValue,
-}: {
-  label: string;
-  name: string;
-  defaultValue: string;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-        {label}
-      </span>
-
-      <input
-        type="date"
-        name={name}
-        defaultValue={defaultValue}
-        className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-[#192a3a] focus:ring-2 focus:ring-[#192a3a]/10"
-      />
-    </label>
-  );
-}
 
 function LeadFilterPill({
   href,
@@ -2318,114 +2109,11 @@ function LeadFilterPill({
     <Link
       href={href}
       className={`shrink-0 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.08em] transition ${active
-          ? "border-[#192a3a] bg-[#192a3a] text-white"
-          : "border-slate-200 bg-white text-slate-500 hover:border-[#192a3a] hover:text-[#192a3a]"
+        ? "border-[#192a3a] bg-[#192a3a] text-white"
+        : "border-slate-200 bg-white text-slate-500 hover:border-[#192a3a] hover:text-[#192a3a]"
         }`}
     >
       {label}
     </Link>
-  );
-}
-
-function LeadsPagination({
-  currentPage,
-  totalPages,
-  totalItems,
-  firstItem,
-  lastItem,
-  filters,
-}: {
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  firstItem: number;
-  lastItem: number;
-  filters: LeadQueryState;
-}) {
-  if (totalItems === 0) {
-    return null;
-  }
-
-  const pages = getPaginationPages(
-    currentPage,
-    totalPages
-  );
-
-  return (
-    <nav
-      aria-label="Paginación de solicitudes"
-      className="mt-6 flex flex-col gap-4 rounded-[18px] border border-black/[0.08] bg-white p-4 shadow-[0_8px_28px_rgba(15,23,42,0.04)] sm:flex-row sm:items-center sm:justify-between"
-    >
-      <p className="text-xs font-semibold text-slate-500">
-        Mostrando{" "}
-        <strong className="text-[#192a3a]">
-          {firstItem}–{lastItem}
-        </strong>{" "}
-        de{" "}
-        <strong className="text-[#192a3a]">
-          {totalItems}
-        </strong>{" "}
-        solicitudes
-      </p>
-
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-        {currentPage > 1 ? (
-          <Link
-            href={buildLeadsHref({
-              ...filters,
-              page: currentPage - 1,
-            })}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
-          >
-            <ArrowLeft size={14} />
-            Anterior
-          </Link>
-        ) : (
-          <span className="inline-flex h-10 shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4 text-xs font-black text-slate-300">
-            <ArrowLeft size={14} />
-            Anterior
-          </span>
-        )}
-
-        {pages.map((page) => (
-          <Link
-            key={page}
-            href={buildLeadsHref({
-              ...filters,
-              page,
-            })}
-            aria-current={
-              page === currentPage
-                ? "page"
-                : undefined
-            }
-            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-xs font-black transition active:scale-[0.98] ${page === currentPage
-                ? "border-[#192a3a] bg-[#192a3a] text-white"
-                : "border-slate-200 bg-white text-slate-600 hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a]"
-              }`}
-          >
-            {page}
-          </Link>
-        ))}
-
-        {currentPage < totalPages ? (
-          <Link
-            href={buildLeadsHref({
-              ...filters,
-              page: currentPage + 1,
-            })}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
-          >
-            Siguiente
-            <ArrowRight size={14} />
-          </Link>
-        ) : (
-          <span className="inline-flex h-10 shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4 text-xs font-black text-slate-300">
-            Siguiente
-            <ArrowRight size={14} />
-          </span>
-        )}
-      </div>
-    </nav>
   );
 }

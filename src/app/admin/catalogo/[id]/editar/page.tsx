@@ -1,26 +1,18 @@
-import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   notFound,
   redirect,
 } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import type { LucideIcon } from "lucide-react";
 import {
-  AlertCircle,
-  ArrowLeft,
-  ArrowRight,
-  BadgeCheck,
-  CalendarDays,
+  BookOpen,
   CheckCircle2,
   Eye,
   EyeOff,
   ImageIcon,
-  Info,
   Layers3,
   Plus,
   Save,
-  Sparkles,
   Star,
   Tags,
   Trash2,
@@ -31,14 +23,23 @@ import {
   VehicleCategory,
   VehicleMediaType,
 } from "@prisma/client";
+import {
+  AdminAlert,
+  AdminHero,
+  AdminInput,
+  AdminSection,
+  AdminSelect,
+  AdminSummaryCard,
+  AdminTextarea,
+  AdminToggleOption,
+} from "@/components/admin/ui";
+import { BrandCategorySelects } from "@/components/admin/catalog/BrandCategorySelects";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
   deletePublicFile,
   saveVehicleMediaFiles,
 } from "@/lib/uploads";
-import { BrandCategorySelects } from "@/components/admin/catalog/BrandCategorySelects";
-import { ConfirmSubmitButton } from "@/components/admin/ui/ConfirmSubmitButton";
 
 export const dynamic = "force-dynamic";
 
@@ -53,13 +54,7 @@ type EditCatalogModelPageProps = {
   }>;
 };
 
-const validCategories: VehicleCategory[] = [
-  VehicleCategory.AUTO,
-  VehicleCategory.MOTO,
-  VehicleCategory.TODOTERRENO,
-];
-
-function getStringValue(
+function getTextValue(
   formData: FormData,
   fieldName: string
 ) {
@@ -68,13 +63,28 @@ function getStringValue(
   ).trim();
 }
 
+function getPositiveIntegerValue(
+  formData: FormData,
+  fieldName: string
+) {
+  const value = Number(
+    formData.get(fieldName)
+  );
+
+  return Number.isInteger(value) &&
+    value > 0
+    ? value
+    : 0;
+}
+
 function getOptionalNumberValue(
   formData: FormData,
   fieldName: string
 ) {
-  const rawValue = String(
-    formData.get(fieldName) ?? ""
-  ).trim();
+  const rawValue = getTextValue(
+    formData,
+    fieldName
+  );
 
   if (!rawValue) {
     return null;
@@ -85,6 +95,25 @@ function getOptionalNumberValue(
   return Number.isFinite(value)
     ? value
     : null;
+}
+
+function getSortOrderValue(
+  formData: FormData
+) {
+  const rawValue = getTextValue(
+    formData,
+    "sortOrder"
+  );
+
+  if (!rawValue) {
+    return 0;
+  }
+
+  const value = Number(rawValue);
+
+  return Number.isInteger(value)
+    ? value
+    : Number.NaN;
 }
 
 function slugify(value: string) {
@@ -133,11 +162,18 @@ async function getUniqueCatalogSlug(
 
 function getVehicleCategoryValue(
   value: FormDataEntryValue | null
-): VehicleCategory {
+) {
   const categoryValue = String(
     value ||
     VehicleCategory.TODOTERRENO
   );
+
+  const validCategories: VehicleCategory[] =
+    [
+      VehicleCategory.AUTO,
+      VehicleCategory.MOTO,
+      VehicleCategory.TODOTERRENO,
+    ];
 
   return validCategories.includes(
     categoryValue as VehicleCategory
@@ -155,13 +191,36 @@ function getCategoryTypeLabel(
   > = {
     AUTO: "Auto",
     MOTO: "Moto",
-    TODOTERRENO: "Todoterreno",
+    TODOTERRENO: "Todo terreno",
   };
 
   return labels[category];
 }
 
-function redirectEditError(
+function isValidImageReference(
+  value: string
+) {
+  if (!value) {
+    return true;
+  }
+
+  if (value.startsWith("/")) {
+    return true;
+  }
+
+  try {
+    const url = new URL(value);
+
+    return (
+      url.protocol === "http:" ||
+      url.protocol === "https:"
+    );
+  } catch {
+    return false;
+  }
+}
+
+function redirectCatalogError(
   modelId: number,
   message: string
 ): never {
@@ -177,13 +236,62 @@ function revalidateCatalogPaths(
 ) {
   revalidatePath("/admin");
   revalidatePath("/admin/catalogo");
+
   revalidatePath(
     `/admin/catalogo/${modelId}/editar`
   );
+
   revalidatePath(
     "/admin/inventario/nuevo"
   );
+
   revalidatePath("/catalogo");
+  revalidatePath("/inventario");
+}
+
+async function safelyDeleteMedia(
+  media: {
+    url: string;
+  }[]
+) {
+  await Promise.allSettled(
+    media.map(async (item) => {
+      if (
+        !item.url.startsWith("/uploads/")
+      ) {
+        return;
+      }
+
+      try {
+        await deletePublicFile(item.url);
+      } catch (error) {
+        console.error(
+          `No se pudo eliminar ${item.url}:`,
+          error
+        );
+      }
+    })
+  );
+}
+
+async function safelyDeleteFile(
+  url?: string | null
+) {
+  if (
+    !url ||
+    !url.startsWith("/uploads/")
+  ) {
+    return;
+  }
+
+  try {
+    await deletePublicFile(url);
+  } catch (error) {
+    console.error(
+      `No se pudo eliminar ${url}:`,
+      error
+    );
+  }
 }
 
 async function updateCatalogModel(
@@ -193,17 +301,16 @@ async function updateCatalogModel(
 
   await requireAdmin();
 
-  const modelId = Number(
-    formData.get("modelId")
-  );
+  const modelId =
+    getPositiveIntegerValue(
+      formData,
+      "modelId"
+    );
 
-  if (
-    !Number.isInteger(modelId) ||
-    modelId <= 0
-  ) {
+  if (!modelId) {
     redirect(
       `/admin/catalogo?error=${encodeURIComponent(
-        "No se pudo identificar el modelo."
+        "El modelo no es válido."
       )}`
     );
   }
@@ -216,14 +323,9 @@ async function updateCatalogModel(
 
       include: {
         images: {
-          orderBy: [
-            {
-              order: "asc",
-            },
-            {
-              id: "asc",
-            },
-          ],
+          orderBy: {
+            order: "asc",
+          },
         },
       },
     });
@@ -236,45 +338,56 @@ async function updateCatalogModel(
     );
   }
 
-  const brandId = Number(
-    formData.get("brandId")
-  );
+  const brandId =
+    getPositiveIntegerValue(
+      formData,
+      "brandId"
+    );
 
-  const categoryId =
-    getOptionalNumberValue(
+  const selectedCategoryId =
+    getPositiveIntegerValue(
       formData,
       "categoryId"
     );
 
-  const name = getStringValue(
+  const categoryId =
+    selectedCategoryId || null;
+
+  const name = getTextValue(
     formData,
     "name"
   );
 
-  const subtitle = getStringValue(
+  const subtitle = getTextValue(
     formData,
     "subtitle"
   );
 
-  const description = getStringValue(
+  const description = getTextValue(
     formData,
     "description"
   );
 
-  const specs = getStringValue(
+  const specs = getTextValue(
     formData,
     "specs"
   );
 
-  const features = getStringValue(
+  const features = getTextValue(
     formData,
     "features"
   );
 
-  const year = getOptionalNumberValue(
+  const mainImageUrl = getTextValue(
     formData,
-    "year"
+    "mainImageUrl"
   );
+
+  const year =
+    getOptionalNumberValue(
+      formData,
+      "year"
+    );
 
   const priceFrom =
     getOptionalNumberValue(
@@ -283,10 +396,7 @@ async function updateCatalogModel(
     );
 
   const sortOrder =
-    getOptionalNumberValue(
-      formData,
-      "sortOrder"
-    ) ?? 0;
+    getSortOrderValue(formData);
 
   const categoryType =
     getVehicleCategoryValue(
@@ -296,22 +406,17 @@ async function updateCatalogModel(
   const active =
     formData.get("active") === "on";
 
-  const mainImageUrl = getStringValue(
-    formData,
-    "mainImageUrl"
-  );
-
-  if (!brandId) {
-    redirectEditError(
+  if (!brandId || !name) {
+    redirectCatalogError(
       modelId,
-      "Selecciona una marca para el modelo."
+      "Selecciona una marca y captura el nombre del modelo."
     );
   }
 
-  if (!name) {
-    redirectEditError(
+  if (name.length < 2) {
+    redirectCatalogError(
       modelId,
-      "Captura el nombre del modelo."
+      "El nombre debe contener al menos dos caracteres."
     );
   }
 
@@ -319,9 +424,10 @@ async function updateCatalogModel(
     year !== null &&
     (!Number.isInteger(year) ||
       year < 1900 ||
-      year > 2100)
+      year >
+      new Date().getFullYear() + 3)
   ) {
-    redirectEditError(
+    redirectCatalogError(
       modelId,
       "El año del modelo no es válido."
     );
@@ -329,10 +435,9 @@ async function updateCatalogModel(
 
   if (
     priceFrom !== null &&
-    (!Number.isFinite(priceFrom) ||
-      priceFrom < 0)
+    priceFrom < 0
   ) {
-    redirectEditError(
+    redirectCatalogError(
       modelId,
       "El precio base no es válido."
     );
@@ -342,9 +447,20 @@ async function updateCatalogModel(
     !Number.isInteger(sortOrder) ||
     sortOrder < 0
   ) {
-    redirectEditError(
+    redirectCatalogError(
       modelId,
       "El orden debe ser un número entero igual o mayor a cero."
+    );
+  }
+
+  if (
+    !isValidImageReference(
+      mainImageUrl
+    )
+  ) {
+    redirectCatalogError(
+      modelId,
+      "La referencia de la imagen principal no es válida."
     );
   }
 
@@ -358,72 +474,59 @@ async function updateCatalogModel(
         select: {
           id: true,
           active: true,
+          category: true,
         },
       }),
 
       categoryId
-        ? prisma.catalogCategory.findUnique({
-          where: {
-            id: categoryId,
-          },
+        ? prisma.catalogCategory.findUnique(
+          {
+            where: {
+              id: categoryId,
+            },
 
-          select: {
-            id: true,
-            brandId: true,
-            active: true,
-          },
-        })
+            select: {
+              id: true,
+              active: true,
+              brandId: true,
+            },
+          }
+        )
         : Promise.resolve(null),
     ]);
 
-  if (!brand) {
-    redirectEditError(
+  if (
+    !brand ||
+    (!brand.active &&
+      brand.id !==
+      currentModel.brandId)
+  ) {
+    redirectCatalogError(
       modelId,
-      "La marca seleccionada ya no existe."
-    );
-  }
-
-  if (categoryId && !category) {
-    redirectEditError(
-      modelId,
-      "La categoría seleccionada ya no existe."
+      "La marca seleccionada no existe o está inactiva."
     );
   }
 
   if (
-    category &&
-    category.brandId !== brandId
+    brand.category !== categoryType
   ) {
-    redirectEditError(
+    redirectCatalogError(
       modelId,
-      "La categoría seleccionada no pertenece a la marca."
-    );
-  }
-
-  /*
-   * Se permite conservar la marca o categoría
-   * actual aunque esté inactiva. Para cambiar a
-   * otra relación, esta debe estar activa.
-   */
-  if (
-    !brand.active &&
-    brandId !== currentModel.brandId
-  ) {
-    redirectEditError(
-      modelId,
-      "No puedes asignar una marca inactiva."
+      "El tipo seleccionado no corresponde con la clasificación de la marca."
     );
   }
 
   if (
-    category &&
-    !category.active &&
-    category.id !==
-    currentModel.categoryId
+    categoryId &&
+    (!category ||
+      category.brandId !== brandId ||
+      (!category.active &&
+        category.id !==
+        currentModel.categoryId))
   ) {
-    redirectEditError(
+    redirectCatalogError(
       modelId,
-      "No puedes asignar una categoría inactiva."
+      "La categoría seleccionada no corresponde con la marca."
     );
   }
 
@@ -448,11 +551,11 @@ async function updateCatalogModel(
       );
   } catch (error) {
     console.error(
-      "Error guardando archivos del catálogo:",
+      "Error guardando archivos:",
       error
     );
 
-    redirectEditError(
+    redirectCatalogError(
       modelId,
       error instanceof Error
         ? error.message
@@ -460,24 +563,25 @@ async function updateCatalogModel(
     );
   }
 
-  const currentHighestOrder =
+  const highestOrder =
     currentModel.images.reduce(
       (highest, image) =>
-        image.order > highest
-          ? image.order
-          : highest,
+        Math.max(
+          highest,
+          image.order
+        ),
       -1
-    );
-
-  const firstUploadedImage =
-    savedMedia.find(
-      (item) =>
-        item.type ===
-        VehicleMediaType.IMAGE
     );
 
   const firstExistingImage =
     currentModel.images.find(
+      (image) =>
+        image.type ===
+        VehicleMediaType.IMAGE
+    );
+
+  const firstUploadedImage =
+    savedMedia.find(
       (item) =>
         item.type ===
         VehicleMediaType.IMAGE
@@ -505,8 +609,7 @@ async function updateCatalogModel(
 
       data: {
         brandId,
-        categoryId:
-          categoryId || null,
+        categoryId,
         name,
         slug,
         categoryType,
@@ -516,56 +619,37 @@ async function updateCatalogModel(
         description,
         specs,
         features,
-        mainImage:
-          finalMainImage,
+        mainImage: finalMainImage,
         active,
         sortOrder,
 
-        images:
-          savedMedia.length > 0
-            ? {
-              create: savedMedia.map(
-                (item, index) => ({
-                  url: item.url,
-                  type: item.type,
-                  alt: name,
+        images: savedMedia.length
+          ? {
+            create: savedMedia.map(
+              (item, index) => ({
+                url: item.url,
+                type: item.type,
+                alt: name,
 
-                  order:
-                    currentHighestOrder +
-                    index +
-                    1,
-                })
-              ),
-            }
-            : undefined,
+                order:
+                  highestOrder +
+                  index +
+                  1,
+              })
+            ),
+          }
+          : undefined,
       },
     });
   } catch (error) {
-    for (const item of savedMedia) {
-      if (
-        item.url.startsWith(
-          "/uploads/"
-        )
-      ) {
-        try {
-          await deletePublicFile(
-            item.url
-          );
-        } catch (cleanupError) {
-          console.error(
-            "No se pudo limpiar el archivo:",
-            cleanupError
-          );
-        }
-      }
-    }
+    await safelyDeleteMedia(savedMedia);
 
     console.error(
       "Error actualizando modelo:",
       error
     );
 
-    redirectEditError(
+    redirectCatalogError(
       modelId,
       "No se pudieron guardar los cambios del modelo."
     );
@@ -588,7 +672,12 @@ async function setCatalogMainImage(
 
   await requireAdmin();
 
-  if (!modelId || !imageId) {
+  if (
+    !Number.isInteger(modelId) ||
+    modelId <= 0 ||
+    !Number.isInteger(imageId) ||
+    imageId <= 0
+  ) {
     return;
   }
 
@@ -597,13 +686,25 @@ async function setCatalogMainImage(
       where: {
         id: imageId,
       },
+
+      include: {
+        catalogModel: {
+          include: {
+            images: {
+              orderBy: {
+                order: "asc",
+              },
+            },
+          },
+        },
+      },
     });
 
   if (
     !image ||
     image.catalogModelId !== modelId
   ) {
-    redirectEditError(
+    redirectCatalogError(
       modelId,
       "No se pudo identificar la imagen."
     );
@@ -613,31 +714,15 @@ async function setCatalogMainImage(
     image.type !==
     VehicleMediaType.IMAGE
   ) {
-    redirectEditError(
+    redirectCatalogError(
       modelId,
       "Un video no puede utilizarse como imagen principal."
     );
   }
 
-  const images =
-    await prisma.catalogImage.findMany({
-      where: {
-        catalogModelId: modelId,
-      },
-
-      orderBy: [
-        {
-          order: "asc",
-        },
-        {
-          id: "asc",
-        },
-      ],
-    });
-
-  const reorderedImages = [
+  const orderedImages = [
     image,
-    ...images.filter(
+    ...image.catalogModel.images.filter(
       (item) => item.id !== image.id
     ),
   ];
@@ -653,7 +738,7 @@ async function setCatalogMainImage(
       },
     }),
 
-    ...reorderedImages.map(
+    ...orderedImages.map(
       (item, index) =>
         prisma.catalogImage.update({
           where: {
@@ -676,7 +761,6 @@ async function setCatalogMainImage(
   );
 }
 
-
 async function deleteCatalogImage(
   modelId: number,
   imageId: number
@@ -685,7 +769,12 @@ async function deleteCatalogImage(
 
   await requireAdmin();
 
-  if (!modelId || !imageId) {
+  if (
+    !Number.isInteger(modelId) ||
+    modelId <= 0 ||
+    !Number.isInteger(imageId) ||
+    imageId <= 0
+  ) {
     return;
   }
 
@@ -699,14 +788,9 @@ async function deleteCatalogImage(
         catalogModel: {
           include: {
             images: {
-              orderBy: [
-                {
-                  order: "asc",
-                },
-                {
-                  id: "asc",
-                },
-              ],
+              orderBy: {
+                order: "asc",
+              },
             },
           },
         },
@@ -717,7 +801,7 @@ async function deleteCatalogImage(
     !image ||
     image.catalogModelId !== modelId
   ) {
-    redirectEditError(
+    redirectCatalogError(
       modelId,
       "No se pudo identificar el archivo."
     );
@@ -728,18 +812,17 @@ async function deleteCatalogImage(
       (item) => item.id !== image.id
     );
 
-  const isCurrentMainImage =
+  const wasMainImage =
     image.catalogModel.mainImage ===
     image.url;
 
-  const nextMainImage =
-    isCurrentMainImage
-      ? remainingImages.find(
-        (item) =>
-          item.type ===
-          VehicleMediaType.IMAGE
-      )?.url ?? ""
-      : image.catalogModel.mainImage;
+  const nextMainImage = wasMainImage
+    ? remainingImages.find(
+      (item) =>
+        item.type ===
+        VehicleMediaType.IMAGE
+    )?.url ?? ""
+    : image.catalogModel.mainImage;
 
   await prisma.$transaction([
     prisma.catalogImage.delete({
@@ -772,27 +855,13 @@ async function deleteCatalogImage(
     ),
   ]);
 
-  if (
-    image.url.startsWith("/uploads/")
-  ) {
-    try {
-      await deletePublicFile(image.url);
-    } catch (error) {
-      console.error(
-        "No se pudo eliminar el archivo:",
-        error
-      );
-    }
-  }
+  await safelyDeleteFile(image.url);
 
   revalidateCatalogPaths(modelId);
 
   redirect(
     `/admin/catalogo/${modelId}/editar?success=${encodeURIComponent(
-      image.type ===
-        VehicleMediaType.VIDEO
-        ? "Video eliminado correctamente."
-        : "Imagen eliminada correctamente."
+      "Archivo eliminado correctamente."
     )}`
   );
 }
@@ -831,14 +900,9 @@ export default async function EditCatalogModelPage({
         },
 
         images: {
-          orderBy: [
-            {
-              order: "asc",
-            },
-            {
-              id: "asc",
-            },
-          ],
+          orderBy: {
+            order: "asc",
+          },
         },
       },
     });
@@ -872,11 +936,11 @@ export default async function EditCatalogModelPage({
             {
               active: true,
             },
+
             ...(catalogModel.categoryId
               ? [
                 {
-                  id:
-                    catalogModel.categoryId,
+                  id: catalogModel.categoryId,
                 },
               ]
               : []),
@@ -917,8 +981,8 @@ export default async function EditCatalogModelPage({
   const videoCount =
     catalogModel.images.filter(
       (image) =>
-        image.type ===
-        VehicleMediaType.VIDEO
+        image.type !==
+        VehicleMediaType.IMAGE
     ).length;
 
   const categoryName =
@@ -927,117 +991,89 @@ export default async function EditCatalogModelPage({
 
   return (
     <div className="pb-10">
-      {/* Encabezado */}
-      <section className="relative overflow-hidden rounded-[22px] bg-[#192a3a] px-5 py-7 text-white shadow-[0_18px_50px_rgba(15,23,42,0.14)] md:px-7 md:py-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_32%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
-
-        <div className="relative flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
-          <div className="max-w-3xl">
-            <Link
-              href="/admin/catalogo"
-              className="inline-flex items-center gap-2 text-xs font-black text-white/60 transition hover:text-white"
-            >
-              <ArrowLeft size={16} />
-              Volver al catálogo
-            </Link>
-
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#dfe7ec] backdrop-blur-sm">
-              <Tags size={15} />
-              Modelo #{catalogModel.id}
-            </div>
-
-            <h1 className="mt-4 text-3xl font-black tracking-[-0.045em] md:text-4xl lg:text-5xl">
-              {catalogModel.brand.name}{" "}
-              {catalogModel.name}
-            </h1>
-
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-white/60 md:text-base">
-              Actualiza la información comercial,
-              clasificación, publicación y galería
-              utilizada al crear unidades reales.
-            </p>
-          </div>
-
+      <AdminHero
+        eyebrow={`Modelo #${catalogModel.id}`}
+        title={`${catalogModel.brand.name} ${catalogModel.name}`}
+        description="Actualiza la información comercial, publicación y galería utilizada como plantilla al crear unidades reales."
+        icon={Layers3}
+        backHref="/admin/catalogo"
+        backLabel="Volver al catálogo base"
+        actions={
           <Link
             href="/admin/inventario/nuevo"
-            className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
           >
             <Plus size={17} />
             Crear unidad
-
-            <ArrowRight
-              size={15}
-              className="transition-transform group-hover:translate-x-0.5"
-            />
           </Link>
-        </div>
-      </section>
+        }
+      />
 
-      {/* Mensajes */}
       {query.error && (
-        <div
-          role="alert"
-          className="mt-5 flex items-start gap-3 rounded-[16px] border border-red-200 bg-red-50 px-4 py-4 text-sm font-bold text-red-700"
+        <AdminAlert
+          variant="error"
+          className="mt-5"
         >
-          <AlertCircle
-            size={20}
-            className="mt-0.5 shrink-0"
-          />
-
-          <span>{query.error}</span>
-        </div>
+          {query.error}
+        </AdminAlert>
       )}
 
       {query.success && (
-        <div
-          role="status"
-          className="mt-5 flex items-start gap-3 rounded-[16px] border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm font-bold text-emerald-700"
+        <AdminAlert
+          variant="success"
+          className="mt-5"
         >
-          <CheckCircle2
-            size={20}
-            className="mt-0.5 shrink-0"
-          />
-
-          <span>{query.success}</span>
-        </div>
+          {query.success}
+        </AdminAlert>
       )}
 
-      {/* Resumen */}
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard
-          icon={Tags}
-          label="Marca"
-          value={catalogModel.brand.name}
-        />
-
-        <SummaryCard
-          icon={Layers3}
-          label="Categoría"
-          value={categoryName}
-        />
-
-        <SummaryCard
-          icon={CalendarDays}
-          label="Año modelo"
+        <AdminSummaryCard
+          icon={
+            catalogModel.active
+              ? Eye
+              : EyeOff
+          }
+          label="Estado"
           value={
-            catalogModel.year
-              ? String(catalogModel.year)
-              : "Sin definir"
+            catalogModel.active
+              ? "Modelo activo"
+              : "Modelo inactivo"
+          }
+          tone={
+            catalogModel.active
+              ? "emerald"
+              : "red"
           }
         />
 
-        <SummaryCard
+        <AdminSummaryCard
+          icon={Tags}
+          label="Marca"
+          value={catalogModel.brand.name}
+          tone="blue"
+        />
+
+        <AdminSummaryCard
+          icon={Layers3}
+          label="Categoría"
+          value={categoryName}
+          tone="violet"
+        />
+
+        <AdminSummaryCard
           icon={ImageIcon}
-          label="Galería"
+          label="Multimedia"
           value={`${imageCount} imagen${imageCount === 1 ? "" : "es"
             } · ${videoCount} video${videoCount === 1 ? "" : "s"
             }`}
+          tone="amber"
         />
       </section>
 
       <form
         action={updateCatalogModel}
-        className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_370px]"
+        className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]"
       >
         <input
           type="hidden"
@@ -1046,104 +1082,67 @@ export default async function EditCatalogModelPage({
         />
 
         <div className="space-y-6">
-          {/* Clasificación */}
-          <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
-            <SectionHeader
-              icon={Sparkles}
-              eyebrow="Clasificación"
-              title="Marca y categoría"
-              description="Modifica las relaciones comerciales del modelo."
-            />
+          <BrandCategorySelects
+            mode="catalog"
+            brands={brands.map(
+              (brand) => ({
+                id: brand.id,
+                name: brand.name,
+                category:
+                  brand.category,
+              })
+            )}
+            categories={catalogCategories.map(
+              (category) => ({
+                id: category.id,
+                brandId:
+                  category.brandId,
+                name: category.name,
+                parentId:
+                  category.parentId,
+                parentName:
+                  category.parent
+                    ?.name ?? null,
+              })
+            )}
+            defaultBrandId={
+              catalogModel.brandId
+            }
+            defaultCategoryId={
+              catalogModel.categoryId
+            }
+          />
 
-            <div className="p-5 md:p-6">
-              <BrandCategorySelects
-                mode="catalog"
-                brands={brands.map(
-                  (brand) => ({
-                    id: brand.id,
-                    name: brand.name,
-                    category:
-                      brand.category,
-                  })
-                )}
-                categories={catalogCategories.map(
-                  (category) => ({
-                    id: category.id,
-                    brandId:
-                      category.brandId,
-                    name: category.name,
-                    parentId:
-                      category.parentId,
-
-                    parentName:
-                      category.parent
-                        ?.name ?? null,
-                  })
-                )}
-                defaultBrandId={
-                  catalogModel.brandId
+          <AdminSection
+            icon={Layers3}
+            eyebrow="Información principal"
+            title="Datos del modelo"
+            description="Actualiza la clasificación y la información comercial principal."
+          >
+            <div className="grid gap-5 md:grid-cols-2">
+              <AdminInput
+                label="Nombre del modelo"
+                name="name"
+                required
+                defaultValue={
+                  catalogModel.name
                 }
-                defaultCategoryId={
-                  catalogModel.categoryId
-                }
+                containerClassName="md:col-span-2"
               />
 
-              {(!catalogModel.brand.active ||
-                (catalogModel.category &&
-                  !catalogModel.category
-                    .active)) && (
-                  <div className="mt-5 flex items-start gap-3 rounded-[16px] border border-amber-200 bg-amber-50 p-4">
-                    <Info
-                      size={18}
-                      className="mt-0.5 shrink-0 text-amber-700"
-                    />
+              <AdminInput
+                label="Subtítulo comercial"
+                name="subtitle"
+                defaultValue={
+                  catalogModel.subtitle ??
+                  ""
+                }
+                placeholder="Ej. Side-by-side deportivo para aventura extrema"
+                containerClassName="md:col-span-2"
+              />
 
-                    <p className="text-xs font-semibold leading-5 text-amber-800">
-                      Este modelo conserva una marca
-                      o categoría inactiva. Puedes
-                      mantenerla o seleccionar una
-                      relación activa.
-                    </p>
-                  </div>
-                )}
-            </div>
-          </section>
-
-          {/* Datos comerciales */}
-          <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
-            <SectionHeader
-              icon={Layers3}
-              eyebrow="Información comercial"
-              title="Datos del modelo"
-              description="Actualiza nombre, tipo, año, precio y orden."
-            />
-
-            <div className="grid gap-5 p-5 md:grid-cols-2 md:p-6">
-              <div className="md:col-span-2">
-                <FormInput
-                  label="Nombre del modelo"
-                  name="name"
-                  required
-                  defaultValue={
-                    catalogModel.name
-                  }
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <FormInput
-                  label="Subtítulo comercial"
-                  name="subtitle"
-                  defaultValue={
-                    catalogModel.subtitle ??
-                    ""
-                  }
-                  placeholder="Ej. Side-by-side deportivo para aventura extrema"
-                />
-              </div>
-
-              <FormSelect
-                label="Tipo comercial"
+              <AdminSelect
+                label="Tipo"
                 name="categoryType"
                 defaultValue={
                   catalogModel.categoryType
@@ -1161,31 +1160,39 @@ export default async function EditCatalogModelPage({
                     )}
                   </option>
                 ))}
-              </FormSelect>
+              </AdminSelect>
 
-              <FormInput
+              <AdminInput
                 label="Año modelo"
                 name="year"
                 type="number"
                 min={1900}
-                max={2100}
+                max={
+                  new Date().getFullYear() +
+                  3
+                }
                 defaultValue={
                   catalogModel.year ?? ""
                 }
               />
 
-              <FormInput
+              <AdminInput
                 label="Precio desde"
                 name="priceFrom"
                 type="number"
                 min={0}
+                step="0.01"
                 defaultValue={
-                  catalogModel.priceFrom ??
-                  ""
+                  catalogModel.priceFrom !==
+                    null
+                    ? Number(
+                      catalogModel.priceFrom
+                    )
+                    : ""
                 }
               />
 
-              <FormInput
+              <AdminInput
                 label="Orden"
                 name="sortOrder"
                 type="number"
@@ -1193,42 +1200,39 @@ export default async function EditCatalogModelPage({
                 defaultValue={
                   catalogModel.sortOrder
                 }
-                description="Los números menores aparecen primero."
+                description="Los valores menores aparecen primero."
               />
             </div>
-          </section>
+          </AdminSection>
 
-          {/* Contenido */}
-          <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
-            <SectionHeader
-              icon={Tags}
-              eyebrow="Contenido"
-              title="Ficha comercial"
-              description="Edita la información reutilizada al registrar unidades."
-            />
-
-            <div className="grid gap-5 p-5 md:p-6">
-              <FormTextarea
+          <AdminSection
+            icon={BookOpen}
+            eyebrow="Ficha comercial"
+            title="Contenido del modelo"
+            description="Actualiza la descripción, especificaciones y características principales."
+          >
+            <div className="grid gap-5">
+              <AdminTextarea
                 label="Descripción"
                 name="description"
-                rows={6}
+                rows={5}
                 defaultValue={
                   catalogModel.description ??
                   ""
                 }
               />
 
-              <FormTextarea
+              <AdminTextarea
                 label="Especificaciones rápidas"
                 name="specs"
                 rows={4}
                 defaultValue={
                   catalogModel.specs ?? ""
                 }
-                description="Separa las especificaciones utilizando comas."
+                description="Puedes separar cada especificación con comas o saltos de línea."
               />
 
-              <FormTextarea
+              <AdminTextarea
                 label="Características principales"
                 name="features"
                 rows={5}
@@ -1236,15 +1240,14 @@ export default async function EditCatalogModelPage({
                   catalogModel.features ??
                   ""
                 }
+                description="Puedes separar cada característica con comas o saltos de línea."
               />
             </div>
-          </section>
+          </AdminSection>
         </div>
 
-        {/* Columna lateral */}
         <aside className="xl:sticky xl:top-6 xl:self-start">
           <div className="space-y-5">
-            {/* Publicación */}
             <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
               <div className="border-b border-slate-100 bg-[#f8fafb] p-5">
                 <div className="flex items-start gap-3">
@@ -1258,15 +1261,14 @@ export default async function EditCatalogModelPage({
                     </h2>
 
                     <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Controla si puede utilizarse
-                      como plantilla.
+                      Controla la disponibilidad del modelo.
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="grid gap-4 p-5">
-                <ToggleOption
+                <AdminToggleOption
                   name="active"
                   title="Modelo activo"
                   description="Podrá seleccionarse al registrar unidades reales."
@@ -1279,19 +1281,6 @@ export default async function EditCatalogModelPage({
                     catalogModel.active
                   }
                 />
-
-                <div className="rounded-[16px] border border-[#192a3a]/10 bg-[#e7edf1] p-4">
-                  <p className="flex items-center gap-2 text-sm font-black text-[#192a3a]">
-                    <BadgeCheck size={17} />
-                    Estado actual
-                  </p>
-
-                  <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
-                    {catalogModel.active
-                      ? "Este modelo está disponible para crear unidades."
-                      : "Este modelo se encuentra oculto y no debería aparecer como opción nueva."}
-                  </p>
-                </div>
 
                 <button
                   type="submit"
@@ -1310,125 +1299,105 @@ export default async function EditCatalogModelPage({
               </div>
             </section>
 
-            {/* Imagen principal */}
-            <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
-              <div className="border-b border-slate-100 bg-[#f8fafb] p-5">
-                <div className="flex items-start gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e7edf1] text-[#192a3a]">
-                    <ImageIcon size={18} />
-                  </span>
+            <AdminSection
+              icon={ImageIcon}
+              eyebrow="Imagen principal"
+              title="Portada"
+              description="Configura la imagen representativa del modelo."
+              contentClassName="p-5"
+            >
+              <div className="overflow-hidden rounded-[16px] border border-slate-200 bg-[#f8fafb]">
+                {mainImage ? (
+                  <img
+                    src={mainImage}
+                    alt={
+                      catalogModel.name
+                    }
+                    className="h-56 w-full object-cover"
+                  />
+                ) : (
+                  <div className="grid h-56 place-items-center text-slate-400">
+                    <div className="text-center">
+                      <ImageIcon
+                        size={40}
+                        className="mx-auto"
+                      />
 
-                  <div>
-                    <h2 className="text-xl font-black">
-                      Imagen principal
-                    </h2>
-
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Portada comercial del modelo.
-                    </p>
+                      <p className="mt-2 text-[9px] font-black uppercase tracking-[0.12em]">
+                        Sin portada
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              <div className="p-5">
-                <div className="overflow-hidden rounded-[16px] border border-slate-200 bg-slate-100">
-                  {mainImage ? (
-                    <img
-                      src={mainImage}
-                      alt={catalogModel.name}
-                      className="h-56 w-full object-cover"
-                    />
-                  ) : (
-                    <div className="grid h-56 place-items-center text-slate-400">
-                      <div className="text-center">
-                        <ImageIcon
-                          size={42}
-                          className="mx-auto"
-                        />
+              <div className="mt-4">
+                <AdminInput
+                  label="URL manual"
+                  name="mainImageUrl"
+                  defaultValue={
+                    catalogModel.mainImage ??
+                    ""
+                  }
+                  placeholder="/uploads/vehicles/imagen.webp"
+                  description="También puedes utilizar una URL externa."
+                />
+              </div>
 
-                        <p className="mt-2 text-[10px] font-black uppercase tracking-[0.12em]">
-                          Sin imagen
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
+              <label className="mt-5 block">
+                <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+                  Agregar multimedia
+                </span>
 
-                <div className="mt-5 grid gap-5">
-                  <FormInput
-                    label="URL manual"
-                    name="mainImageUrl"
-                    defaultValue={
-                      catalogModel.mainImage ??
-                      ""
-                    }
-                    placeholder="https://..."
-                    description="La galería seguirá conservando sus archivos."
+                <div className="rounded-[16px] border border-dashed border-slate-300 bg-[#f8fafb] p-4">
+                  <Upload
+                    size={24}
+                    className="mx-auto text-[#192a3a]"
                   />
 
-                  <label className="block">
-                    <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-                      Agregar archivos
-                    </span>
+                  <p className="mt-3 text-center text-xs font-black text-slate-700">
+                    Imágenes o videos
+                  </p>
 
-                    <div className="rounded-[16px] border border-dashed border-slate-300 bg-[#f8fafb] p-4">
-                      <Upload
-                        size={24}
-                        className="mx-auto text-[#192a3a]"
-                      />
-
-                      <p className="mt-3 text-center text-xs font-black text-slate-700">
-                        Imágenes o videos
-                      </p>
-
-                      <input
-                        name="mediaFiles"
-                        type="file"
-                        multiple
-                        accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime"
-                        className="mt-4 block w-full text-xs font-semibold text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-[#192a3a] file:px-3 file:py-2 file:text-xs file:font-black file:text-white hover:file:bg-[#29465c]"
-                      />
-                    </div>
-
-                    <span className="mt-2 block text-xs leading-5 text-slate-500">
-                      Los archivos nuevos se agregan
-                      a la galería existente.
-                    </span>
-                  </label>
+                  <input
+                    name="mediaFiles"
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime"
+                    className="mt-4 block w-full text-xs font-semibold text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-[#192a3a] file:px-3 file:py-2 file:text-xs file:font-black file:text-white hover:file:bg-[#29465c]"
+                  />
                 </div>
-              </div>
-            </section>
 
-            {/* Galería */}
-            <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
-              <div className="border-b border-slate-100 bg-[#f8fafb] p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#192a3a]">
-                      Galería
-                    </p>
+                <span className="mt-2 block text-xs leading-5 text-slate-500">
+                  Los archivos nuevos se agregan a la galería actual.
+                </span>
+              </label>
+            </AdminSection>
 
-                    <h2 className="mt-2 text-xl font-black">
-                      Archivos actuales
-                    </h2>
-                  </div>
-
-                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[9px] font-black text-slate-500">
-                    {catalogModel.images.length}{" "}
-                    archivo
-                    {catalogModel.images.length ===
-                      1
-                      ? ""
-                      : "s"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid gap-4 p-5">
+            <AdminSection
+              icon={Tags}
+              eyebrow="Galería"
+              title="Archivos actuales"
+              description={`${catalogModel.images.length} archivo${catalogModel.images.length ===
+                  1
+                  ? ""
+                  : "s"
+                } registrado${catalogModel.images.length ===
+                  1
+                  ? ""
+                  : "s"
+                }.`}
+              contentClassName="p-5"
+            >
+              <div className="grid gap-4">
                 {catalogModel.images.length >
                   0 ? (
                   catalogModel.images.map(
                     (image) => {
+                      const isImage =
+                        image.type ===
+                        VehicleMediaType.IMAGE;
+
                       const isMain =
                         catalogModel.mainImage ===
                         image.url;
@@ -1439,8 +1408,7 @@ export default async function EditCatalogModelPage({
                           className="overflow-hidden rounded-[16px] border border-slate-200 bg-[#f8fafb]"
                         >
                           <div className="relative">
-                            {image.type ===
-                              VehicleMediaType.IMAGE ? (
+                            {isImage ? (
                               <img
                                 src={image.url}
                                 alt={
@@ -1453,74 +1421,73 @@ export default async function EditCatalogModelPage({
                               <video
                                 src={image.url}
                                 controls
+                                preload="metadata"
                                 className="h-44 w-full bg-black object-cover"
                               />
                             )}
 
-                            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/65 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-white backdrop-blur-sm">
-                              {image.type ===
-                                VehicleMediaType.IMAGE ? (
+                            <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-white backdrop-blur">
+                              {isImage ? (
                                 <ImageIcon
-                                  size={11}
+                                  size={12}
                                 />
                               ) : (
-                                <Video size={11} />
+                                <Video
+                                  size={12}
+                                />
                               )}
 
-                              {image.type ===
-                                VehicleMediaType.IMAGE
+                              {isImage
                                 ? "Imagen"
                                 : "Video"}
                             </span>
 
                             {isMain && (
-                              <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.08em] text-amber-700 shadow-sm">
-                                <Star size={12} />
+                              <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-amber-600 shadow-sm">
+                                <Star
+                                  size={13}
+                                />
                                 Principal
                               </span>
                             )}
                           </div>
 
                           <div className="grid gap-2 p-3">
-                            {image.type ===
-                              VehicleMediaType.IMAGE && (
-                                <button
-                                  type="submit"
-                                  formAction={setCatalogMainImage.bind(
-                                    null,
-                                    catalogModel.id,
-                                    image.id
-                                  )}
-                                  formNoValidate
-                                  disabled={isMain}
-                                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[10px] font-black text-slate-700 transition hover:border-[#192a3a] hover:bg-[#e7edf1] disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  <Star size={14} />
+                            {isImage && (
+                              <button
+                                type="submit"
+                                formAction={setCatalogMainImage.bind(
+                                  null,
+                                  catalogModel.id,
+                                  image.id
+                                )}
+                                formNoValidate
+                                disabled={isMain}
+                                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-[#192a3a] hover:text-[#192a3a] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                              >
+                                <Star size={14} />
 
-                                  {isMain
-                                    ? "Imagen principal"
-                                    : "Usar como principal"}
-                                </button>
-                              )}
+                                {isMain
+                                  ? "Imagen principal"
+                                  : "Usar como principal"}
+                              </button>
+                            )}
 
-                            <ConfirmSubmitButton
+                            <button
+                              type="submit"
                               formAction={deleteCatalogImage.bind(
                                 null,
                                 catalogModel.id,
                                 image.id
                               )}
                               formNoValidate
-                              confirmMessage={
-                                image.type === VehicleMediaType.VIDEO
-                                  ? "¿Seguro que deseas eliminar este video? Esta acción no se puede deshacer."
-                                  : "¿Seguro que deseas eliminar esta imagen? Esta acción no se puede deshacer."
-                              }
-                              pendingText="Eliminando..."
-                              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-[10px] font-black text-red-700 transition hover:bg-red-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 text-xs font-black text-red-700 transition hover:bg-red-100 active:scale-[0.98]"
                             >
-                              <Trash2 size={14} />
+                              <Trash2
+                                size={14}
+                              />
                               Eliminar archivo
-                            </ConfirmSubmitButton>
+                            </button>
                           </div>
                         </article>
                       );
@@ -1529,7 +1496,7 @@ export default async function EditCatalogModelPage({
                 ) : (
                   <div className="rounded-[16px] border border-dashed border-slate-300 bg-[#f8fafb] p-8 text-center">
                     <ImageIcon
-                      size={40}
+                      size={38}
                       className="mx-auto text-slate-400"
                     />
 
@@ -1538,228 +1505,19 @@ export default async function EditCatalogModelPage({
                     </p>
 
                     <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Agrega imágenes o videos
-                      desde el bloque superior.
+                      Agrega imágenes o videos desde el apartado superior.
                     </p>
                   </div>
                 )}
               </div>
-            </section>
+            </AdminSection>
+
+            <AdminAlert variant="info">
+              Solo los archivos de imagen pueden utilizarse como portada principal.
+            </AdminAlert>
           </div>
         </aside>
       </form>
     </div>
-  );
-}
-
-function SummaryCard({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-}) {
-  return (
-    <article className="rounded-[20px] border border-black/[0.08] bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)]">
-      <span className="grid h-11 w-11 place-items-center rounded-xl border border-[#192a3a]/10 bg-[#e7edf1] text-[#192a3a]">
-        <Icon size={20} />
-      </span>
-
-      <p className="mt-4 text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
-        {label}
-      </p>
-
-      <p className="mt-2 truncate text-sm font-black text-[#192a3a]">
-        {value}
-      </p>
-    </article>
-  );
-}
-
-function SectionHeader({
-  icon: Icon,
-  eyebrow,
-  title,
-  description,
-}: {
-  icon: LucideIcon;
-  eyebrow: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="border-b border-slate-100 bg-[#f8fafb] p-5 md:p-6">
-      <div className="flex items-start gap-4">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#192a3a] text-white">
-          <Icon size={20} />
-        </span>
-
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#192a3a]">
-            {eyebrow}
-          </p>
-
-          <h2 className="mt-2 text-2xl font-black tracking-[-0.035em]">
-            {title}
-          </h2>
-
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-            {description}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FormInput({
-  label,
-  name,
-  type = "text",
-  required = false,
-  min,
-  max,
-  placeholder,
-  defaultValue,
-  description,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  required?: boolean;
-  min?: number;
-  max?: number;
-  placeholder?: string;
-  defaultValue?: string | number;
-  description?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-        {label}
-      </span>
-
-      <input
-        name={name}
-        type={type}
-        required={required}
-        min={min}
-        max={max}
-        defaultValue={defaultValue}
-        placeholder={placeholder}
-        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
-      />
-
-      {description && (
-        <span className="mt-2 block text-xs leading-5 text-slate-500">
-          {description}
-        </span>
-      )}
-    </label>
-  );
-}
-
-function FormSelect({
-  label,
-  name,
-  defaultValue,
-  children,
-}: {
-  label: string;
-  name: string;
-  defaultValue?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-        {label}
-      </span>
-
-      <select
-        name={name}
-        defaultValue={defaultValue}
-        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
-      >
-        {children}
-      </select>
-    </label>
-  );
-}
-
-function FormTextarea({
-  label,
-  name,
-  rows,
-  defaultValue,
-  description,
-}: {
-  label: string;
-  name: string;
-  rows: number;
-  defaultValue?: string;
-  description?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-        {label}
-      </span>
-
-      <textarea
-        name={name}
-        rows={rows}
-        defaultValue={defaultValue}
-        className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-700 outline-none transition focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
-      />
-
-      {description && (
-        <span className="mt-2 block text-xs leading-5 text-slate-500">
-          {description}
-        </span>
-      )}
-    </label>
-  );
-}
-
-function ToggleOption({
-  name,
-  title,
-  description,
-  icon: Icon,
-  defaultChecked,
-}: {
-  name: string;
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  defaultChecked: boolean;
-}) {
-  return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-[16px] border border-slate-200 bg-[#f8fafb] p-4 transition hover:border-[#192a3a]/30">
-      <input
-        type="checkbox"
-        name={name}
-        defaultChecked={defaultChecked}
-        className="mt-0.5 h-5 w-5 rounded border-slate-300 accent-[#192a3a]"
-      />
-
-      <Icon
-        size={17}
-        className="mt-0.5 shrink-0 text-[#192a3a]"
-      />
-
-      <span>
-        <span className="block text-sm font-black text-slate-700">
-          {title}
-        </span>
-
-        <span className="mt-1 block text-xs leading-5 text-slate-500">
-          {description}
-        </span>
-      </span>
-    </label>
   );
 }

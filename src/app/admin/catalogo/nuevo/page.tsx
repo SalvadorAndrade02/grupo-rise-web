@@ -1,15 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import type { ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
 import {
-  AlertCircle,
-  ArrowLeft,
+  BookOpen,
   CheckCircle2,
   Eye,
   ImageIcon,
-  Info,
   Layers3,
   Save,
   Sparkles,
@@ -20,13 +16,23 @@ import {
   VehicleCategory,
   VehicleMediaType,
 } from "@prisma/client";
+import {
+  AdminAlert,
+  AdminHero,
+  AdminInput,
+  AdminSection,
+  AdminSelect,
+  AdminSummaryCard,
+  AdminTextarea,
+  AdminToggleOption,
+} from "@/components/admin/ui";
+import { BrandCategorySelects } from "@/components/admin/catalog/BrandCategorySelects";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
   deletePublicFile,
   saveVehicleMediaFiles,
 } from "@/lib/uploads";
-import { BrandCategorySelects } from "@/components/admin/catalog/BrandCategorySelects";
 
 export const dynamic = "force-dynamic";
 
@@ -36,13 +42,28 @@ type NewCatalogModelPageProps = {
   }>;
 };
 
-const validCategories: VehicleCategory[] = [
-  VehicleCategory.AUTO,
-  VehicleCategory.MOTO,
-  VehicleCategory.TODOTERRENO,
-];
+function getTextValue(
+  formData: FormData,
+  fieldName: string
+) {
+  return String(
+    formData.get(fieldName) ?? ""
+  ).trim();
+}
 
-function getNumberValue(
+function getOptionalTextValue(
+  formData: FormData,
+  fieldName: string
+) {
+  const value = getTextValue(
+    formData,
+    fieldName
+  );
+
+  return value || null;
+}
+
+function getPositiveIntegerValue(
   formData: FormData,
   fieldName: string
 ) {
@@ -50,7 +71,8 @@ function getNumberValue(
     formData.get(fieldName)
   );
 
-  return Number.isFinite(value)
+  return Number.isInteger(value) &&
+    value > 0
     ? value
     : 0;
 }
@@ -59,9 +81,10 @@ function getOptionalNumberValue(
   formData: FormData,
   fieldName: string
 ) {
-  const rawValue = String(
-    formData.get(fieldName) ?? ""
-  ).trim();
+  const rawValue = getTextValue(
+    formData,
+    fieldName
+  );
 
   if (!rawValue) {
     return null;
@@ -74,13 +97,23 @@ function getOptionalNumberValue(
     : null;
 }
 
-function getTextValue(
-  formData: FormData,
-  fieldName: string
+function getSortOrderValue(
+  formData: FormData
 ) {
-  return String(
-    formData.get(fieldName) ?? ""
-  ).trim();
+  const rawValue = getTextValue(
+    formData,
+    "sortOrder"
+  );
+
+  if (!rawValue) {
+    return 0;
+  }
+
+  const value = Number(rawValue);
+
+  return Number.isInteger(value)
+    ? value
+    : Number.NaN;
 }
 
 function slugify(value: string) {
@@ -132,6 +165,13 @@ function getVehicleCategoryValue(
     VehicleCategory.TODOTERRENO
   );
 
+  const validCategories: VehicleCategory[] =
+    [
+      VehicleCategory.AUTO,
+      VehicleCategory.MOTO,
+      VehicleCategory.TODOTERRENO,
+    ];
+
   return validCategories.includes(
     categoryValue as VehicleCategory
   )
@@ -159,6 +199,55 @@ function revalidateCatalogPaths() {
     "/admin/inventario/nuevo"
   );
   revalidatePath("/catalogo");
+  revalidatePath("/inventario");
+}
+
+function isValidImageReference(
+  value: string | null
+) {
+  if (!value) {
+    return true;
+  }
+
+  if (value.startsWith("/")) {
+    return true;
+  }
+
+  try {
+    const url = new URL(value);
+
+    return (
+      url.protocol === "http:" ||
+      url.protocol === "https:"
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function safelyDeleteMedia(
+  media: {
+    url: string;
+  }[]
+) {
+  await Promise.allSettled(
+    media.map(async (item) => {
+      if (
+        !item.url.startsWith("/uploads/")
+      ) {
+        return;
+      }
+
+      try {
+        await deletePublicFile(item.url);
+      } catch (error) {
+        console.error(
+          `No se pudo eliminar ${item.url}:`,
+          error
+        );
+      }
+    })
+  );
 }
 
 async function createCatalogModel(
@@ -168,55 +257,63 @@ async function createCatalogModel(
 
   await requireAdmin();
 
-  const brandId = getNumberValue(
-    formData,
-    "brandId"
-  );
+  const brandId =
+    getPositiveIntegerValue(
+      formData,
+      "brandId"
+    );
 
-  const categoryId = getNumberValue(
-    formData,
-    "categoryId"
-  );
+  const categoryId =
+    getPositiveIntegerValue(
+      formData,
+      "categoryId"
+    );
 
   const name = getTextValue(
     formData,
     "name"
   );
 
-  const subtitle = getTextValue(
-    formData,
-    "subtitle"
-  );
+  const subtitle =
+    getOptionalTextValue(
+      formData,
+      "subtitle"
+    );
 
-  const description = getTextValue(
-    formData,
-    "description"
-  );
+  const description =
+    getOptionalTextValue(
+      formData,
+      "description"
+    );
 
-  const specs = getTextValue(
-    formData,
-    "specs"
-  );
+  const specs =
+    getOptionalTextValue(
+      formData,
+      "specs"
+    );
 
-  const features = getTextValue(
-    formData,
-    "features"
-  );
+  const features =
+    getOptionalTextValue(
+      formData,
+      "features"
+    );
 
-  const mainImageInput = getTextValue(
-    formData,
-    "mainImage"
-  );
+  const mainImageInput =
+    getOptionalTextValue(
+      formData,
+      "mainImage"
+    );
 
   const categoryType =
     getVehicleCategoryValue(
       formData.get("categoryType")
     );
 
-  const year = getOptionalNumberValue(
-    formData,
-    "year"
-  );
+  const year =
+    getOptionalNumberValue(
+      formData,
+      "year"
+    );
 
   const priceFrom =
     getOptionalNumberValue(
@@ -225,23 +322,20 @@ async function createCatalogModel(
     );
 
   const sortOrder =
-    getOptionalNumberValue(
-      formData,
-      "sortOrder"
-    ) ?? 0;
+    getSortOrderValue(formData);
 
   const active =
     formData.get("active") === "on";
 
-  if (!brandId) {
+  if (!brandId || !name) {
     redirectCatalogError(
-      "Selecciona una marca para el modelo."
+      "Selecciona una marca y captura el nombre del modelo."
     );
   }
 
-  if (!name) {
+  if (name.length < 2) {
     redirectCatalogError(
-      "Captura el nombre del modelo."
+      "El nombre del modelo debe contener al menos dos caracteres."
     );
   }
 
@@ -249,7 +343,8 @@ async function createCatalogModel(
     year !== null &&
     (!Number.isInteger(year) ||
       year < 1900 ||
-      year > 2100)
+      year >
+      new Date().getFullYear() + 3)
   ) {
     redirectCatalogError(
       "El año del modelo no es válido."
@@ -258,8 +353,7 @@ async function createCatalogModel(
 
   if (
     priceFrom !== null &&
-    (!Number.isFinite(priceFrom) ||
-      priceFrom < 0)
+    priceFrom < 0
   ) {
     redirectCatalogError(
       "El precio base no es válido."
@@ -275,6 +369,16 @@ async function createCatalogModel(
     );
   }
 
+  if (
+    !isValidImageReference(
+      mainImageInput
+    )
+  ) {
+    redirectCatalogError(
+      "La URL de la imagen principal no es válida."
+    );
+  }
+
   const [brand, category] =
     await Promise.all([
       prisma.brand.findUnique({
@@ -284,55 +388,50 @@ async function createCatalogModel(
 
         select: {
           id: true,
+          category: true,
           active: true,
         },
       }),
 
       categoryId
-        ? prisma.catalogCategory.findUnique({
-          where: {
-            id: categoryId,
-          },
+        ? prisma.catalogCategory.findUnique(
+          {
+            where: {
+              id: categoryId,
+            },
 
-          select: {
-            id: true,
-            brandId: true,
-            active: true,
-          },
-        })
+            select: {
+              id: true,
+              brandId: true,
+              active: true,
+            },
+          }
+        )
         : Promise.resolve(null),
     ]);
 
-  if (!brand) {
+  if (!brand || !brand.active) {
     redirectCatalogError(
-      "La marca seleccionada ya no existe."
-    );
-  }
-
-  if (!brand.active) {
-    redirectCatalogError(
-      "La marca seleccionada está inactiva."
-    );
-  }
-
-  if (categoryId && !category) {
-    redirectCatalogError(
-      "La categoría seleccionada ya no existe."
+      "La marca seleccionada no existe o está inactiva."
     );
   }
 
   if (
-    category &&
-    category.brandId !== brandId
+    brand.category !== categoryType
   ) {
     redirectCatalogError(
-      "La categoría seleccionada no pertenece a la marca."
+      "El tipo del modelo no corresponde con la categoría de la marca."
     );
   }
 
-  if (category && !category.active) {
+  if (
+    categoryId &&
+    (!category ||
+      !category.active ||
+      category.brandId !== brandId)
+  ) {
     redirectCatalogError(
-      "La categoría seleccionada está inactiva."
+      "La categoría seleccionada no corresponde con la marca."
     );
   }
 
@@ -357,7 +456,7 @@ async function createCatalogModel(
       );
   } catch (error) {
     console.error(
-      "Error guardando archivos del catálogo:",
+      "Error guardando archivos:",
       error
     );
 
@@ -389,64 +488,44 @@ async function createCatalogModel(
     await prisma.catalogModel.create({
       data: {
         brandId,
-        categoryId:
-          categoryId || null,
+        categoryId: categoryId || null,
         name,
         slug,
         categoryType,
         year,
         priceFrom,
         subtitle,
-        description,
-        specs,
-        features,
-        mainImage:
-          finalMainImage,
+        description: description ?? undefined,
+        specs: specs ?? undefined,
+        features: features ?? undefined,
+        mainImage: finalMainImage,
         active,
         sortOrder,
 
-        images:
-          savedMedia.length > 0
-            ? {
-              create: savedMedia.map(
-                (item, index) => ({
-                  url: item.url,
-                  type: item.type,
-                  alt: name,
-                  order: index,
-                })
-              ),
-            }
-            : undefined,
+        images: savedMedia.length
+          ? {
+            create: savedMedia.map(
+              (item, index) => ({
+                url: item.url,
+                type: item.type,
+                alt: name,
+                order: index,
+              })
+            ),
+          }
+          : undefined,
       },
     });
   } catch (error) {
-    for (const item of savedMedia) {
-      if (
-        item.url.startsWith(
-          "/uploads/"
-        )
-      ) {
-        try {
-          await deletePublicFile(
-            item.url
-          );
-        } catch (cleanupError) {
-          console.error(
-            "No se pudo limpiar el archivo:",
-            cleanupError
-          );
-        }
-      }
-    }
+    await safelyDeleteMedia(savedMedia);
 
     console.error(
-      "Error creando modelo de catálogo:",
+      "Error creando modelo:",
       error
     );
 
     redirectCatalogError(
-      "No se pudo guardar el modelo comercial."
+      "No se pudo registrar el modelo comercial."
     );
   }
 
@@ -454,7 +533,7 @@ async function createCatalogModel(
 
   redirect(
     `/admin/catalogo?success=${encodeURIComponent(
-      "Modelo comercial creado correctamente."
+      "Modelo registrado correctamente."
     )}`
   );
 }
@@ -464,192 +543,143 @@ export default async function NewCatalogModelPage({
 }: NewCatalogModelPageProps) {
   await requireAdmin();
 
-  const params = await searchParams;
+  const query = await searchParams;
 
-  const currentYear =
-    new Date().getFullYear();
-
-  const [
-    brands,
-    catalogCategories,
-  ] = await Promise.all([
-    prisma.brand.findMany({
-      where: {
-        active: true,
-      },
-
-      orderBy: {
-        name: "asc",
-      },
-    }),
-
-    prisma.catalogCategory.findMany({
-      where: {
-        active: true,
-
-        brand: {
+  const [brands, catalogCategories] =
+    await Promise.all([
+      prisma.brand.findMany({
+        where: {
           active: true,
         },
-      },
 
-      include: {
-        parent: true,
-      },
-
-      orderBy: [
-        {
-          sortOrder: "asc",
-        },
-        {
+        orderBy: {
           name: "asc",
         },
-      ],
-    }),
-  ]);
+      }),
+
+      prisma.catalogCategory.findMany({
+        where: {
+          active: true,
+        },
+
+        include: {
+          parent: true,
+        },
+
+        orderBy: [
+          {
+            sortOrder: "asc",
+          },
+          {
+            name: "asc",
+          },
+        ],
+      }),
+    ]);
 
   return (
     <div className="pb-10">
-      {/* Encabezado */}
-      <section className="relative overflow-hidden rounded-[22px] bg-[#192a3a] px-5 py-7 text-white shadow-[0_18px_50px_rgba(15,23,42,0.14)] md:px-7 md:py-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_32%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
+      <AdminHero
+        eyebrow="Catálogo base"
+        title="Registrar modelo comercial"
+        description="Crea una plantilla comercial por marca para utilizarla posteriormente al registrar unidades reales en inventario."
+        icon={Layers3}
+        backHref="/admin/catalogo"
+        backLabel="Volver al catálogo base"
+      />
 
-        <div className="relative">
-          <Link
-            href="/admin/catalogo"
-            className="inline-flex items-center gap-2 text-xs font-black text-white/60 transition hover:text-white"
-          >
-            <ArrowLeft size={16} />
-            Volver al catálogo
-          </Link>
-
-          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#dfe7ec] backdrop-blur-sm">
-            <Tags size={15} />
-            Catálogo base
-          </div>
-
-          <h1 className="mt-4 text-3xl font-black tracking-[-0.045em] md:text-4xl lg:text-5xl">
-            Registrar modelo comercial
-          </h1>
-
-          <p className="mt-3 max-w-3xl text-sm font-medium leading-7 text-white/60 md:text-base">
-            Crea una plantilla comercial con
-            imágenes, precio, descripción y
-            especificaciones para reutilizarla al
-            registrar unidades reales.
-          </p>
-        </div>
-      </section>
-
-      {/* Mensaje de error */}
-      {params.error && (
-        <div
-          role="alert"
-          className="mt-5 flex items-start gap-3 rounded-[16px] border border-red-200 bg-red-50 px-4 py-4 text-sm font-bold text-red-700"
+      {query.error && (
+        <AdminAlert
+          variant="error"
+          className="mt-5"
         >
-          <AlertCircle
-            size={20}
-            className="mt-0.5 shrink-0"
-          />
-
-          <span>{params.error}</span>
-        </div>
+          {query.error}
+        </AdminAlert>
       )}
 
-      {/* Advertencia sin marcas */}
-      {brands.length === 0 && (
-        <div className="mt-5 rounded-[16px] border border-amber-200 bg-amber-50 p-4">
-          <p className="text-sm font-black text-amber-800">
-            No hay marcas activas
-          </p>
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminSummaryCard
+          icon={Layers3}
+          label="Modelo base"
+          value="Información comercial"
+        />
 
-          <p className="mt-1 text-xs leading-5 text-amber-700">
-            Debes registrar o activar una marca
-            antes de crear un modelo comercial.
-          </p>
+        <AdminSummaryCard
+          icon={Tags}
+          label="Clasificación"
+          value="Marca y categoría"
+          tone="blue"
+        />
 
-          <Link
-            href="/admin/marcas"
-            className="mt-3 inline-flex text-xs font-black text-amber-800 underline"
-          >
-            Ir a marcas
-          </Link>
-        </div>
-      )}
+        <AdminSummaryCard
+          icon={ImageIcon}
+          label="Multimedia"
+          value="Imágenes y videos"
+          tone="violet"
+        />
+
+        <AdminSummaryCard
+          icon={Eye}
+          label="Publicación"
+          value="Visibilidad en inventario"
+          tone="emerald"
+        />
+      </section>
 
       <form
         action={createCatalogModel}
-        className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
+        className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_370px]"
       >
         <div className="space-y-6">
-          {/* Relación comercial */}
-          <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
-            <SectionHeader
-              icon={Sparkles}
-              eyebrow="Clasificación"
-              title="Marca y categoría"
-              description="Selecciona la marca y la familia comercial a la que pertenece el modelo."
-            />
+          <BrandCategorySelects
+            mode="catalog"
+            brands={brands.map(
+              (brand) => ({
+                id: brand.id,
+                name: brand.name,
+                category:
+                  brand.category,
+              })
+            )}
+            categories={catalogCategories.map(
+              (category) => ({
+                id: category.id,
+                brandId:
+                  category.brandId,
+                name: category.name,
+                parentId:
+                  category.parentId,
+                parentName:
+                  category.parent
+                    ?.name ?? null,
+              })
+            )}
+          />
 
-            <div className="p-5 md:p-6">
-              <BrandCategorySelects
-                mode="catalog"
-                brands={brands.map(
-                  (brand) => ({
-                    id: brand.id,
-                    name: brand.name,
-                    category:
-                      brand.category,
-                  })
-                )}
-                categories={catalogCategories.map(
-                  (category) => ({
-                    id: category.id,
-                    brandId:
-                      category.brandId,
-                    name: category.name,
-                    parentId:
-                      category.parentId,
-
-                    parentName:
-                      category.parent
-                        ?.name ?? null,
-                  })
-                )}
+          <AdminSection
+            icon={Layers3}
+            eyebrow="Información principal"
+            title="Datos del modelo"
+            description="Información comercial que servirá como base al registrar unidades reales."
+          >
+            <div className="grid gap-5 md:grid-cols-2">
+              <AdminInput
+                label="Nombre del modelo"
+                name="name"
+                required
+                placeholder="Ej. Defender HD11, Maverick R..."
+                containerClassName="md:col-span-2"
               />
-            </div>
-          </section>
 
-          {/* Datos del modelo */}
-          <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
-            <SectionHeader
-              icon={Layers3}
-              eyebrow="Información comercial"
-              title="Datos del modelo"
-              description="Captura el nombre, año, precio base y orden del modelo."
-            />
+              <AdminInput
+                label="Subtítulo comercial"
+                name="subtitle"
+                placeholder="Ej. Side-by-side utilitario para trabajo y aventura"
+                containerClassName="md:col-span-2"
+              />
 
-            <div className="grid gap-5 p-5 md:grid-cols-2 md:p-6">
-              <div className="md:col-span-2">
-                <FormInput
-                  label="Nombre del modelo"
-                  name="name"
-                  required
-                  placeholder="Ej. Defender HD11"
-                  description="Utiliza el nombre comercial que verá el administrador."
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <FormInput
-                  label="Subtítulo comercial"
-                  name="subtitle"
-                  placeholder="Ej. Utilitario para trabajo y aventura"
-                  description="Texto breve para resumir el propósito del modelo."
-                />
-              </div>
-
-              <FormSelect
-                label="Tipo comercial"
+              <AdminSelect
+                label="Tipo"
                 name="categoryType"
                 defaultValue={
                   VehicleCategory.TODOTERRENO
@@ -657,94 +687,98 @@ export default async function NewCatalogModelPage({
               >
                 <option
                   value={
-                    VehicleCategory.TODOTERRENO
+                    VehicleCategory.AUTO
                   }
                 >
-                  Todoterreno
+                  Auto
                 </option>
 
                 <option
-                  value={VehicleCategory.MOTO}
+                  value={
+                    VehicleCategory.MOTO
+                  }
                 >
                   Moto
                 </option>
 
                 <option
-                  value={VehicleCategory.AUTO}
+                  value={
+                    VehicleCategory.TODOTERRENO
+                  }
                 >
-                  Auto
+                  Todo terreno
                 </option>
-              </FormSelect>
+              </AdminSelect>
 
-              <FormInput
+              <AdminInput
                 label="Año modelo"
                 name="year"
                 type="number"
                 min={1900}
-                max={2100}
-                defaultValue={currentYear}
-                description="Puede modificarse posteriormente."
+                max={
+                  new Date().getFullYear() +
+                  3
+                }
+                placeholder={String(
+                  new Date().getFullYear()
+                )}
               />
 
-              <FormInput
+              <AdminInput
                 label="Precio desde"
                 name="priceFrom"
                 type="number"
                 min={0}
-                placeholder="Ej. 539900"
-                description="Precio comercial de referencia."
+                step="0.01"
+                placeholder="539900"
               />
 
-              <FormInput
+              <AdminInput
                 label="Orden"
                 name="sortOrder"
                 type="number"
                 min={0}
                 defaultValue={0}
-                description="Los números menores aparecen primero."
+                description="Los valores menores aparecen primero."
               />
             </div>
-          </section>
+          </AdminSection>
 
-          {/* Ficha comercial */}
-          <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
-            <SectionHeader
-              icon={Tags}
-              eyebrow="Contenido"
-              title="Ficha comercial"
-              description="Agrega información reutilizable al crear unidades reales."
-            />
-
-            <div className="grid gap-5 p-5 md:p-6">
-              <FormTextarea
+          <AdminSection
+            icon={BookOpen}
+            eyebrow="Contenido comercial"
+            title="Ficha del modelo"
+            description="Agrega la descripción, especificaciones y características principales."
+          >
+            <div className="grid gap-5">
+              <AdminTextarea
                 label="Descripción"
                 name="description"
-                rows={6}
+                rows={5}
                 placeholder="Descripción comercial del modelo..."
               />
 
-              <FormTextarea
+              <AdminTextarea
                 label="Especificaciones rápidas"
                 name="specs"
                 rows={4}
-                placeholder="Ej. Motor HD11, 95 hp, tracción 4x4..."
-                description="Puedes separar las especificaciones utilizando comas."
+                placeholder="Motor HD11, 95 hp, tracción 4x4..."
+                description="Puedes separar cada especificación utilizando comas o saltos de línea."
               />
 
-              <FormTextarea
+              <AdminTextarea
                 label="Características principales"
                 name="features"
                 rows={5}
-                placeholder="Ej. Cabina cómoda, suspensión reforzada, manejo todoterreno..."
+                placeholder="Cabina cómoda, suspensión reforzada..."
+                description="Puedes separar cada característica utilizando comas o saltos de línea."
               />
             </div>
-          </section>
+          </AdminSection>
         </div>
 
-        {/* Columna lateral */}
         <aside className="xl:sticky xl:top-6 xl:self-start">
           <div className="space-y-5">
-            {/* Publicación */}
             <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
               <div className="border-b border-slate-100 bg-[#f8fafb] p-5">
                 <div className="flex items-start gap-3">
@@ -758,15 +792,14 @@ export default async function NewCatalogModelPage({
                     </h2>
 
                     <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Define si podrá utilizarse
-                      como plantilla.
+                      Controla la disponibilidad del modelo.
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="grid gap-4 p-5">
-                <ToggleOption
+                <AdminToggleOption
                   name="active"
                   title="Modelo activo"
                   description="Podrá seleccionarse al registrar unidades reales."
@@ -785,56 +818,48 @@ export default async function NewCatalogModelPage({
                   </p>
 
                   <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">
-                    Primero crea el modelo base.
-                    Después selecciónalo al registrar
-                    una unidad real en inventario.
+                    Primero registra el modelo base.
+                    Después crea las unidades reales
+                    desde inventario.
                   </p>
                 </div>
               </div>
             </section>
 
-            {/* Galería */}
-            <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
-              <div className="border-b border-slate-100 bg-[#f8fafb] p-5">
-                <div className="flex items-start gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e7edf1] text-[#192a3a]">
-                    <ImageIcon size={18} />
-                  </span>
-
-                  <div>
-                    <h2 className="text-xl font-black">
-                      Galería
-                    </h2>
-
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Imágenes y videos comerciales
-                      del modelo.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-5 p-5">
-                <FormInput
-                  label="Imagen externa"
+            <AdminSection
+              icon={ImageIcon}
+              eyebrow="Archivos"
+              title="Galería"
+              description="Carga imágenes o videos comerciales del modelo."
+              contentClassName="p-5"
+            >
+              <div className="grid gap-5">
+                <AdminInput
+                  label="Imagen principal externa"
                   name="mainImage"
-                  placeholder="https://..."
-                  description="Opcional. Una imagen subida tendrá prioridad."
+                  type="url"
+                  placeholder="https://... o /ruta/imagen.webp"
+                  description="Se utilizará cuando no se cargue una imagen local."
                 />
 
                 <label className="block">
                   <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-                    Archivos
+                    Archivos multimedia
                   </span>
 
                   <div className="rounded-[16px] border border-dashed border-slate-300 bg-[#f8fafb] p-4">
                     <Upload
-                      size={24}
+                      size={25}
                       className="mx-auto text-[#192a3a]"
                     />
 
                     <p className="mt-3 text-center text-xs font-black text-slate-700">
-                      Selecciona imágenes o videos
+                      Imágenes y videos
+                    </p>
+
+                    <p className="mt-1 text-center text-xs leading-5 text-slate-500">
+                      Puedes seleccionar varios
+                      archivos.
                     </p>
 
                     <input
@@ -851,28 +876,13 @@ export default async function NewCatalogModelPage({
                     WEBM o MOV.
                   </span>
                 </label>
-
-                <div className="rounded-[16px] border border-slate-100 bg-[#f8fafb] p-4">
-                  <p className="flex items-start gap-2 text-xs font-semibold leading-5 text-slate-500">
-                    <Info
-                      size={15}
-                      className="mt-0.5 shrink-0 text-[#192a3a]"
-                    />
-
-                    La primera imagen subida se
-                    utilizará como portada del
-                    modelo.
-                  </p>
-                </div>
               </div>
-            </section>
+            </AdminSection>
 
-            {/* Guardar */}
-            <section className="rounded-[22px] border border-[#192a3a]/10 bg-[#e7edf1] p-5">
+            <section className="rounded-[22px] border border-black/[0.08] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
               <button
                 type="submit"
-                disabled={brands.length === 0}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
               >
                 <Save size={17} />
                 Guardar modelo
@@ -880,7 +890,7 @@ export default async function NewCatalogModelPage({
 
               <Link
                 href="/admin/catalogo"
-                className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl border border-[#192a3a]/15 bg-white px-5 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#f8fafb] active:scale-[0.98]"
+                className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
               >
                 Cancelar
               </Link>
@@ -889,191 +899,5 @@ export default async function NewCatalogModelPage({
         </aside>
       </form>
     </div>
-  );
-}
-
-function SectionHeader({
-  icon: Icon,
-  eyebrow,
-  title,
-  description,
-}: {
-  icon: LucideIcon;
-  eyebrow: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="border-b border-slate-100 bg-[#f8fafb] p-5 md:p-6">
-      <div className="flex items-start gap-4">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#192a3a] text-white">
-          <Icon size={20} />
-        </span>
-
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#192a3a]">
-            {eyebrow}
-          </p>
-
-          <h2 className="mt-2 text-2xl font-black tracking-[-0.035em]">
-            {title}
-          </h2>
-
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-            {description}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FormInput({
-  label,
-  name,
-  type = "text",
-  required = false,
-  min,
-  max,
-  placeholder,
-  defaultValue,
-  description,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  required?: boolean;
-  min?: number;
-  max?: number;
-  placeholder?: string;
-  defaultValue?: string | number;
-  description?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-        {label}
-      </span>
-
-      <input
-        name={name}
-        type={type}
-        required={required}
-        min={min}
-        max={max}
-        defaultValue={defaultValue}
-        placeholder={placeholder}
-        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
-      />
-
-      {description && (
-        <span className="mt-2 block text-xs leading-5 text-slate-500">
-          {description}
-        </span>
-      )}
-    </label>
-  );
-}
-
-function FormSelect({
-  label,
-  name,
-  defaultValue,
-  children,
-}: {
-  label: string;
-  name: string;
-  defaultValue?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-        {label}
-      </span>
-
-      <select
-        name={name}
-        defaultValue={defaultValue}
-        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
-      >
-        {children}
-      </select>
-    </label>
-  );
-}
-
-function FormTextarea({
-  label,
-  name,
-  rows,
-  placeholder,
-  description,
-}: {
-  label: string;
-  name: string;
-  rows: number;
-  placeholder?: string;
-  description?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-        {label}
-      </span>
-
-      <textarea
-        name={name}
-        rows={rows}
-        placeholder={placeholder}
-        className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
-      />
-
-      {description && (
-        <span className="mt-2 block text-xs leading-5 text-slate-500">
-          {description}
-        </span>
-      )}
-    </label>
-  );
-}
-
-function ToggleOption({
-  name,
-  title,
-  description,
-  icon: Icon,
-  defaultChecked = false,
-}: {
-  name: string;
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  defaultChecked?: boolean;
-}) {
-  return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-[16px] border border-slate-200 bg-[#f8fafb] p-4 transition hover:border-[#192a3a]/30">
-      <input
-        type="checkbox"
-        name={name}
-        defaultChecked={defaultChecked}
-        className="mt-0.5 h-5 w-5 rounded border-slate-300 accent-[#192a3a]"
-      />
-
-      <Icon
-        size={17}
-        className="mt-0.5 shrink-0 text-[#192a3a]"
-      />
-
-      <span>
-        <span className="block text-sm font-black text-slate-700">
-          {title}
-        </span>
-
-        <span className="mt-1 block text-xs leading-5 text-slate-500">
-          {description}
-        </span>
-      </span>
-    </label>
   );
 }

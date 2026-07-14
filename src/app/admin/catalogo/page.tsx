@@ -1,13 +1,8 @@
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import type { LucideIcon } from "lucide-react";
 import {
-  AlertCircle,
   AlertTriangle,
-  ArrowLeft,
   ArrowRight,
-  BadgeCheck,
   Car,
   Eye,
   EyeOff,
@@ -15,21 +10,24 @@ import {
   Layers3,
   Plus,
   Search,
-  SlidersHorizontal,
   Tags,
-  Trash2,
 } from "lucide-react";
 import {
   VehicleCategory,
   VehicleMediaType,
 } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
+import {
+  AdminAlert,
+  AdminHero,
+  AdminInput,
+  AdminPagination,
+  AdminSelect,
+  AdminSummaryCard,
+} from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
-import { redirect } from "next/navigation";
-import { deletePublicFile } from "@/lib/uploads";
-import { ConfirmSubmitButton } from "@/components/admin/ui/ConfirmSubmitButton";
 
 export const dynamic = "force-dynamic";
 
@@ -40,8 +38,8 @@ type AdminCatalogPageProps = {
     tipo?: string;
     estado?: string;
     pagina?: string;
-    error?: string;
     success?: string;
+    error?: string;
   }>;
 };
 
@@ -60,13 +58,6 @@ type CatalogQueryState = {
   type: CatalogTypeFilter;
   status: CatalogStatusFilter;
 };
-
-type CatalogStatTone =
-  | "navy"
-  | "blue"
-  | "emerald"
-  | "amber"
-  | "red";
 
 const PAGE_SIZE = 6;
 
@@ -115,62 +106,20 @@ function parseCatalogStatus(
   return "TODOS";
 }
 
-function parsePage(value?: string) {
-  const page = Number(value);
-
-  return Number.isInteger(page) &&
-    page > 0
-    ? page
-    : 1;
-}
-
-function parseBrandFilter(
+function parsePositiveInteger(
   value?: string
 ) {
-  if (!value || value === "TODAS") {
-    return "TODAS";
-  }
+  const numberValue = Number(value);
 
-  const brandId = Number(value);
-
-  return Number.isInteger(brandId) &&
-    brandId > 0
-    ? String(brandId)
-    : "TODAS";
+  return Number.isInteger(numberValue) &&
+    numberValue > 0
+    ? numberValue
+    : 0;
 }
 
-function getPaginationPages(
-  currentPage: number,
-  totalPages: number
-) {
-  const visiblePages = 5;
-
-  let startPage = Math.max(
-    1,
-    currentPage - 2
-  );
-
-  const endPage = Math.min(
-    totalPages,
-    startPage + visiblePages - 1
-  );
-
-  if (
-    endPage - startPage + 1 <
-    visiblePages
-  ) {
-    startPage = Math.max(
-      1,
-      endPage - visiblePages + 1
-    );
-  }
-
-  return Array.from(
-    {
-      length:
-        endPage - startPage + 1,
-    },
-    (_, index) => startPage + index
+function parsePage(value?: string) {
+  return (
+    parsePositiveInteger(value) || 1
   );
 }
 
@@ -219,13 +168,23 @@ function buildCatalogHref({
     : "/admin/catalogo";
 }
 
-function revalidateCatalogPaths() {
+function revalidateCatalogPaths(
+  modelId: number
+) {
   revalidatePath("/admin");
   revalidatePath("/admin/catalogo");
+
+  revalidatePath(
+    `/admin/catalogo/${modelId}/editar`
+  );
+
   revalidatePath(
     "/admin/inventario/nuevo"
   );
+
   revalidatePath("/catalogo");
+  revalidatePath("/inventario");
+  revalidatePath("/");
 }
 
 async function toggleCatalogModelActive(
@@ -238,11 +197,6 @@ async function toggleCatalogModelActive(
   const modelId = Number(
     formData.get("modelId")
   );
-
-  const currentActive =
-    String(
-      formData.get("active")
-    ) === "true";
 
   if (
     !Number.isInteger(modelId) ||
@@ -259,6 +213,7 @@ async function toggleCatalogModelActive(
 
       select: {
         id: true,
+        active: true,
       },
     });
 
@@ -272,197 +227,11 @@ async function toggleCatalogModelActive(
     },
 
     data: {
-      active: !currentActive,
+      active: !model.active,
     },
   });
 
-  revalidateCatalogPaths();
-}
-
-async function deleteCatalogModel(
-  formData: FormData
-) {
-  "use server";
-
-  await requireAdmin();
-
-  const modelId = Number(
-    formData.get("modelId")
-  );
-
-  if (
-    !Number.isInteger(modelId) ||
-    modelId <= 0
-  ) {
-    redirect(
-      `/admin/catalogo?error=${encodeURIComponent(
-        "No se pudo identificar el modelo."
-      )}`
-    );
-  }
-
-  const catalogModel =
-    await prisma.catalogModel.findUnique({
-      where: {
-        id: modelId,
-      },
-
-      include: {
-        brand: {
-          select: {
-            name: true,
-          },
-        },
-
-        images: {
-          select: {
-            id: true,
-            url: true,
-          },
-        },
-      },
-    });
-
-  if (!catalogModel) {
-    redirect(
-      `/admin/catalogo?error=${encodeURIComponent(
-        "El modelo ya no existe o fue eliminado previamente."
-      )}`
-    );
-  }
-
-  /*
-   * Las unidades creadas desde una plantilla
-   * pueden conservar las mismas URLs.
-   */
-  const catalogUrls = Array.from(
-    new Set(
-      [
-        catalogModel.mainImage,
-        ...catalogModel.images.map(
-          (image) => image.url
-        ),
-      ].filter(
-        (url): url is string =>
-          Boolean(url?.trim())
-      )
-    )
-  );
-
-  const [
-    vehicleImageReferences,
-    vehicleMainImageReferences,
-  ] =
-    catalogUrls.length > 0
-      ? await Promise.all([
-        prisma.vehicleImage.findMany({
-          where: {
-            url: {
-              in: catalogUrls,
-            },
-          },
-
-          select: {
-            url: true,
-          },
-        }),
-
-        prisma.vehicle.findMany({
-          where: {
-            mainImage: {
-              in: catalogUrls,
-            },
-          },
-
-          select: {
-            mainImage: true,
-          },
-        }),
-      ])
-      : [[], []];
-
-  const referencedUrls = new Set<string>();
-
-  vehicleImageReferences.forEach(
-    (image) => {
-      referencedUrls.add(image.url);
-    }
-  );
-
-  vehicleMainImageReferences.forEach(
-    (vehicle) => {
-      if (vehicle.mainImage) {
-        referencedUrls.add(
-          vehicle.mainImage
-        );
-      }
-    }
-  );
-
-  try {
-    await prisma.$transaction([
-      prisma.catalogImage.deleteMany({
-        where: {
-          catalogModelId: modelId,
-        },
-      }),
-
-      prisma.catalogModel.delete({
-        where: {
-          id: modelId,
-        },
-      }),
-    ]);
-  } catch (error) {
-    console.error(
-      "Error eliminando modelo del catálogo:",
-      error
-    );
-
-    redirect(
-      `/admin/catalogo?error=${encodeURIComponent(
-        "No se pudo eliminar el modelo del catálogo."
-      )}`
-    );
-  }
-
-  /*
-   * Borra solo archivos locales que no estén
-   * siendo usados por unidades del inventario.
-   */
-  for (const url of catalogUrls) {
-    if (
-      !url.startsWith("/uploads/") ||
-      referencedUrls.has(url)
-    ) {
-      continue;
-    }
-
-    try {
-      await deletePublicFile(url);
-    } catch (error) {
-      console.error(
-        `El modelo fue eliminado, pero no se pudo borrar el archivo ${url}:`,
-        error
-      );
-    }
-  }
-
-  revalidatePath("/admin");
-  revalidatePath("/admin/catalogo");
-  revalidatePath(
-    "/admin/catalogo/nuevo"
-  );
-  revalidatePath(
-    "/admin/inventario/nuevo"
-  );
-  revalidatePath("/catalogo");
-
-  redirect(
-    `/admin/catalogo?success=${encodeURIComponent(
-      `El modelo ${catalogModel.brand.name} ${catalogModel.name} fue eliminado correctamente.`
-    )}`
-  );
+  revalidateCatalogPaths(modelId);
 }
 
 export default async function AdminCatalogPage({
@@ -475,35 +244,42 @@ export default async function AdminCatalogPage({
   const search =
     params.q?.trim() ?? "";
 
+  const selectedBrandId =
+    parsePositiveInteger(
+      params.marca
+    );
+
   const brandFilter =
-    parseBrandFilter(params.marca);
+    selectedBrandId > 0
+      ? String(selectedBrandId)
+      : "TODAS";
 
   const typeFilter =
     parseCatalogType(params.tipo);
 
   const statusFilter =
-    parseCatalogStatus(params.estado);
+    parseCatalogStatus(
+      params.estado
+    );
 
   const requestedPage =
     parsePage(params.pagina);
-
-  const selectedBrandId =
-    brandFilter !== "TODAS"
-      ? Number(brandFilter)
-      : 0;
 
   const numericSearch =
     Number(search);
 
   const searchYear =
     search &&
-      Number.isInteger(numericSearch) &&
+      Number.isInteger(
+        numericSearch
+      ) &&
       numericSearch >= 1900 &&
       numericSearch <= 2100
       ? numericSearch
       : null;
 
-  const searchConditions: Prisma.CatalogModelWhereInput[] =
+  const searchConditions:
+    Prisma.CatalogModelWhereInput[] =
     [];
 
   if (search) {
@@ -520,16 +296,6 @@ export default async function AdminCatalogPage({
       },
       {
         description: {
-          contains: search,
-        },
-      },
-      {
-        specs: {
-          contains: search,
-        },
-      },
-      {
-        features: {
           contains: search,
         },
       },
@@ -560,8 +326,8 @@ export default async function AdminCatalogPage({
     }
   }
 
-  const where: Prisma.CatalogModelWhereInput =
-  {
+  const where:
+    Prisma.CatalogModelWhereInput = {
     ...(searchConditions.length > 0
       ? {
         OR: searchConditions,
@@ -570,7 +336,8 @@ export default async function AdminCatalogPage({
 
     ...(selectedBrandId > 0
       ? {
-        brandId: selectedBrandId,
+        brandId:
+          selectedBrandId,
       }
       : {}),
 
@@ -605,6 +372,11 @@ export default async function AdminCatalogPage({
       orderBy: {
         name: "asc",
       },
+
+      select: {
+        id: true,
+        name: true,
+      },
     }),
 
     prisma.catalogModel.count({
@@ -636,7 +408,8 @@ export default async function AdminCatalogPage({
   const totalPages = Math.max(
     1,
     Math.ceil(
-      filteredModelCount / PAGE_SIZE
+      filteredModelCount /
+      PAGE_SIZE
     )
   );
 
@@ -646,7 +419,8 @@ export default async function AdminCatalogPage({
   );
 
   const paginationSkip =
-    (currentPage - 1) * PAGE_SIZE;
+    (currentPage - 1) *
+    PAGE_SIZE;
 
   const catalogModels =
     await prisma.catalogModel.findMany({
@@ -701,7 +475,7 @@ export default async function AdminCatalogPage({
   const modelsWithoutImage =
     statsModels.filter(
       (model) =>
-        !model.mainImage?.trim() &&
+        !model.mainImage &&
         model.images.length === 0
     ).length;
 
@@ -711,55 +485,6 @@ export default async function AdminCatalogPage({
         (model) => model.brandId
       )
     ).size;
-
-  const stats: Array<{
-    label: string;
-    value: number;
-    description: string;
-    icon: LucideIcon;
-    tone: CatalogStatTone;
-  }> = [
-      {
-        label: "Modelos",
-        value: totalModels,
-        description:
-          "Plantillas comerciales registradas.",
-        icon: Layers3,
-        tone: "navy",
-      },
-      {
-        label: "Activos",
-        value: activeModels,
-        description:
-          "Disponibles para crear unidades.",
-        icon: BadgeCheck,
-        tone: "emerald",
-      },
-      {
-        label: "Ocultos",
-        value: hiddenModels,
-        description:
-          "Modelos fuera de publicación.",
-        icon: EyeOff,
-        tone: "amber",
-      },
-      {
-        label: "Marcas",
-        value: brandsWithCatalog,
-        description:
-          "Marcas con modelos registrados.",
-        icon: Tags,
-        tone: "blue",
-      },
-      {
-        label: "Sin imagen",
-        value: modelsWithoutImage,
-        description:
-          "Modelos que necesitan portada.",
-        icon: ImageIcon,
-        tone: "red",
-      },
-    ];
 
   const hasAdvancedFilters =
     brandFilter !== "TODAS" ||
@@ -782,14 +507,15 @@ export default async function AdminCatalogPage({
       ? 0
       : paginationSkip + 1;
 
-  const lastVisibleModel = Math.min(
-    paginationSkip +
-    catalogModels.length,
-    filteredModelCount
-  );
+  const lastVisibleModel =
+    Math.min(
+      paginationSkip +
+      catalogModels.length,
+      filteredModelCount
+    );
 
-  const catalogQueryState: CatalogQueryState =
-  {
+  const catalogQueryState:
+    CatalogQueryState = {
     search,
     brand: brandFilter,
     type: typeFilter,
@@ -798,83 +524,93 @@ export default async function AdminCatalogPage({
 
   return (
     <div className="pb-10">
-      {/* Encabezado */}
-      <section className="relative overflow-hidden rounded-[22px] bg-[#192a3a] px-5 py-7 text-white shadow-[0_18px_50px_rgba(15,23,42,0.14)] md:px-7 md:py-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_32%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
+      <AdminHero
+        eyebrow="Catálogo base"
+        title="Modelos comerciales"
+        description="Administra las plantillas de vehículos por marca, categoría, precio e información comercial."
+        icon={Tags}
+        actions={
+          <>
+            <Link
+              href="/catalogo"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-black text-white transition hover:bg-white/15 active:scale-[0.98]"
+            >
+              <Eye size={17} />
+              Ver catálogo público
+            </Link>
 
-        <div className="relative flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#dfe7ec] backdrop-blur-sm">
-              <Tags size={15} />
-              Catálogo base
-            </div>
+            <Link
+              href="/admin/catalogo/nuevo"
+              className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+            >
+              <Plus size={18} />
+              Nuevo modelo
 
-            <h1 className="mt-4 text-3xl font-black tracking-[-0.045em] md:text-4xl lg:text-5xl">
-              Modelos comerciales
-            </h1>
-
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-white/60 md:text-base">
-              Administra las plantillas de
-              vehículos por marca, categoría,
-              precio e información comercial.
-            </p>
-          </div>
-
-          <Link
-            href="/admin/catalogo/nuevo"
-            className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
-          >
-            <Plus size={18} />
-            Nuevo modelo
-
-            <ArrowRight
-              size={16}
-              className="transition-transform group-hover:translate-x-0.5"
-            />
-          </Link>
-        </div>
-      </section>
-
-      {/* Mensajes */}
-      {params.error && (
-        <div
-          role="alert"
-          className="mt-5 flex items-start gap-3 rounded-[16px] border border-red-200 bg-red-50 px-4 py-4 text-sm font-bold text-red-700"
-        >
-          <AlertCircle
-            size={20}
-            className="mt-0.5 shrink-0"
-          />
-
-          <span>{params.error}</span>
-        </div>
-      )}
+              <ArrowRight
+                size={16}
+                className="transition-transform group-hover:translate-x-0.5"
+              />
+            </Link>
+          </>
+        }
+      />
 
       {params.success && (
-        <div
-          role="status"
-          className="mt-5 flex items-start gap-3 rounded-[16px] border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm font-bold text-emerald-700"
+        <AdminAlert
+          variant="success"
+          className="mt-5"
         >
-          <BadgeCheck
-            size={20}
-            className="mt-0.5 shrink-0"
-          />
-
-          <span>{params.success}</span>
-        </div>
+          {params.success}
+        </AdminAlert>
       )}
 
-      {/* Estadísticas */}
-      <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {stats.map((stat) => (
-          <CatalogStatCard
-            key={stat.label}
-            {...stat}
-          />
-        ))}
+      {params.error && (
+        <AdminAlert
+          variant="error"
+          className="mt-5"
+        >
+          {params.error}
+        </AdminAlert>
+      )}
+
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <AdminSummaryCard
+          icon={Layers3}
+          label="Total modelos"
+          value={totalModels}
+        />
+
+        <AdminSummaryCard
+          icon={Eye}
+          label="Activos"
+          value={activeModels}
+          tone="emerald"
+        />
+
+        <AdminSummaryCard
+          icon={EyeOff}
+          label="Ocultos"
+          value={hiddenModels}
+          tone="red"
+        />
+
+        <AdminSummaryCard
+          icon={Tags}
+          label="Marcas"
+          value={brandsWithCatalog}
+          tone="blue"
+        />
+
+        <AdminSummaryCard
+          icon={ImageIcon}
+          label="Sin imagen"
+          value={modelsWithoutImage}
+          tone="amber"
+        />
       </section>
 
-      {/* Filtros */}
       <section className="mt-6 rounded-[22px] border border-black/[0.08] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.04)] md:p-6">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
@@ -886,18 +622,18 @@ export default async function AdminCatalogPage({
               </p>
             </div>
 
-            <h2 className="mt-3 flex items-center gap-2 text-2xl font-black tracking-[-0.035em]">
-              <SlidersHorizontal size={20} />
+            <h2 className="mt-3 text-2xl font-black tracking-[-0.035em]">
               Modelos del catálogo
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-slate-500">
               Busca por modelo, marca,
-              categoría, contenido o año.
+              categoría, tipo o estado de
+              publicación.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {activeFilterCount > 0 && (
               <span className="rounded-full border border-[#192a3a]/10 bg-[#e7edf1] px-4 py-2 text-xs font-black text-[#192a3a]">
                 {activeFilterCount} filtro
@@ -912,7 +648,7 @@ export default async function AdminCatalogPage({
             )}
 
             <span className="rounded-full border border-slate-200 bg-[#f8fafb] px-4 py-2 text-xs font-black text-slate-600">
-              {filteredModelCount} resultado
+              {filteredModelCount} modelo
               {filteredModelCount === 1
                 ? ""
                 : "s"}
@@ -922,211 +658,131 @@ export default async function AdminCatalogPage({
 
         <form
           action="/admin/catalogo"
-          className="mt-6"
+          className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(250px,1fr)_220px_200px_200px_auto]"
         >
-          {/* Búsqueda principal */}
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
-            <label className="block">
-              <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-                Buscar modelo
-              </span>
-
-              <div className="relative">
-                <Search
-                  size={17}
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-
-                <input
-                  name="q"
-                  defaultValue={search}
-                  placeholder="Modelo, marca, categoría o año"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
-                />
-              </div>
-            </label>
-
-            <button
-              type="submit"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-6 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] lg:self-end"
-            >
-              <Search size={17} />
-              Buscar
-            </button>
-
-            {hasFilters && (
-              <Link
-                href="/admin/catalogo"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98] lg:self-end"
-              >
-                Limpiar
-              </Link>
-            )}
-          </div>
-
-          {/* Filtros secundarios */}
-          <details
-            open={hasAdvancedFilters}
-            className="group mt-4 overflow-hidden rounded-[16px] border border-slate-200 bg-[#f8fafb]"
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3">
-              <span className="flex items-center gap-2 text-xs font-black text-[#192a3a]">
-                <SlidersHorizontal
-                  size={16}
-                />
-                Más filtros
-              </span>
-
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-[#192a3a] transition group-open:rotate-90">
-                <ArrowRight size={14} />
-              </span>
-            </summary>
-
-            <div className="border-t border-slate-200 p-4">
-              <div className="grid gap-4 md:grid-cols-3">
-                <FilterSelect
-                  label="Marca"
-                  name="marca"
-                  defaultValue={
-                    brandFilter
-                  }
-                >
-                  <option value="TODAS">
-                    Todas las marcas
-                  </option>
-
-                  {brands.map((brand) => (
-                    <option
-                      key={brand.id}
-                      value={brand.id}
-                    >
-                      {brand.name}
-                    </option>
-                  ))}
-                </FilterSelect>
-
-                <FilterSelect
-                  label="Tipo"
-                  name="tipo"
-                  defaultValue={
-                    typeFilter
-                  }
-                >
-                  <option value="TODOS">
-                    Todos los tipos
-                  </option>
-
-                  <option
-                    value={
-                      VehicleCategory.AUTO
-                    }
-                  >
-                    Auto
-                  </option>
-
-                  <option
-                    value={
-                      VehicleCategory.MOTO
-                    }
-                  >
-                    Moto
-                  </option>
-
-                  <option
-                    value={
-                      VehicleCategory.TODOTERRENO
-                    }
-                  >
-                    Todoterreno
-                  </option>
-                </FilterSelect>
-
-                <FilterSelect
-                  label="Estado"
-                  name="estado"
-                  defaultValue={
-                    statusFilter
-                  }
-                >
-                  <option value="TODOS">
-                    Todos
-                  </option>
-
-                  <option value="ACTIVOS">
-                    Activos
-                  </option>
-
-                  <option value="OCULTOS">
-                    Ocultos
-                  </option>
-                </FilterSelect>
-              </div>
-
-              <div className="mt-4 flex flex-col justify-end gap-3 sm:flex-row">
-                {hasAdvancedFilters && (
-                  <Link
-                    href={
-                      search
-                        ? `/admin/catalogo?q=${encodeURIComponent(
-                          search
-                        )}`
-                        : "/admin/catalogo"
-                    }
-                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:text-[#192a3a]"
-                  >
-                    Limpiar secundarios
-                  </Link>
-                )}
-
-                <button
-                  type="submit"
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
-                >
-                  Aplicar filtros
-                </button>
-              </div>
-            </div>
-          </details>
-        </form>
-
-        {/* Filtros rápidos */}
-        <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
-          <CatalogTypeLink
-            href={buildCatalogHref({
-              search,
-              brand: brandFilter,
-              type: "TODOS",
-              status: statusFilter,
-            })}
-            active={
-              typeFilter === "TODOS"
-            }
-            label="Todos"
+          <AdminInput
+            label="Buscar"
+            name="q"
+            defaultValue={search}
+            placeholder="Modelo, marca, categoría o año"
           />
 
-          {Object.values(
-            VehicleCategory
-          ).map((type) => (
+          <AdminSelect
+            label="Marca"
+            name="marca"
+            defaultValue={brandFilter}
+          >
+            <option value="TODAS">
+              Todas las marcas
+            </option>
+
+            {brands.map((brand) => (
+              <option
+                key={brand.id}
+                value={brand.id}
+              >
+                {brand.name}
+              </option>
+            ))}
+          </AdminSelect>
+
+          <AdminSelect
+            label="Tipo"
+            name="tipo"
+            defaultValue={typeFilter}
+          >
+            <option value="TODOS">
+              Todos los tipos
+            </option>
+
+            {Object.values(
+              VehicleCategory
+            ).map((type) => (
+              <option
+                key={type}
+                value={type}
+              >
+                {getCategoryLabel(type)}
+              </option>
+            ))}
+          </AdminSelect>
+
+          <AdminSelect
+            label="Estado"
+            name="estado"
+            defaultValue={statusFilter}
+          >
+            <option value="TODOS">
+              Todos
+            </option>
+
+            <option value="ACTIVOS">
+              Activos
+            </option>
+
+            <option value="OCULTOS">
+              Ocultos
+            </option>
+          </AdminSelect>
+
+          <button
+            type="submit"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-6 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] xl:self-end"
+          >
+            <Search size={17} />
+            Buscar
+          </button>
+        </form>
+
+        <div className="mt-5 flex flex-col justify-between gap-4 border-t border-slate-100 pt-5 lg:flex-row lg:items-center">
+          <div className="flex gap-2 overflow-x-auto pb-2 lg:pb-0">
             <CatalogTypeLink
-              key={type}
               href={buildCatalogHref({
                 search,
                 brand: brandFilter,
-                type,
-                status: statusFilter,
+                type: "TODOS",
+                status:
+                  statusFilter,
               })}
               active={
-                typeFilter === type
+                typeFilter === "TODOS"
               }
-              label={getCategoryLabel(
-                type
-              )}
+              label="Todos"
             />
-          ))}
+
+            {Object.values(
+              VehicleCategory
+            ).map((type) => (
+              <CatalogTypeLink
+                key={type}
+                href={buildCatalogHref({
+                  search,
+                  brand: brandFilter,
+                  type,
+                  status:
+                    statusFilter,
+                })}
+                active={
+                  typeFilter === type
+                }
+                label={getCategoryLabel(
+                  type
+                )}
+              />
+            ))}
+          </div>
+
+          {hasFilters && (
+            <Link
+              href="/admin/catalogo"
+              className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+            >
+              Limpiar filtros
+            </Link>
+          )}
         </div>
       </section>
 
-      {/* Resultados */}
       <section className="mt-6">
         <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
@@ -1166,18 +822,25 @@ export default async function AdminCatalogPage({
               (model) => {
                 const image =
                   model.mainImage ||
-                  model.images[0]?.url ||
+                  model.images[0]
+                    ?.url ||
                   "";
 
                 const hasPrice =
-                  model.priceFrom !== null &&
+                  model.priceFrom !==
+                  null &&
                   Number(
                     model.priceFrom
                   ) > 0;
 
+                const hasDescription =
+                  Boolean(
+                    model.description?.trim()
+                  );
+
                 const hasIssues =
                   !image ||
-                  !model.description?.trim() ||
+                  !hasDescription ||
                   !hasPrice;
 
                 return (
@@ -1185,9 +848,8 @@ export default async function AdminCatalogPage({
                     key={model.id}
                     className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)] transition duration-300 hover:border-[#192a3a]/25 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
                   >
-                    <div className="grid xl:grid-cols-[210px_minmax(0,1fr)_290px]">
-                      {/* Imagen */}
-                      <div className="relative h-[220px] overflow-hidden bg-slate-100 sm:h-[280px] xl:h-full xl:min-h-[320px]">
+                    <div className="grid xl:grid-cols-[230px_minmax(0,1fr)_290px]">
+                      <div className="relative h-[230px] overflow-hidden bg-slate-100 sm:h-[300px] xl:h-full xl:min-h-[330px]">
                         {image ? (
                           <img
                             src={image}
@@ -1220,7 +882,9 @@ export default async function AdminCatalogPage({
                             }`}
                         >
                           {model.active ? (
-                            <Eye size={13} />
+                            <Eye
+                              size={13}
+                            />
                           ) : (
                             <EyeOff
                               size={13}
@@ -1233,7 +897,6 @@ export default async function AdminCatalogPage({
                         </span>
                       </div>
 
-                      {/* Información */}
                       <div className="min-w-0 p-5 md:p-6">
                         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                           <div className="min-w-0">
@@ -1282,16 +945,17 @@ export default async function AdminCatalogPage({
                           </p>
                         )}
 
-                        {model.description ? (
-                          <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-500">
+                        {hasDescription ? (
+                          <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500">
                             {
                               model.description
                             }
                           </p>
                         ) : (
                           <p className="mt-3 text-sm italic leading-6 text-slate-400">
-                            Este modelo no tiene
-                            una descripción
+                            Este modelo no
+                            tiene una
+                            descripción
                             comercial.
                           </p>
                         )}
@@ -1302,8 +966,9 @@ export default async function AdminCatalogPage({
                             value={
                               hasPrice
                                 ? formatCurrency(
-                                  model.priceFrom ??
-                                  0
+                                  Number(
+                                    model.priceFrom
+                                  )
                                 )
                                 : "Sin precio"
                             }
@@ -1332,7 +997,9 @@ export default async function AdminCatalogPage({
                                 size={14}
                                 className="text-amber-600"
                               />
-                              Información pendiente
+
+                              Información
+                              pendiente
                             </p>
 
                             <div className="mt-3 flex flex-wrap gap-2">
@@ -1340,7 +1007,7 @@ export default async function AdminCatalogPage({
                                 <IssueBadge label="Sin imagen" />
                               )}
 
-                              {!model.description?.trim() && (
+                              {!hasDescription && (
                                 <IssueBadge label="Sin descripción" />
                               )}
 
@@ -1352,12 +1019,11 @@ export default async function AdminCatalogPage({
                         )}
                       </div>
 
-                      {/* Acciones */}
                       <CatalogModelActions
                         modelId={model.id}
-                        active={model.active}
-                        modelName={model.name}
-                        brandName={model.brand.name}
+                        active={
+                          model.active
+                        }
                       />
                     </div>
                   </article>
@@ -1404,117 +1070,38 @@ export default async function AdminCatalogPage({
           </div>
         )}
 
-        <CatalogPagination
+        <AdminPagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={
-            filteredModelCount
-          }
+          totalItems={filteredModelCount}
           firstItem={firstVisibleModel}
           lastItem={lastVisibleModel}
-          filters={catalogQueryState}
+          itemLabel="modelo"
+          itemLabelPlural="modelos"
+          hrefForPage={(page) =>
+            buildCatalogHref({
+              ...catalogQueryState,
+              page,
+            })
+          }
         />
       </section>
 
-      {/* Resumen */}
-      <section className="mt-6 rounded-[18px] border border-[#192a3a]/10 bg-[#e7edf1] px-5 py-4">
-        <p className="text-sm font-black text-[#192a3a]">
-          Resumen del catálogo
-        </p>
-
-        <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-          Actualmente existen{" "}
-          {hiddenModels} modelos ocultos.
-          Los {activeModels} modelos activos
-          pueden utilizarse como base para
-          registrar nuevas unidades.
-        </p>
-      </section>
+      <AdminAlert
+        variant="info"
+        className="mt-6"
+      >
+        Actualmente existen{" "}
+        <strong>
+          {hiddenModels} modelos
+          ocultos
+        </strong>
+        . Los modelos activos pueden
+        seleccionarse como base al
+        registrar nuevas unidades de
+        inventario.
+      </AdminAlert>
     </div>
-  );
-}
-
-function CatalogStatCard({
-  label,
-  value,
-  description,
-  icon: Icon,
-  tone,
-}: {
-  label: string;
-  value: number;
-  description: string;
-  icon: LucideIcon;
-  tone: CatalogStatTone;
-}) {
-  const tones: Record<
-    CatalogStatTone,
-    string
-  > = {
-    navy:
-      "border-[#192a3a]/10 bg-[#e7edf1] text-[#192a3a]",
-
-    blue:
-      "border-blue-100 bg-blue-50 text-blue-700",
-
-    emerald:
-      "border-emerald-100 bg-emerald-50 text-emerald-700",
-
-    amber:
-      "border-amber-100 bg-amber-50 text-amber-700",
-
-    red:
-      "border-red-100 bg-red-50 text-red-700",
-  };
-
-  return (
-    <article className="rounded-[20px] border border-black/[0.08] bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)]">
-      <span
-        className={`grid h-11 w-11 place-items-center rounded-xl border ${tones[tone]}`}
-      >
-        <Icon size={21} />
-      </span>
-
-      <p className="mt-5 text-4xl font-black tracking-[-0.05em] text-[#192a3a]">
-        {value}
-      </p>
-
-      <h2 className="mt-2 text-sm font-black">
-        {label}
-      </h2>
-
-      <p className="mt-1 text-xs font-medium leading-5 text-slate-500">
-        {description}
-      </p>
-    </article>
-  );
-}
-
-function FilterSelect({
-  label,
-  name,
-  defaultValue,
-  children,
-}: {
-  label: string;
-  name: string;
-  defaultValue: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-        {label}
-      </span>
-
-      <select
-        name={name}
-        defaultValue={defaultValue}
-        className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 outline-none transition focus:border-[#192a3a] focus:ring-2 focus:ring-[#192a3a]/10"
-      >
-        {children}
-      </select>
-    </label>
   );
 }
 
@@ -1587,13 +1174,9 @@ function IssueBadge({
 function CatalogModelActions({
   modelId,
   active,
-  modelName,
-  brandName,
 }: {
   modelId: number;
   active: boolean;
-  modelName: string;
-  brandName: string;
 }) {
   return (
     <aside className="border-t border-slate-100 bg-[#f8fafb] p-5 xl:border-l xl:border-t-0">
@@ -1623,18 +1206,14 @@ function CatalogModelActions({
         </Link>
 
         <form
-          action={toggleCatalogModelActive}
+          action={
+            toggleCatalogModelActive
+          }
         >
           <input
             type="hidden"
             name="modelId"
             value={modelId}
-          />
-
-          <input
-            type="hidden"
-            name="active"
-            value={String(active)}
           />
 
           <button
@@ -1654,130 +1233,7 @@ function CatalogModelActions({
             )}
           </button>
         </form>
-
-        <form action={deleteCatalogModel}>
-          <input
-            type="hidden"
-            name="modelId"
-            value={modelId}
-          />
-
-          <ConfirmSubmitButton
-            title="Eliminar modelo del catálogo"
-            confirmMessage={`Estás por eliminar "${brandName} ${modelName}" del catálogo base. Las unidades que ya fueron creadas permanecerán en el inventario.`}
-            confirmText="Eliminar definitivamente"
-            cancelText="Conservar modelo"
-            pendingText="Eliminando modelo..."
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-xs font-black text-red-700 transition hover:bg-red-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Trash2 size={16} />
-            Eliminar modelo
-          </ConfirmSubmitButton>
-        </form>
       </div>
     </aside>
-  );
-}
-
-function CatalogPagination({
-  currentPage,
-  totalPages,
-  totalItems,
-  firstItem,
-  lastItem,
-  filters,
-}: {
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  firstItem: number;
-  lastItem: number;
-  filters: CatalogQueryState;
-}) {
-  if (totalItems === 0) {
-    return null;
-  }
-
-  const pages = getPaginationPages(
-    currentPage,
-    totalPages
-  );
-
-  return (
-    <nav
-      aria-label="Paginación del catálogo"
-      className="mt-6 flex flex-col gap-4 rounded-[18px] border border-black/[0.08] bg-white p-4 shadow-[0_8px_28px_rgba(15,23,42,0.04)] sm:flex-row sm:items-center sm:justify-between"
-    >
-      <p className="text-xs font-semibold text-slate-500">
-        Mostrando{" "}
-        <strong className="text-[#192a3a]">
-          {firstItem}–{lastItem}
-        </strong>{" "}
-        de{" "}
-        <strong className="text-[#192a3a]">
-          {totalItems}
-        </strong>{" "}
-        modelos
-      </p>
-
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-        {currentPage > 1 ? (
-          <Link
-            href={buildCatalogHref({
-              ...filters,
-              page: currentPage - 1,
-            })}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1]"
-          >
-            <ArrowLeft size={14} />
-            Anterior
-          </Link>
-        ) : (
-          <span className="inline-flex h-10 shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4 text-xs font-black text-slate-300">
-            <ArrowLeft size={14} />
-            Anterior
-          </span>
-        )}
-
-        {pages.map((page) => (
-          <Link
-            key={page}
-            href={buildCatalogHref({
-              ...filters,
-              page,
-            })}
-            aria-current={
-              page === currentPage
-                ? "page"
-                : undefined
-            }
-            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-xs font-black transition ${page === currentPage
-              ? "border-[#192a3a] bg-[#192a3a] text-white"
-              : "border-slate-200 bg-white text-slate-600 hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a]"
-              }`}
-          >
-            {page}
-          </Link>
-        ))}
-
-        {currentPage < totalPages ? (
-          <Link
-            href={buildCatalogHref({
-              ...filters,
-              page: currentPage + 1,
-            })}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1]"
-          >
-            Siguiente
-            <ArrowRight size={14} />
-          </Link>
-        ) : (
-          <span className="inline-flex h-10 shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4 text-xs font-black text-slate-300">
-            Siguiente
-            <ArrowRight size={14} />
-          </span>
-        )}
-      </div>
-    </nav>
   );
 }

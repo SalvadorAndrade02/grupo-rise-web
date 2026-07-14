@@ -1,69 +1,64 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
 import {
-  AlertCircle,
   AlertTriangle,
-  ArrowRight,
   BadgeCheck,
   Building2,
   Car,
-  CheckCircle2,
   Eye,
   EyeOff,
+  ExternalLink,
   Gauge,
   ImageIcon,
   MapPin,
   Pencil,
   Plus,
   Search,
-  SlidersHorizontal,
   Tags,
   Trash2,
 } from "lucide-react";
+import {
+  VehicleCondition,
+  VehicleMediaType,
+  VehicleStatus,
+} from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import {
+  AdminAlert,
+  AdminHero,
+  AdminInput,
+  AdminPagination,
+  AdminSelect,
+  AdminSummaryCard,
+} from "@/components/admin/ui";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
+import { requireAdmin } from "@/lib/admin-auth";
 import { deletePublicFile } from "@/lib/uploads";
-import type { Prisma } from "@prisma/client";
-import { ConfirmSubmitButton } from "@/components/admin/ui/ConfirmSubmitButton";
 
 export const dynamic = "force-dynamic";
 
 const conditionOptions = [
   "TODAS",
-  "NUEVO",
-  "SEMINUEVO",
+  VehicleCondition.NUEVO,
+  VehicleCondition.SEMINUEVO,
 ] as const;
 
 const statusOptions = [
   "TODOS",
-  "DISPONIBLE",
-  "APARTADO",
-  "VENDIDO",
-  "EN_TRANSITO",
-  "PROXIMAMENTE",
-  "INACTIVO",
+  VehicleStatus.DISPONIBLE,
+  VehicleStatus.APARTADO,
+  VehicleStatus.VENDIDO,
+  VehicleStatus.EN_TRANSITO,
+  VehicleStatus.PROXIMAMENTE,
+  VehicleStatus.INACTIVO,
 ] as const;
 
 const visibilityOptions = [
   "TODOS",
   "ACTIVO",
   "OCULTO",
-] as const;
-
-const validVehicleConditions = [
-  "NUEVO",
-  "SEMINUEVO",
-] as const;
-
-const validVehicleStatuses = [
-  "DISPONIBLE",
-  "APARTADO",
-  "VENDIDO",
-  "EN_TRANSITO",
-  "PROXIMAMENTE",
-  "INACTIVO",
 ] as const;
 
 type ConditionFilter =
@@ -75,11 +70,16 @@ type StatusFilter =
 type VisibilityFilter =
   (typeof visibilityOptions)[number];
 
-type VehicleConditionValue =
-  (typeof validVehicleConditions)[number];
+type InventoryQueryState = {
+  search: string;
+  brandId: number;
+  condition: ConditionFilter;
+  status: StatusFilter;
+  visibility: VisibilityFilter;
+  branchId: number;
+};
 
-type VehicleStatusValue =
-  (typeof validVehicleStatuses)[number];
+const PAGE_SIZE = 6;
 
 type AdminInventoryPageProps = {
   searchParams: Promise<{
@@ -95,18 +95,9 @@ type AdminInventoryPageProps = {
   }>;
 };
 
-type InventoryQueryState = {
-  search: string;
-  brandId: number;
-  branchId: number;
-  condition: ConditionFilter;
-  status: StatusFilter;
-  visibility: VisibilityFilter;
-};
-
-const PAGE_SIZE = 6;
-
-function getConditionLabel(condition: string) {
+function getConditionLabel(
+  condition: string
+) {
   const labels: Record<string, string> = {
     NUEVO: "Nuevo",
     SEMINUEVO: "Seminuevo",
@@ -128,17 +119,21 @@ function getStatusLabel(status: string) {
   return labels[status] ?? status;
 }
 
-function getCategoryLabel(category: string) {
+function getCategoryLabel(
+  category: string
+) {
   const labels: Record<string, string> = {
     AUTO: "Auto",
     MOTO: "Moto",
-    TODOTERRENO: "Todoterreno",
+    TODOTERRENO: "Todo terreno",
   };
 
   return labels[category] ?? category;
 }
 
-function getConditionClasses(condition: string) {
+function getConditionClasses(
+  condition: string
+) {
   const classes: Record<string, string> = {
     NUEVO:
       "border-blue-200 bg-blue-50 text-blue-700",
@@ -152,7 +147,9 @@ function getConditionClasses(condition: string) {
   );
 }
 
-function getStatusClasses(status: string) {
+function getStatusClasses(
+  status: string
+) {
   const classes: Record<string, string> = {
     DISPONIBLE:
       "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -174,17 +171,107 @@ function getStatusClasses(status: string) {
   );
 }
 
-function formatMileage(value: number | null) {
+function formatMileage(
+  value: number | null
+) {
   if (
     value === null ||
     value === undefined
   ) {
-    return "N/D";
+    return "Kilometraje N/D";
   }
 
   return `${new Intl.NumberFormat(
     "es-MX"
   ).format(value)} km`;
+}
+
+function parsePositiveInteger(
+  value?: string
+) {
+  const parsedValue = Number(value);
+
+  return Number.isInteger(parsedValue) &&
+    parsedValue > 0
+    ? parsedValue
+    : 0;
+}
+
+function parsePage(value?: string) {
+  const page = Number(value);
+
+  return Number.isInteger(page) && page > 0
+    ? page
+    : 1;
+}
+
+function buildInventoryHref({
+  search = "",
+  brandId = 0,
+  condition = "TODAS",
+  status = "TODOS",
+  visibility = "TODOS",
+  branchId = 0,
+  page = 1,
+}: {
+  search?: string;
+  brandId?: number;
+  condition?: string;
+  status?: string;
+  visibility?: string;
+  branchId?: number;
+  page?: number;
+}) {
+  const params = new URLSearchParams();
+
+  if (search.trim()) {
+    params.set("q", search.trim());
+  }
+
+  if (brandId > 0) {
+    params.set(
+      "marca",
+      String(brandId)
+    );
+  }
+
+  if (condition !== "TODAS") {
+    params.set(
+      "condicion",
+      condition
+    );
+  }
+
+  if (status !== "TODOS") {
+    params.set("estado", status);
+  }
+
+  if (visibility !== "TODOS") {
+    params.set(
+      "visibilidad",
+      visibility
+    );
+  }
+
+  if (branchId > 0) {
+    params.set(
+      "sucursal",
+      String(branchId)
+    );
+  }
+
+  if (page > 1) {
+    params.set(
+      "pagina",
+      String(page)
+    );
+  }
+
+  const query = params.toString();
+
+  return query
+    ? `/admin/inventario?${query}`
+    : "/admin/inventario";
 }
 
 function parseConditionFilter(
@@ -217,128 +304,102 @@ function parseVisibilityFilter(
     : "TODOS";
 }
 
-function parsePage(value?: string) {
-  const page = Number(value);
-
-  return Number.isInteger(page) && page > 0
-    ? page
-    : 1;
-}
-
-function buildInventoryHref(
-  page: number,
-  filters: InventoryQueryState
-) {
-  const query = new URLSearchParams();
-
-  if (filters.search) {
-    query.set("q", filters.search);
-  }
-
-  if (filters.brandId) {
-    query.set(
-      "marca",
-      String(filters.brandId)
-    );
-  }
-
-  if (filters.branchId) {
-    query.set(
-      "sucursal",
-      String(filters.branchId)
-    );
-  }
-
-  if (filters.condition !== "TODAS") {
-    query.set(
-      "condicion",
-      filters.condition
-    );
-  }
-
-  if (filters.status !== "TODOS") {
-    query.set("estado", filters.status);
-  }
-
-  if (filters.visibility !== "TODOS") {
-    query.set(
-      "visibilidad",
-      filters.visibility
-    );
-  }
-
-  if (page > 1) {
-    query.set("pagina", String(page));
-  }
-
-  const queryString = query.toString();
-
-  return queryString
-    ? `/admin/inventario?${queryString}`
-    : "/admin/inventario";
-}
-
-function getPaginationPages(
-  currentPage: number,
-  totalPages: number
-) {
-  const visiblePages = 5;
-
-  let startPage = Math.max(
-    1,
-    currentPage - 2
-  );
-
-  const endPage = Math.min(
-    totalPages,
-    startPage + visiblePages - 1
-  );
-
-  if (
-    endPage - startPage + 1 <
-    visiblePages
-  ) {
-    startPage = Math.max(
-      1,
-      endPage - visiblePages + 1
-    );
-  }
-
-  return Array.from(
-    {
-      length:
-        endPage - startPage + 1,
-    },
-    (_, index) => startPage + index
-  );
-}
-
 function isVehicleCondition(
   value: FormDataEntryValue | null
-): value is VehicleConditionValue {
+): value is VehicleCondition {
   return (
     typeof value === "string" &&
-    validVehicleConditions.includes(
-      value as VehicleConditionValue
-    )
+    Object.values(
+      VehicleCondition
+    ).includes(value as VehicleCondition)
   );
 }
 
 function isVehicleStatus(
   value: FormDataEntryValue | null
-): value is VehicleStatusValue {
+): value is VehicleStatus {
   return (
     typeof value === "string" &&
-    validVehicleStatuses.includes(
-      value as VehicleStatusValue
-    )
+    Object.values(
+      VehicleStatus
+    ).includes(value as VehicleStatus)
   );
+}
+
+function revalidateVehiclePaths(
+  vehicleId?: number
+) {
+  revalidatePath("/admin");
+  revalidatePath("/admin/inventario");
+  revalidatePath(
+    "/admin/inventario/salud"
+  );
+  revalidatePath("/admin/catalogo");
+  revalidatePath("/catalogo");
+  revalidatePath("/inventario");
+  revalidatePath("/");
+
+  if (vehicleId) {
+    revalidatePath(
+      `/admin/inventario/${vehicleId}/editar`
+    );
+
+    revalidatePath(
+      `/vehiculos/${vehicleId}`
+    );
+  }
+}
+
+async function safelyDeleteUnreferencedFile(
+  url?: string | null
+) {
+  if (
+    !url ||
+    !url.startsWith("/uploads/")
+  ) {
+    return;
+  }
+
+  const [
+    vehicleReferences,
+    catalogReferences,
+  ] = await Promise.all([
+    prisma.vehicleImage.count({
+      where: {
+        url,
+      },
+    }),
+
+    prisma.catalogImage.count({
+      where: {
+        url,
+      },
+    }),
+  ]);
+
+  if (
+    vehicleReferences > 0 ||
+    catalogReferences > 0
+  ) {
+    return;
+  }
+
+  try {
+    await deletePublicFile(url);
+  } catch (error) {
+    console.error(
+      `No se pudo eliminar el archivo ${url}`,
+      error
+    );
+  }
 }
 
 async function toggleVehicleActive(
   formData: FormData
 ) {
   "use server";
+
+  await requireAdmin();
 
   const vehicleId = Number(
     formData.get("vehicleId")
@@ -347,7 +408,10 @@ async function toggleVehicleActive(
   const active =
     formData.get("active") === "true";
 
-  if (!vehicleId) {
+  if (
+    !Number.isInteger(vehicleId) ||
+    vehicleId <= 0
+  ) {
     return;
   }
 
@@ -355,22 +419,21 @@ async function toggleVehicleActive(
     where: {
       id: vehicleId,
     },
+
     data: {
       active: !active,
     },
   });
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/inventario");
-  revalidatePath("/catalogo");
-  revalidatePath("/inventario");
-  revalidatePath(`/vehiculos/${vehicleId}`);
+  revalidateVehiclePaths(vehicleId);
 }
 
 async function updateVehicleCondition(
   formData: FormData
 ) {
   "use server";
+
+  await requireAdmin();
 
   const vehicleId = Number(
     formData.get("vehicleId")
@@ -380,7 +443,8 @@ async function updateVehicleCondition(
     formData.get("condition");
 
   if (
-    !vehicleId ||
+    !Number.isInteger(vehicleId) ||
+    vehicleId <= 0 ||
     !isVehicleCondition(condition)
   ) {
     return;
@@ -390,16 +454,13 @@ async function updateVehicleCondition(
     where: {
       id: vehicleId,
     },
+
     data: {
       condition,
     },
   });
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/inventario");
-  revalidatePath("/catalogo");
-  revalidatePath("/inventario");
-  revalidatePath(`/vehiculos/${vehicleId}`);
+  revalidateVehiclePaths(vehicleId);
 }
 
 async function updateVehicleStatus(
@@ -407,14 +468,18 @@ async function updateVehicleStatus(
 ) {
   "use server";
 
+  await requireAdmin();
+
   const vehicleId = Number(
     formData.get("vehicleId")
   );
 
-  const status = formData.get("status");
+  const status =
+    formData.get("status");
 
   if (
-    !vehicleId ||
+    !Number.isInteger(vehicleId) ||
+    vehicleId <= 0 ||
     !isVehicleStatus(status)
   ) {
     return;
@@ -424,22 +489,25 @@ async function updateVehicleStatus(
     where: {
       id: vehicleId,
     },
+
     data: {
       status,
+      active:
+        status === VehicleStatus.INACTIVO
+          ? false
+          : undefined,
     },
   });
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/inventario");
-  revalidatePath("/catalogo");
-  revalidatePath("/inventario");
-  revalidatePath(`/vehiculos/${vehicleId}`);
+  revalidateVehiclePaths(vehicleId);
 }
 
 async function deleteVehicle(
   formData: FormData
 ) {
   "use server";
+
+  await requireAdmin();
 
   const vehicleId = Number(
     formData.get("vehicleId")
@@ -449,7 +517,10 @@ async function deleteVehicle(
     formData.get("confirmText") || ""
   ).trim();
 
-  if (!vehicleId) {
+  if (
+    !Number.isInteger(vehicleId) ||
+    vehicleId <= 0
+  ) {
     redirect(
       `/admin/inventario?error=${encodeURIComponent(
         "No se pudo identificar la unidad a eliminar."
@@ -470,6 +541,7 @@ async function deleteVehicle(
       where: {
         id: vehicleId,
       },
+
       include: {
         images: true,
       },
@@ -498,14 +570,17 @@ async function deleteVehicle(
     );
   }
 
-  const urlsToDelete = new Set(
-    [
-      vehicle.mainImage,
-      ...vehicle.images.map(
-        (image) => image.url
-      ),
-    ].filter(
-      (url): url is string => Boolean(url)
+  const urlsToDelete = Array.from(
+    new Set(
+      [
+        vehicle.mainImage,
+        ...vehicle.images.map(
+          (image) => image.url
+        ),
+      ].filter(
+        (url): url is string =>
+          Boolean(url)
+      )
     )
   );
 
@@ -529,24 +604,13 @@ async function deleteVehicle(
     }),
   ]);
 
-  for (const url of urlsToDelete) {
-    if (url.startsWith("/uploads/")) {
-      try {
-        await deletePublicFile(url);
-      } catch (error) {
-        console.error(
-          `No se pudo eliminar el archivo ${url}`,
-          error
-        );
-      }
-    }
-  }
+  await Promise.allSettled(
+    urlsToDelete.map((url) =>
+      safelyDeleteUnreferencedFile(url)
+    )
+  );
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/inventario");
-  revalidatePath("/catalogo");
-  revalidatePath("/inventario");
-  revalidatePath(`/vehiculos/${vehicleId}`);
+  revalidateVehiclePaths(vehicleId);
 
   redirect(
     `/admin/inventario?success=${encodeURIComponent(
@@ -558,32 +622,40 @@ async function deleteVehicle(
 export default async function AdminInventoryPage({
   searchParams,
 }: AdminInventoryPageProps) {
+  await requireAdmin();
+
   const params = await searchParams;
 
-  const search = params.q?.trim() ?? "";
+  const search =
+    params.q?.trim() ?? "";
 
-  const selectedBrandId = params.marca
-    ? Number(params.marca)
-    : 0;
+  const selectedBrandId =
+    parsePositiveInteger(
+      params.marca
+    );
 
-  const selectedBranchId = params.sucursal
-    ? Number(params.sucursal)
-    : 0;
+  const selectedBranchId =
+    parsePositiveInteger(
+      params.sucursal
+    );
 
   const selectedCondition =
-    parseConditionFilter(params.condicion);
+    parseConditionFilter(
+      params.condicion
+    );
 
   const selectedStatus =
-    parseStatusFilter(params.estado);
+    parseStatusFilter(
+      params.estado
+    );
 
   const selectedVisibility =
     parseVisibilityFilter(
       params.visibilidad
     );
 
-  const requestedPage = parsePage(
-    params.pagina
-  );
+  const requestedPage =
+    parsePage(params.pagina);
 
   const where: Prisma.VehicleWhereInput = {
     ...(search
@@ -595,23 +667,34 @@ export default async function AdminInventoryPage({
             },
           },
           {
+            model: {
+              contains: search,
+            },
+          },
+          {
             brand: {
-              name: {
-                contains: search,
+              is: {
+                name: {
+                  contains: search,
+                },
               },
             },
           },
           {
             branch: {
-              name: {
-                contains: search,
+              is: {
+                name: {
+                  contains: search,
+                },
               },
             },
           },
           {
             branch: {
-              city: {
-                contains: search,
+              is: {
+                city: {
+                  contains: search,
+                },
               },
             },
           },
@@ -627,13 +710,15 @@ export default async function AdminInventoryPage({
 
     ...(selectedBranchId
       ? {
-        branchId: selectedBranchId,
+        branchId:
+          selectedBranchId,
       }
       : {}),
 
     ...(selectedCondition !== "TODAS"
       ? {
-        condition: selectedCondition,
+        condition:
+          selectedCondition,
       }
       : {}),
 
@@ -656,28 +741,8 @@ export default async function AdminInventoryPage({
       : {}),
   };
 
-  const filteredVehicleCount =
-    await prisma.vehicle.count({
-      where,
-    });
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(
-      filteredVehicleCount / PAGE_SIZE
-    )
-  );
-
-  const currentPage = Math.min(
-    requestedPage,
-    totalPages
-  );
-
-  const paginationSkip =
-    (currentPage - 1) * PAGE_SIZE;
-
   const [
-    vehicles,
+    filteredVehicleCount,
     brands,
     branches,
     totalVehicles,
@@ -686,30 +751,8 @@ export default async function AdminInventoryPage({
     totalAvailableUsedVehicles,
     totalSoldVehicles,
   ] = await Promise.all([
-    prisma.vehicle.findMany({
+    prisma.vehicle.count({
       where,
-      skip: paginationSkip,
-      take: PAGE_SIZE,
-      include: {
-        brand: true,
-        branch: true,
-
-        images: {
-          where: {
-            type: "IMAGE",
-          },
-
-          orderBy: {
-            order: "asc",
-          },
-
-          take: 1,
-        },
-      },
-
-      orderBy: {
-        createdAt: "desc",
-      },
     }),
 
     prisma.brand.findMany({
@@ -727,32 +770,45 @@ export default async function AdminInventoryPage({
         active: true,
       },
 
-      orderBy: {
-        name: "asc",
-      },
+      orderBy: [
+        {
+          sortOrder: "asc",
+        },
+        {
+          name: "asc",
+        },
+      ],
     }),
 
     prisma.vehicle.count(),
 
     prisma.vehicle.count({
       where: {
-        condition: "NUEVO",
+        condition:
+          VehicleCondition.NUEVO,
       },
     }),
 
     prisma.vehicle.count({
       where: {
-        condition: "SEMINUEVO",
+        condition:
+          VehicleCondition.SEMINUEVO,
       },
     }),
 
     prisma.vehicle.count({
       where: {
         active: true,
-        condition: "SEMINUEVO",
-        status: "DISPONIBLE",
+        condition:
+          VehicleCondition.SEMINUEVO,
+        status:
+          VehicleStatus.DISPONIBLE,
 
         branch: {
+          active: true,
+        },
+
+        brand: {
           active: true,
         },
       },
@@ -760,40 +816,64 @@ export default async function AdminInventoryPage({
 
     prisma.vehicle.count({
       where: {
-        status: "VENDIDO",
+        status:
+          VehicleStatus.VENDIDO,
       },
     }),
   ]);
 
-  const inventoryQueryState: InventoryQueryState =
-  {
-    search,
-    brandId: selectedBrandId,
-    branchId: selectedBranchId,
-    condition: selectedCondition,
-    status: selectedStatus,
-    visibility: selectedVisibility,
-  };
+  const totalPages = Math.max(
+    1,
+    Math.ceil(
+      filteredVehicleCount /
+      PAGE_SIZE
+    )
+  );
 
-  const hasAdvancedFilters =
-    Boolean(selectedBrandId) ||
-    Boolean(selectedBranchId) ||
-    selectedCondition !== "TODAS" ||
-    selectedStatus !== "TODOS" ||
-    selectedVisibility !== "TODOS";
+  const currentPage = Math.min(
+    requestedPage,
+    totalPages
+  );
+
+  const paginationSkip =
+    (currentPage - 1) * PAGE_SIZE;
+
+  const vehicles =
+    await prisma.vehicle.findMany({
+      where,
+      skip: paginationSkip,
+      take: PAGE_SIZE,
+
+      include: {
+        brand: true,
+        branch: true,
+
+        images: {
+          where: {
+            type:
+              VehicleMediaType.IMAGE,
+          },
+
+          orderBy: {
+            order: "asc",
+          },
+
+          take: 1,
+        },
+      },
+
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
   const hasFilters =
     Boolean(search) ||
-    hasAdvancedFilters;
-
-  const activeFilterCount = [
-    Boolean(search),
-    Boolean(selectedBrandId),
-    Boolean(selectedBranchId),
-    selectedCondition !== "TODAS",
-    selectedStatus !== "TODOS",
-    selectedVisibility !== "TODOS",
-  ].filter(Boolean).length;
+    selectedBrandId > 0 ||
+    selectedBranchId > 0 ||
+    selectedCondition !== "TODAS" ||
+    selectedStatus !== "TODOS" ||
+    selectedVisibility !== "TODOS";
 
   const firstVisibleVehicle =
     filteredVehicleCount === 0
@@ -805,120 +885,102 @@ export default async function AdminInventoryPage({
     filteredVehicleCount
   );
 
-  const stats = [
-    {
-      title: "Unidades registradas",
-      value: totalVehicles,
-      description:
-        "Total almacenado en el sistema.",
-      icon: Car,
-      tone: "navy" as const,
-    },
-    {
-      title: "Vehículos nuevos",
-      value: totalNewVehicles,
-      description:
-        "Unidades registradas como nuevas.",
-      icon: BadgeCheck,
-      tone: "blue" as const,
-    },
-    {
-      title: "Seminuevos públicos",
-      value: totalAvailableUsedVehicles,
-      description:
-        "Activos, disponibles y publicados.",
-      icon: Eye,
-      tone: "emerald" as const,
-    },
-    {
-      title: "Vehículos vendidos",
-      value: totalSoldVehicles,
-      description:
-        "Unidades marcadas como vendidas.",
-      icon: CheckCircle2,
-      tone: "amber" as const,
-    },
-  ];
+  const inventoryQueryState:
+    InventoryQueryState = {
+    search,
+    brandId: selectedBrandId,
+    condition: selectedCondition,
+    status: selectedStatus,
+    visibility: selectedVisibility,
+    branchId: selectedBranchId,
+  };
 
   return (
     <div className="pb-10">
-      {/* Encabezado */}
-      <section className="relative overflow-hidden rounded-[22px] bg-[#192a3a] px-5 py-7 text-white shadow-[0_18px_50px_rgba(15,23,42,0.14)] md:px-7 md:py-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_32%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
+      <AdminHero
+        eyebrow="Administración"
+        title="Inventario de unidades"
+        description="Administra vehículos nuevos, seminuevos, disponibles, vendidos, apartados y ocultos. Las unidades activas y disponibles se muestran en el sitio público."
+        icon={Car}
+        actions={
+          <>
+            <Link
+              href="/inventario"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-black text-white transition hover:bg-white/15 active:scale-[0.98]"
+            >
+              Ver inventario público
+              <ExternalLink size={16} />
+            </Link>
 
-        <div className="relative flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#dfe7ec] backdrop-blur-sm">
-              <Car size={15} />
-              Administración de unidades
-            </div>
+            <Link
+              href="/admin/inventario/nuevo"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+            >
+              <Plus size={17} />
+              Registrar unidad
+            </Link>
+          </>
+        }
+      />
 
-            <h1 className="mt-4 text-3xl font-black tracking-[-0.045em] md:text-4xl lg:text-5xl">
-              Inventario
-            </h1>
-
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-white/60 md:text-base">
-              Administra vehículos nuevos y
-              seminuevos, publicación, precios,
-              sucursales, imágenes y estado comercial.
-            </p>
-          </div>
-
-          <Link
-            href="/admin/inventario/nuevo"
-            className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
-          >
-            <Plus size={18} />
-            Registrar unidad
-
-            <ArrowRight
-              size={16}
-              className="transition-transform group-hover:translate-x-0.5"
-            />
-          </Link>
-        </div>
-      </section>
-
-      {/* Mensajes */}
       {params.error && (
-        <div
-          role="alert"
-          className="mt-5 flex items-start gap-3 rounded-[16px] border border-red-200 bg-red-50 px-4 py-4 text-sm font-bold text-red-700"
+        <AdminAlert
+          variant="error"
+          className="mt-5"
         >
-          <AlertCircle
-            size={20}
-            className="mt-0.5 shrink-0"
-          />
-
-          <span>{params.error}</span>
-        </div>
+          {params.error}
+        </AdminAlert>
       )}
 
       {params.success && (
-        <div
-          role="status"
-          className="mt-5 flex items-start gap-3 rounded-[16px] border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm font-bold text-emerald-700"
+        <AdminAlert
+          variant="success"
+          className="mt-5"
         >
-          <CheckCircle2
-            size={20}
-            className="mt-0.5 shrink-0"
-          />
-
-          <span>{params.success}</span>
-        </div>
+          {params.success}
+        </AdminAlert>
       )}
 
-      {/* Estadísticas */}
-      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((item) => (
-          <InventoryStatCard
-            key={item.title}
-            {...item}
-          />
-        ))}
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <AdminSummaryCard
+          icon={Car}
+          label="Unidades registradas"
+          value={totalVehicles}
+        />
+
+        <AdminSummaryCard
+          icon={BadgeCheck}
+          label="Nuevos"
+          value={totalNewVehicles}
+          tone="blue"
+        />
+
+        <AdminSummaryCard
+          icon={Gauge}
+          label="Seminuevos"
+          value={totalUsedVehicles}
+          tone="amber"
+        />
+
+        <AdminSummaryCard
+          icon={Eye}
+          label="Visibles en público"
+          value={
+            totalAvailableUsedVehicles
+          }
+          tone="emerald"
+        />
+
+        <AdminSummaryCard
+          icon={Tags}
+          label="Vendidos"
+          value={totalSoldVehicles}
+          tone="red"
+        />
       </section>
 
-      {/* Filtros */}
       <section className="mt-6 rounded-[22px] border border-black/[0.08] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.04)] md:p-6">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
@@ -931,244 +993,240 @@ export default async function AdminInventoryPage({
             </div>
 
             <h2 className="mt-3 flex items-center gap-2 text-2xl font-black tracking-[-0.035em]">
-              <SlidersHorizontal size={21} />
-              Inventario
+              <Search size={20} />
+              Unidades registradas
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Busca directamente o despliega los
-              filtros secundarios.
+              Busca unidades por marca,
+              condición, estado, sucursal o
+              visibilidad pública.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {activeFilterCount > 0 && (
-              <span className="rounded-full border border-[#192a3a]/10 bg-[#e7edf1] px-4 py-2 text-xs font-black text-[#192a3a]">
-                {activeFilterCount} filtro
-                {activeFilterCount === 1
-                  ? ""
-                  : "s"}{" "}
-                activo
-                {activeFilterCount === 1
-                  ? ""
-                  : "s"}
-              </span>
-            )}
-
-            <span className="rounded-full border border-slate-200 bg-[#f8fafb] px-4 py-2 text-xs font-black text-slate-600">
-              {filteredVehicleCount} resultado
-              {filteredVehicleCount === 1
-                ? ""
-                : "s"}
-            </span>
-          </div>
+          <span className="rounded-full border border-slate-200 bg-[#f8fafb] px-4 py-2 text-xs font-black text-slate-600">
+            {filteredVehicleCount} resultado
+            {filteredVehicleCount === 1
+              ? ""
+              : "s"}
+          </span>
         </div>
 
         <form
           action="/admin/inventario"
-          className="mt-6"
+          className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(240px,1.4fr)_1fr_1fr_1fr_1fr_1fr_auto]"
         >
-          {/* Búsqueda principal */}
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
-            <label className="block">
-              <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-                Buscar unidad
-              </span>
+          <AdminInput
+            label="Buscar"
+            name="q"
+            defaultValue={search}
+            placeholder="Modelo, marca o sucursal"
+          />
 
-              <div className="relative">
-                <Search
-                  size={17}
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                />
+          <AdminSelect
+            label="Marca"
+            name="marca"
+            defaultValue={
+              selectedBrandId || ""
+            }
+          >
+            <option value="">
+              Todas
+            </option>
 
-                <input
-                  name="q"
-                  defaultValue={search}
-                  placeholder="Modelo, marca, ciudad o sucursal"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
-                />
-              </div>
-            </label>
-
-            <button
-              type="submit"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-6 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] lg:self-end"
-            >
-              <Search size={17} />
-              Buscar
-            </button>
-
-            {hasFilters && (
-              <Link
-                href="/admin/inventario"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98] lg:self-end"
+            {brands.map((brand) => (
+              <option
+                key={brand.id}
+                value={brand.id}
               >
-                Limpiar
-              </Link>
+                {brand.name}
+              </option>
+            ))}
+          </AdminSelect>
+
+          <AdminSelect
+            label="Condición"
+            name="condicion"
+            defaultValue={
+              selectedCondition
+            }
+          >
+            <option value="TODAS">
+              Todas
+            </option>
+
+            <option
+              value={
+                VehicleCondition.NUEVO
+              }
+            >
+              Nuevo
+            </option>
+
+            <option
+              value={
+                VehicleCondition.SEMINUEVO
+              }
+            >
+              Seminuevo
+            </option>
+          </AdminSelect>
+
+          <AdminSelect
+            label="Estado"
+            name="estado"
+            defaultValue={
+              selectedStatus
+            }
+          >
+            <option value="TODOS">
+              Todos
+            </option>
+
+            <option
+              value={
+                VehicleStatus.DISPONIBLE
+              }
+            >
+              Disponible
+            </option>
+
+            <option
+              value={
+                VehicleStatus.APARTADO
+              }
+            >
+              Apartado
+            </option>
+
+            <option
+              value={
+                VehicleStatus.VENDIDO
+              }
+            >
+              Vendido
+            </option>
+
+            <option
+              value={
+                VehicleStatus.EN_TRANSITO
+              }
+            >
+              En tránsito
+            </option>
+
+            <option
+              value={
+                VehicleStatus.PROXIMAMENTE
+              }
+            >
+              Próximamente
+            </option>
+
+            <option
+              value={
+                VehicleStatus.INACTIVO
+              }
+            >
+              Inactivo
+            </option>
+          </AdminSelect>
+
+          <AdminSelect
+            label="Visibilidad"
+            name="visibilidad"
+            defaultValue={
+              selectedVisibility
+            }
+          >
+            <option value="TODOS">
+              Todas
+            </option>
+
+            <option value="ACTIVO">
+              Activos
+            </option>
+
+            <option value="OCULTO">
+              Ocultos
+            </option>
+          </AdminSelect>
+
+          <AdminSelect
+            label="Sucursal"
+            name="sucursal"
+            defaultValue={
+              selectedBranchId || ""
+            }
+          >
+            <option value="">
+              Todas
+            </option>
+
+            {branches.map((branch) => (
+              <option
+                key={branch.id}
+                value={branch.id}
+              >
+                {branch.name} ·{" "}
+                {branch.city}
+              </option>
+            ))}
+          </AdminSelect>
+
+          <button
+            type="submit"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-6 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] xl:self-end"
+          >
+            <Search size={17} />
+            Filtrar
+          </button>
+        </form>
+
+        {hasFilters && (
+          <div className="mt-4 border-t border-slate-100 pt-4">
+            <Link
+              href="/admin/inventario"
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+            >
+              Limpiar filtros
+            </Link>
+          </div>
+        )}
+
+        <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="h-px w-7 bg-[#192a3a]" />
+
+              <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[#192a3a]">
+                Resultados
+              </p>
+            </div>
+
+            <h2 className="mt-3 text-2xl font-black tracking-[-0.035em]">
+              Unidades registradas
+            </h2>
+
+            {filteredVehicleCount > 0 && (
+              <p className="mt-2 text-sm font-semibold text-slate-500">
+                Mostrando{" "}
+                {firstVisibleVehicle}–
+                {lastVisibleVehicle} de{" "}
+                {filteredVehicleCount}
+              </p>
             )}
           </div>
 
-          {/* Filtros secundarios */}
-          <details
-            open={hasAdvancedFilters}
-            className="group mt-4 overflow-hidden rounded-[16px] border border-slate-200 bg-[#f8fafb]"
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3">
-              <span className="flex items-center gap-2 text-xs font-black text-[#192a3a]">
-                <SlidersHorizontal size={16} />
-                Más filtros
-              </span>
-
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-[#192a3a] transition group-open:rotate-90">
-                <ArrowRight size={14} />
-              </span>
-            </summary>
-
-            <div className="border-t border-slate-200 p-4">
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                <FilterSelect
-                  label="Marca"
-                  name="marca"
-                  defaultValue={
-                    selectedBrandId || ""
-                  }
-                >
-                  <option value="">Todas</option>
-
-                  {brands.map((brand) => (
-                    <option
-                      key={brand.id}
-                      value={brand.id}
-                    >
-                      {brand.name}
-                    </option>
-                  ))}
-                </FilterSelect>
-
-                <FilterSelect
-                  label="Condición"
-                  name="condicion"
-                  defaultValue={
-                    selectedCondition
-                  }
-                >
-                  <option value="TODAS">
-                    Todas
-                  </option>
-
-                  <option value="NUEVO">
-                    Nuevo
-                  </option>
-
-                  <option value="SEMINUEVO">
-                    Seminuevo
-                  </option>
-                </FilterSelect>
-
-                <FilterSelect
-                  label="Estado"
-                  name="estado"
-                  defaultValue={selectedStatus}
-                >
-                  <option value="TODOS">
-                    Todos
-                  </option>
-
-                  <option value="DISPONIBLE">
-                    Disponible
-                  </option>
-
-                  <option value="APARTADO">
-                    Apartado
-                  </option>
-
-                  <option value="VENDIDO">
-                    Vendido
-                  </option>
-
-                  <option value="EN_TRANSITO">
-                    En tránsito
-                  </option>
-
-                  <option value="PROXIMAMENTE">
-                    Próximamente
-                  </option>
-
-                  <option value="INACTIVO">
-                    Inactivo
-                  </option>
-                </FilterSelect>
-
-                <FilterSelect
-                  label="Visibilidad"
-                  name="visibilidad"
-                  defaultValue={
-                    selectedVisibility
-                  }
-                >
-                  <option value="TODOS">
-                    Todas
-                  </option>
-
-                  <option value="ACTIVO">
-                    Visibles
-                  </option>
-
-                  <option value="OCULTO">
-                    Ocultas
-                  </option>
-                </FilterSelect>
-
-                <FilterSelect
-                  label="Sucursal"
-                  name="sucursal"
-                  defaultValue={
-                    selectedBranchId || ""
-                  }
-                >
-                  <option value="">Todas</option>
-
-                  {branches.map((branch) => (
-                    <option
-                      key={branch.id}
-                      value={branch.id}
-                    >
-                      {branch.name} ·{" "}
-                      {branch.city}
-                    </option>
-                  ))}
-                </FilterSelect>
-              </div>
-
-              <div className="mt-4 flex flex-col justify-end gap-3 sm:flex-row">
-                {hasAdvancedFilters && (
-                  <Link
-                    href={
-                      search
-                        ? `/admin/inventario?q=${encodeURIComponent(
-                          search
-                        )}`
-                        : "/admin/inventario"
-                    }
-                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:text-[#192a3a] active:scale-[0.98]"
-                  >
-                    Limpiar secundarios
-                  </Link>
-                )}
-
-                <button
-                  type="submit"
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
-                >
-                  Aplicar filtros
-                </button>
-              </div>
-            </div>
-          </details>
-        </form>
+          <span className="w-fit rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-600">
+            {filteredVehicleCount} unidad
+            {filteredVehicleCount === 1
+              ? ""
+              : "es"}
+          </span>
+        </div>
       </section>
 
-      {/* Resultados */}
       <section className="mt-6">
         {vehicles.length > 0 ? (
           <div className="grid gap-5">
@@ -1181,18 +1239,17 @@ export default async function AdminInventoryPage({
               const publicVisible =
                 vehicle.active &&
                 vehicle.status ===
-                "DISPONIBLE" &&
-                vehicle.branch.active &&
-                vehicle.brand.active;
+                VehicleStatus.DISPONIBLE &&
+                vehicle.brand.active &&
+                vehicle.branch.active;
 
               return (
                 <article
                   key={vehicle.id}
-                  className="overflow-hidden rounded-[22px] border border-black/8 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)] transition duration-300 hover:border-[#192a3a]/25 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
+                  className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)] transition duration-300 hover:border-[#192a3a]/25 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
                 >
-                  <div className="grid xl:grid-cols-[210px_minmax(0,1fr)_310px]">
-                    {/* Imagen */}
-                    <div className="relative h-[220px] overflow-hidden bg-slate-100 sm:h-[280px] xl:h-full xl:min-h-[330px]">
+                  <div className="grid xl:grid-cols-[220px_minmax(0,1fr)_330px]">
+                    <div className="relative h-56 overflow-hidden bg-slate-100 xl:h-full xl:min-h-[315px]">
                       {image ? (
                         <img
                           src={image}
@@ -1203,52 +1260,54 @@ export default async function AdminInventoryPage({
                         <div className="grid h-full place-items-center text-slate-400">
                           <div className="text-center">
                             <ImageIcon
-                              size={42}
                               className="mx-auto"
+                              size={42}
                             />
 
-                            <p className="mt-2 text-[10px] font-black uppercase tracking-[0.16em]">
+                            <p className="mt-2 text-xs font-black uppercase tracking-wider">
                               Sin imagen
                             </p>
                           </div>
                         </div>
                       )}
 
-                      <span className="absolute left-3 top-3 rounded-full border border-white/50 bg-white/90 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#192a3a] shadow-sm backdrop-blur-sm">
+                      <div className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-[#192a3a] shadow-sm">
                         ID #{vehicle.id}
-                      </span>
+                      </div>
 
                       <span
-                        className={`absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] backdrop-blur-sm ${vehicle.active
+                        className={`absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] backdrop-blur-sm ${publicVisible
                           ? "border-emerald-200 bg-emerald-50/95 text-emerald-700"
                           : "border-slate-200 bg-white/95 text-slate-600"
                           }`}
                       >
-                        {vehicle.active ? (
+                        {publicVisible ? (
                           <Eye size={13} />
                         ) : (
                           <EyeOff size={13} />
                         )}
 
-                        {vehicle.active
-                          ? "Visible"
-                          : "Oculto"}
+                        {publicVisible
+                          ? "Publicado"
+                          : "No publicado"}
                       </span>
                     </div>
 
-                    {/* Información */}
                     <div className="min-w-0 p-5 md:p-6">
-                      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                      <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="min-w-0">
-                          <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#192a3a]">
-                            {vehicle.brand.name}
+                          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#192a3a]">
+                            {
+                              vehicle.brand
+                                .name
+                            }
                           </p>
 
-                          <h3 className="mt-2 text-2xl font-black leading-tight tracking-[-0.035em] text-[#0a0f14] md:text-3xl">
+                          <h3 className="mt-2 text-2xl font-black leading-tight tracking-[-0.035em] text-[#192a3a] md:text-3xl">
                             {vehicle.name}
                           </h3>
 
-                          <p className="mt-2 text-sm font-semibold text-slate-500">
+                          <p className="mt-2 text-sm font-bold text-slate-500">
                             {vehicle.year} ·{" "}
                             {getCategoryLabel(
                               vehicle.category
@@ -1257,28 +1316,41 @@ export default async function AdminInventoryPage({
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                          <StatusBadge
-                            classes={getConditionClasses(
+                          <span
+                            className={`rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] ${getConditionClasses(
+                              vehicle.condition
+                            )}`}
+                          >
+                            {getConditionLabel(
                               vehicle.condition
                             )}
-                            label={getConditionLabel(
-                              vehicle.condition
-                            )}
-                          />
+                          </span>
 
-                          <StatusBadge
-                            classes={getStatusClasses(
+                          <span
+                            className={`rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] ${getStatusClasses(
+                              vehicle.status
+                            )}`}
+                          >
+                            {getStatusLabel(
                               vehicle.status
                             )}
-                            label={getStatusLabel(
-                              vehicle.status
-                            )}
-                          />
+                          </span>
+
+                          <span
+                            className={`rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] ${vehicle.active
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-slate-200 bg-slate-100 text-slate-600"
+                              }`}
+                          >
+                            {vehicle.active
+                              ? "Visible"
+                              : "Oculto"}
+                          </span>
                         </div>
                       </div>
 
-                      <div className="mt-5 grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
-                        <VehicleDetailItem
+                      <div className="mt-5 grid gap-3 text-sm font-bold text-slate-500 sm:grid-cols-2 xl:grid-cols-4">
+                        <VehicleDetailBox
                           icon={Gauge}
                           label="Kilometraje"
                           value={formatMileage(
@@ -1286,267 +1358,361 @@ export default async function AdminInventoryPage({
                           )}
                         />
 
-                        <VehicleDetailItem
+                        <VehicleDetailBox
                           icon={MapPin}
                           label="Ciudad"
                           value={
-                            vehicle.branch.city
+                            vehicle.branch
+                              .city
                           }
                         />
 
-                        <VehicleDetailItem
+                        <VehicleDetailBox
                           icon={Building2}
                           label="Sucursal"
                           value={
-                            vehicle.branch.name
+                            vehicle.branch
+                              .name
                           }
                         />
 
                         <div
                           className={`rounded-[16px] border p-4 ${publicVisible
-                            ? "border-emerald-200 bg-emerald-50"
-                            : "border-slate-100 bg-[#f8fafb]"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-slate-100 bg-[#f8fafb] text-slate-500"
                             }`}
                         >
-                          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
-                            Publicación
+                          <p className="text-[9px] font-black uppercase tracking-[0.12em] opacity-70">
+                            Público
                           </p>
 
-                          <p
-                            className={`mt-2 flex items-center gap-2 text-xs font-black ${publicVisible
-                              ? "text-emerald-700"
-                              : "text-slate-500"
-                              }`}
-                          >
+                          <p className="mt-2 flex items-center gap-2 text-xs font-black">
                             <Tags size={15} />
-
                             {publicVisible
-                              ? "Visible en sitio"
-                              : "No publicada"}
+                              ? vehicle.condition ===
+                                VehicleCondition.NUEVO
+                                ? "Catálogo"
+                                : "Inventario"
+                              : "No publicado"}
                           </p>
                         </div>
                       </div>
 
-                      <div className="mt-5 border-t border-slate-100 pt-5">
-                        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
-                          Precio publicado
-                        </p>
+                      <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+                            Precio
+                          </p>
 
-                        <p className="mt-1 text-3xl font-black tracking-[-0.04em] text-[#192a3a]">
-                          {formatCurrency(
-                            vehicle.price
-                          )}
-                        </p>
+                          <p className="mt-1 text-3xl font-black text-[#192a3a]">
+                            {formatCurrency(
+                              vehicle.price
+                            )}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Acciones */}
-                    <VehicleActions
-                      vehicle={vehicle}
-                    />
+                    <aside className="border-t border-slate-100 bg-[#f8fafb] p-5 xl:border-l xl:border-t-0">
+                      <div className="grid gap-3">
+                        <Link
+                          href={`/admin/inventario/${vehicle.id}/editar`}
+                          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+                        >
+                          <Pencil size={16} />
+                          Editar unidad
+                        </Link>
+
+                        <Link
+                          href={`/vehiculos/${vehicle.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+                        >
+                          <Eye size={16} />
+                          Ver público
+                        </Link>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <form
+                            action={
+                              toggleVehicleActive
+                            }
+                          >
+                            <input
+                              type="hidden"
+                              name="vehicleId"
+                              value={
+                                vehicle.id
+                              }
+                            />
+
+                            <input
+                              type="hidden"
+                              name="active"
+                              value={String(
+                                vehicle.active
+                              )}
+                            />
+
+                            <button
+                              type="submit"
+                              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a] active:scale-[0.98]"
+                            >
+                              {vehicle.active ? (
+                                <>
+                                  <EyeOff
+                                    size={15}
+                                  />
+                                  Ocultar
+                                </>
+                              ) : (
+                                <>
+                                  <Eye
+                                    size={15}
+                                  />
+                                  Mostrar
+                                </>
+                              )}
+                            </button>
+                          </form>
+
+                          <form
+                            action={
+                              updateVehicleCondition
+                            }
+                          >
+                            <input
+                              type="hidden"
+                              name="vehicleId"
+                              value={
+                                vehicle.id
+                              }
+                            />
+
+                            <input
+                              type="hidden"
+                              name="condition"
+                              value={
+                                vehicle.condition ===
+                                  VehicleCondition.NUEVO
+                                  ? VehicleCondition.SEMINUEVO
+                                  : VehicleCondition.NUEVO
+                              }
+                            />
+
+                            <button
+                              type="submit"
+                              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a] active:scale-[0.98]"
+                            >
+                              {vehicle.condition ===
+                                VehicleCondition.NUEVO
+                                ? "A seminuevo"
+                                : "A nuevo"}
+                            </button>
+                          </form>
+                        </div>
+
+                        <form
+                          action={
+                            updateVehicleStatus
+                          }
+                          className="grid grid-cols-[1fr_auto] gap-2"
+                        >
+                          <input
+                            type="hidden"
+                            name="vehicleId"
+                            value={vehicle.id}
+                          />
+
+                          <select
+                            name="status"
+                            defaultValue={
+                              vehicle.status
+                            }
+                            className="h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 outline-none transition focus:border-[#192a3a] focus:ring-2 focus:ring-[#192a3a]/10"
+                          >
+                            <option
+                              value={
+                                VehicleStatus.DISPONIBLE
+                              }
+                            >
+                              Disponible
+                            </option>
+
+                            <option
+                              value={
+                                VehicleStatus.APARTADO
+                              }
+                            >
+                              Apartado
+                            </option>
+
+                            <option
+                              value={
+                                VehicleStatus.VENDIDO
+                              }
+                            >
+                              Vendido
+                            </option>
+
+                            <option
+                              value={
+                                VehicleStatus.EN_TRANSITO
+                              }
+                            >
+                              En tránsito
+                            </option>
+
+                            <option
+                              value={
+                                VehicleStatus.PROXIMAMENTE
+                              }
+                            >
+                              Próximamente
+                            </option>
+
+                            <option
+                              value={
+                                VehicleStatus.INACTIVO
+                              }
+                            >
+                              Inactivo
+                            </option>
+                          </select>
+
+                          <button
+                            type="submit"
+                            className="h-11 rounded-xl bg-[#e7edf1] px-4 text-xs font-black text-[#192a3a] transition hover:bg-[#192a3a] hover:text-white active:scale-[0.98]"
+                          >
+                            OK
+                          </button>
+                        </form>
+
+                        <details className="rounded-[16px] border border-red-100 bg-red-50 p-4">
+                          <summary className="flex cursor-pointer items-center gap-2 text-xs font-black uppercase tracking-wider text-red-700">
+                            <Trash2 size={16} />
+                            Eliminar unidad
+                          </summary>
+
+                          <div className="mt-4 rounded-[16px] bg-white p-4">
+                            <div className="flex gap-3">
+                              <AlertTriangle
+                                className="mt-1 shrink-0 text-red-600"
+                                size={20}
+                              />
+
+                              <div>
+                                <p className="text-sm font-black text-red-700">
+                                  Esta acción no
+                                  se puede deshacer.
+                                </p>
+
+                                <p className="mt-1 text-xs leading-5 text-slate-500">
+                                  Si tiene
+                                  solicitudes
+                                  asociadas, no se
+                                  permitirá
+                                  eliminarla.
+                                </p>
+                              </div>
+                            </div>
+
+                            <form
+                              action={deleteVehicle}
+                              className="mt-4 grid gap-3"
+                            >
+                              <input
+                                type="hidden"
+                                name="vehicleId"
+                                value={
+                                  vehicle.id
+                                }
+                              />
+
+                              <input
+                                name="confirmText"
+                                placeholder="Escribe ELIMINAR"
+                                className="h-11 rounded-xl border border-red-100 bg-red-50 px-4 text-sm font-black text-red-700 outline-none transition placeholder:text-red-300 focus:border-red-300 focus:bg-white"
+                              />
+
+                              <button
+                                type="submit"
+                                className="h-11 rounded-xl bg-red-600 px-5 text-xs font-black uppercase tracking-wider text-white transition hover:bg-red-700 active:scale-[0.98]"
+                              >
+                                Eliminar definitivamente
+                              </button>
+                            </form>
+                          </div>
+                        </details>
+                      </div>
+                    </aside>
                   </div>
                 </article>
               );
             })}
-            <InventoryPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={filteredVehicleCount}
-              firstItem={firstVisibleVehicle}
-              lastItem={lastVisibleVehicle}
-              filters={inventoryQueryState}
-            />
           </div>
         ) : (
           <div className="rounded-[22px] border border-dashed border-slate-300 bg-white p-10 text-center">
             <Car
-              size={50}
               className="mx-auto text-slate-400"
+              size={52}
             />
 
             <h2 className="mt-4 text-2xl font-black">
-              No hay unidades con esos filtros
+              No hay unidades con esos filtros.
             </h2>
 
-            <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
-              Modifica los criterios de búsqueda o
-              registra una nueva unidad.
+            <p className="mt-2 text-sm text-slate-500">
+              Ajusta la búsqueda o registra
+              una nueva unidad.
             </p>
 
-            <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link
-                href="/admin/inventario"
-                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
-              >
-                Limpiar filtros
-              </Link>
-
-              <Link
-                href="/admin/inventario/nuevo"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
-              >
-                <Plus size={17} />
-                Registrar unidad
-              </Link>
-            </div>
+            <Link
+              href="/admin/inventario/nuevo"
+              className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+            >
+              <Plus size={17} />
+              Registrar unidad
+            </Link>
           </div>
         )}
-      </section>
-
-      <section className="mt-6 rounded-[18px] border border-[#192a3a]/10 bg-[#e7edf1] px-5 py-4">
-        <p className="text-sm font-black text-[#192a3a]">
-          Resumen del inventario
-        </p>
-
-        <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
-          Hay {totalUsedVehicles} unidades
-          seminuevas registradas. Los cambios de
-          estado, condición o visibilidad se reflejan
-          en el sitio público después de guardar.
-        </p>
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filteredVehicleCount}
+          firstItem={firstVisibleVehicle}
+          lastItem={lastVisibleVehicle}
+          itemLabel="unidad"
+          itemLabelPlural="unidades"
+          hrefForPage={(page) =>
+            buildInventoryHref({
+              ...inventoryQueryState,
+              page,
+            })
+          }
+        />
       </section>
     </div>
   );
 }
 
-function InventoryStatCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-  tone,
-}: {
-  title: string;
-  value: number;
-  description: string;
-  icon: LucideIcon;
-  tone:
-  | "navy"
-  | "blue"
-  | "emerald"
-  | "amber";
-}) {
-  const tones = {
-    navy: "border-[#192a3a]/10 bg-[#e7edf1] text-[#192a3a]",
-    blue:
-      "border-blue-100 bg-blue-50 text-blue-700",
-    emerald:
-      "border-emerald-100 bg-emerald-50 text-emerald-700",
-    amber:
-      "border-amber-100 bg-amber-50 text-amber-700",
-  };
-
-  return (
-    <article className="rounded-[20px] border border-black/8 bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)]">
-      <span
-        className={`grid h-11 w-11 place-items-center rounded-xl border ${tones[tone]}`}
-      >
-        <Icon size={21} />
-      </span>
-
-      <p className="mt-5 text-4xl font-black tracking-[-0.05em] text-[#192a3a]">
-        {value}
-      </p>
-
-      <h2 className="mt-2 text-sm font-black text-[#0a0f14]">
-        {title}
-      </h2>
-
-      <p className="mt-1 text-xs font-medium leading-5 text-slate-500">
-        {description}
-      </p>
-    </article>
-  );
-}
-
-function FilterSearchInput({
-  defaultValue,
-}: {
-  defaultValue: string;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-        Buscar
-      </span>
-
-      <div className="relative">
-        <Search
-          size={17}
-          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-        />
-
-        <input
-          name="q"
-          defaultValue={defaultValue}
-          placeholder="Modelo, marca o sucursal"
-          className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
-        />
-      </div>
-    </label>
-  );
-}
-
-function FilterSelect({
-  label,
-  name,
-  defaultValue,
-  children,
-}: {
-  label: string;
-  name: string;
-  defaultValue: string | number;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-        {label}
-      </span>
-
-      <select
-        name={name}
-        defaultValue={defaultValue}
-        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
-      >
-        {children}
-      </select>
-    </label>
-  );
-}
-
-function StatusBadge({
-  classes,
-  label,
-}: {
-  classes: string;
-  label: string;
-}) {
-  return (
-    <span
-      className={`rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${classes}`}
-    >
-      {label}
-    </span>
-  );
-}
-
-function VehicleDetailItem({
+function VehicleDetailBox({
   icon: Icon,
   label,
   value,
 }: {
-  icon: LucideIcon;
+  icon: typeof Gauge;
   label: string;
   value: string;
 }) {
   return (
-    <div className="min-w-0 rounded-[16px] border border-slate-100 bg-[#f8fafb] p-4">
-      <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+    <div className="rounded-[16px] border border-slate-100 bg-[#f8fafb] p-4">
+      <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">
         {label}
       </p>
 
-      <p className="mt-2 flex min-w-0 items-center gap-2 text-xs font-black text-slate-700">
+      <p className="mt-2 flex items-center gap-2 text-xs font-black text-slate-700">
         <Icon
           size={15}
           className="shrink-0 text-[#192a3a]"
@@ -1557,268 +1723,5 @@ function VehicleDetailItem({
         </span>
       </p>
     </div>
-  );
-}
-
-function VehicleActions({
-  vehicle,
-}: {
-  vehicle: {
-    id: number;
-    active: boolean;
-    condition: string;
-    status: string;
-  };
-}) {
-  return (
-    <aside className="border-t border-slate-100 bg-[#f8fafb] p-5 xl:border-l xl:border-t-0">
-      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
-        Acciones
-      </p>
-
-      <div className="mt-4 grid gap-3">
-        <Link
-          href={`/admin/inventario/${vehicle.id}/editar`}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-4 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
-        >
-          <Pencil size={16} />
-          Editar unidad
-        </Link>
-
-        <Link
-          href={`/vehiculos/${vehicle.id}`}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
-        >
-          <Eye size={16} />
-          Ver en sitio
-        </Link>
-
-        <div className="grid grid-cols-2 gap-2">
-          <form action={toggleVehicleActive}>
-            <input
-              type="hidden"
-              name="vehicleId"
-              value={vehicle.id}
-            />
-
-            <input
-              type="hidden"
-              name="active"
-              value={String(vehicle.active)}
-            />
-
-            <button
-              type="submit"
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-2 text-[10px] font-black text-slate-600 transition hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a] active:scale-[0.98]"
-            >
-              {vehicle.active ? (
-                <>
-                  <EyeOff size={14} />
-                  Ocultar
-                </>
-              ) : (
-                <>
-                  <Eye size={14} />
-                  Mostrar
-                </>
-              )}
-            </button>
-          </form>
-
-          <form action={updateVehicleCondition}>
-            <input
-              type="hidden"
-              name="vehicleId"
-              value={vehicle.id}
-            />
-
-            <input
-              type="hidden"
-              name="condition"
-              value={
-                vehicle.condition === "NUEVO"
-                  ? "SEMINUEVO"
-                  : "NUEVO"
-              }
-            />
-
-            <button
-              type="submit"
-              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-2 text-[10px] font-black text-slate-600 transition hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a] active:scale-[0.98]"
-            >
-              {vehicle.condition === "NUEVO"
-                ? "A seminuevo"
-                : "A nuevo"}
-            </button>
-          </form>
-        </div>
-
-        <form
-          action={updateVehicleStatus}
-          className="grid grid-cols-[minmax(0,1fr)_48px] gap-2"
-        >
-          <input
-            type="hidden"
-            name="vehicleId"
-            value={vehicle.id}
-          />
-
-          <select
-            name="status"
-            defaultValue={vehicle.status}
-            aria-label="Estado de la unidad"
-            className="h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-[10px] font-black text-slate-600 outline-none transition focus:border-[#192a3a]"
-          >
-            <option value="DISPONIBLE">
-              Disponible
-            </option>
-
-            <option value="APARTADO">
-              Apartado
-            </option>
-
-            <option value="VENDIDO">
-              Vendido
-            </option>
-
-            <option value="EN_TRANSITO">
-              En tránsito
-            </option>
-
-            <option value="PROXIMAMENTE">
-              Próximamente
-            </option>
-
-            <option value="INACTIVO">
-              Inactivo
-            </option>
-          </select>
-
-          <button
-            type="submit"
-            className="grid h-11 place-items-center rounded-xl bg-[#e7edf1] text-[10px] font-black text-[#192a3a] transition hover:bg-[#192a3a] hover:text-white active:scale-[0.98]"
-          >
-            OK
-          </button>
-        </form>
-
-        <form action={deleteVehicle}>
-          <input
-            type="hidden"
-            name="vehicleId"
-            value={vehicle.id}
-          />
-
-          <ConfirmSubmitButton
-            confirmMessage={`¿Seguro que deseas eliminar esta unidad? Esta acción no se puede deshacer.`}
-            pendingText="Eliminando unidad..."
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-xs font-black text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Trash2 size={16} />
-            Eliminar unidad
-          </ConfirmSubmitButton>
-        </form>
-      </div>
-    </aside>
-  );
-}
-function InventoryPagination({
-  currentPage,
-  totalPages,
-  totalItems,
-  firstItem,
-  lastItem,
-  filters,
-}: {
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  firstItem: number;
-  lastItem: number;
-  filters: InventoryQueryState;
-}) {
-  if (totalItems === 0) {
-    return null;
-  }
-
-  const pages = getPaginationPages(
-    currentPage,
-    totalPages
-  );
-
-  return (
-    <nav
-      aria-label="Paginación del inventario"
-      className="mt-6 flex flex-col gap-4 rounded-[18px] border border-black/[0.08] bg-white p-4 shadow-[0_8px_28px_rgba(15,23,42,0.04)] sm:flex-row sm:items-center sm:justify-between"
-    >
-      <p className="text-xs font-semibold text-slate-500">
-        Mostrando{" "}
-        <strong className="text-[#192a3a]">
-          {firstItem}–{lastItem}
-        </strong>{" "}
-        de{" "}
-        <strong className="text-[#192a3a]">
-          {totalItems}
-        </strong>{" "}
-        unidades
-      </p>
-
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-        {currentPage > 1 ? (
-          <Link
-            href={buildInventoryHref(
-              currentPage - 1,
-              filters
-            )}
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
-          >
-            Anterior
-          </Link>
-        ) : (
-          <span className="inline-flex h-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl border border-slate-100 bg-slate-50 px-4 text-xs font-black text-slate-300">
-            Anterior
-          </span>
-        )}
-
-        {pages.map((page) => (
-          <Link
-            key={page}
-            href={buildInventoryHref(
-              page,
-              filters
-            )}
-            aria-current={
-              page === currentPage
-                ? "page"
-                : undefined
-            }
-            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border text-xs font-black transition active:scale-[0.98] ${page === currentPage
-              ? "border-[#192a3a] bg-[#192a3a] text-white"
-              : "border-slate-200 bg-white text-slate-600 hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a]"
-              }`}
-          >
-            {page}
-          </Link>
-        ))}
-
-        {currentPage < totalPages ? (
-          <Link
-            href={buildInventoryHref(
-              currentPage + 1,
-              filters
-            )}
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
-          >
-            Siguiente
-          </Link>
-        ) : (
-          <span className="inline-flex h-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl border border-slate-100 bg-slate-50 px-4 text-xs font-black text-slate-300">
-            Siguiente
-          </span>
-        )}
-      </div>
-    </nav>
   );
 }
