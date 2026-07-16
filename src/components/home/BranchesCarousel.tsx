@@ -166,7 +166,7 @@ export function BranchesCarousel({
     }, [branches.length, isPaused]);
 
     return (
-        <section className="overflow-hidden bg-white py-16 md:py-20 lg:py-24">
+        <section className="overflow-hidden py-16 md:py-20 lg:py-24">
             <div className="mx-auto w-full max-w-[1440px] px-5 md:px-8 lg:px-10">
                 <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
                     <div>
@@ -183,7 +183,7 @@ export function BranchesCarousel({
                         </h2>
 
                         <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-slate-500">
-                            Conoce nuestras sucursales and encuentra atención, vehículos y
+                            Conoce nuestras sucursales y encuentra atención, vehículos y
                             servicios cerca de ti.
                         </p>
                     </div>
@@ -193,7 +193,7 @@ export function BranchesCarousel({
                             type="button"
                             onClick={() => moveCarousel("left")}
                             aria-label="Mostrar sucursal anterior"
-                            className="grid h-11 w-11 place-items-center rounded-full border border-black/15 bg-white text-[#0a0f14] transition hover:border-[#1A2A3A] hover:bg-[#1A2A3A] hover:text-white active:scale-95 active:border-[#192a3a] active:bg-[#192a3a] active:text-white"
+                            className="grid h-11 w-11 place-items-center rounded-none border border-black/15 bg-white text-[#0a0f14] transition hover:border-[#1A2A3A] hover:bg-[#1A2A3A] hover:text-white active:scale-95 active:border-[#192a3a] active:bg-[#192a3a] active:text-white"
                         >
                             <ChevronLeft size={20} />
                         </button>
@@ -202,7 +202,7 @@ export function BranchesCarousel({
                             type="button"
                             onClick={() => moveCarousel("right")}
                             aria-label="Mostrar siguiente sucursal"
-                            className="grid h-11 w-11 place-items-center rounded-full border border-black/15 bg-white text-[#0a0f14] transition hover:border-[#1A2A3A] hover:bg-[#1A2A3A] hover:text-white active:scale-95 active:border-[#192a3a] active:bg-[#192a3a] active:text-white"
+                            className="grid h-11 w-11 place-items-center rounded-none border border-black/15 bg-white text-[#0a0f14] transition hover:border-[#1A2A3A] hover:bg-[#1A2A3A] hover:text-white active:scale-95 active:border-[#192a3a] active:bg-[#192a3a] active:text-white"
                         >
                             <ChevronRight size={20} />
                         </button>
@@ -243,7 +243,7 @@ export function BranchesCarousel({
                 <div className="mt-5 flex justify-center sm:hidden">
                     <Link
                         href="/sucursales"
-                        className="inline-flex h-12 items-center justify-center gap-3 rounded-lg bg-[#0a0f14] px-6 text-sm font-black text-white transition hover:bg-[#1A2A3A]"
+                        className="inline-flex h-12 items-center justify-center gap-3 rounded-none bg-[#0a0f14] px-6 text-sm font-black text-white transition hover:bg-[#1A2A3A]"
                     >
                         Ver todas las sucursales
                         <ArrowRight size={17} />
@@ -266,7 +266,7 @@ function BranchCard({
     const services = getServiceLabels(branch.services);
 
     return (
-        <article className="group w-[84vw] max-w-[355px] shrink-0 snap-start overflow-hidden rounded-[18px] border border-black/8 bg-[#f8f7f4] shadow-[0_10px_35px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(15,23,42,0.1)] sm:w-[350px] lg:w-[370px] lg:max-w-[370px] active:scale-[0.98] active:border-[#192a3a]/50">
+        <article className="group w-[84vw] max-w-[355px] shrink-0 snap-start overflow-hidden rounded-none border border-black/8 bg-[#f8f7f4] shadow-[0_10px_35px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(15,23,42,0.1)] sm:w-[350px] lg:w-[370px] lg:max-w-[370px] active:scale-[0.98] active:border-[#192a3a]/50">
             <Link
                 href={`/sucursales/${branch.id}`}
                 className="relative block h-[205px] overflow-hidden bg-[#e8e7e2]"
@@ -293,7 +293,7 @@ function BranchCard({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
 
                 {branch.logoUrl && (
-                    <div className="absolute left-4 top-4 flex h-14 w-20 items-center justify-center rounded-lg border border-white/70 bg-white p-2 shadow-lg">
+                    <div className="absolute left-4 top-4 flex h-14 w-20 items-center justify-center rounded-none border border-white/70 bg-white p-2 shadow-lg">
                         <Image
                             src={branch.logoUrl}
                             alt={`Logo ${branch.name}`}
@@ -304,10 +304,10 @@ function BranchCard({
                     </div>
                 )}
 
-                <div className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white text-[#0a0f14] shadow-lg transition group-hover:bg-[#1A2A3A] group-hover:text-white group-active:text-white" > {/* Círculo flotante cambia a azul marino */}
+                <div className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-none bg-white text-[#0a0f14] shadow-lg transition duration-200 group-hover:bg-[#1A2A3A] group-hover:text-white group-active:bg-[#1A2A3A] group-active:text-white">
                     <ArrowRight
                         size={17}
-                        className="transition-transform group-hover:translate-x-0.5"
+                        className="text-current transition-transform group-hover:translate-x-0.5"
                     />
                 </div>
             </Link>
@@ -327,10 +327,16 @@ function BranchCard({
                 <div className="mt-5 grid gap-2 border-t border-black/8 pt-4 sm:grid-cols-2">
                     <Link
                         href={`/sucursales/${branch.id}`}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#0a0f14] px-4 text-xs font-black text-white transition hover:bg-[#1A2A3A] active:scale-95 active:border-[#192a3a] active:bg-[#192a3a] active:text-white"
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-none bg-[#0a0f14] px-4 text-xs font-black !text-white transition hover:bg-[#1A2A3A] hover:!text-white active:scale-95 active:bg-[#192a3a] active:!text-white"
                     >
-                        Ver agencia
-                        <ArrowRight size={15} />
+                        <span className="text-white">
+                            Ver agencia
+                        </span>
+
+                        <ArrowRight
+                            size={15}
+                            className="text-white"
+                        />
                     </Link>
 
                     {whatsappHref ? (
@@ -338,7 +344,7 @@ function BranchCard({
                             href={whatsappHref}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-4 text-xs font-black text-[#0a0f14] transition hover:border-[#25d366] hover:bg-[#edfdf3] active:scale-[0.98] active:border-[#25d366] active:bg-[#edfdf3]"
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-none border border-black/15 bg-white px-4 text-xs font-black text-[#0a0f14] transition hover:border-[#25d366] hover:bg-[#edfdf3] active:scale-[0.98] active:border-[#25d366] active:bg-[#edfdf3]"
                         >
                             <MessageCircle
                                 size={16}
@@ -350,7 +356,7 @@ function BranchCard({
                     ) : (
                         <Link
                             href={`/sucursales/${branch.id}`}
-                            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-4 text-xs font-black text-[#0a0f14] transition hover:bg-slate-50"
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-none border border-black/15 bg-white px-4 text-xs font-black text-[#0a0f14] transition hover:bg-slate-50"
                         >
                             Más información
                         </Link>

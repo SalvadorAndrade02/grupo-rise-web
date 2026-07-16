@@ -1,25 +1,18 @@
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { InstitutionalHero } from "@/components/home/InstitutionalHero";
+import { HomeBrandCatalogs } from "@/components/home/HomeBrandCatalogs";
+import { BranchesCarousel } from "@/components/home/BranchesCarousel";
+import { prisma } from "@/lib/prisma";
 import {
   VehicleCategory,
-  VehicleCondition,
   VehicleMediaType,
   VehicleStatus,
 } from "@prisma/client";
 
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { Hero } from "@/components/home/Hero";
 import { VehicleCategoryShowcase } from "@/components/home/VehicleCategoryShowcase";
-import { QuickActions } from "@/components/home/QuickActions";
-import { FeaturedVehicles } from "@/components/home/FeaturedVehicles";
-import { MotorcycleBanner } from "@/components/home/MotorcycleBanner";
-import { InfoCards } from "@/components/home/InfoCards";
-import { FinalCTA } from "@/components/home/FinalCTA";
-import { HomeStats } from "@/components/home/HomeStats";
-import { HomeBrandCatalogs } from "@/components/home/HomeBrandCatalogs";
-import { BranchesCarousel } from "@/components/home/BranchesCarousel";
-import { prisma } from "@/lib/prisma";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const catalogBrandNames = [
   "Can-Am",
@@ -82,99 +75,40 @@ function getBrandSlug(brandName: string) {
   return customSlugs[brandName] ?? slugifyBrand(brandName);
 }
 
-function getBrandCover(brandName: string) {
-  const covers: Record<string, string> = {
-    "Can-Am": "/catalog/brands/can-am.jpg",
-    Polaris: "/catalog/brands/polaris.jpg",
-    "Sea-Doo": "/catalog/brands/sea-doo.jpg",
-    "Sea Doo": "/catalog/brands/sea-doo.jpg",
-    SeaDoo: "/catalog/brands/sea-doo.jpg",
-
-    Triumph: "/catalog/brands/triumph.jpg",
-    "Triumph Motorcycles": "/catalog/brands/triumph.jpg",
-
-    "Royal Enfield": "/catalog/brands/royal-enfield.jpg",
-
-    Indian: "/catalog/brands/indian.jpg",
-    "Indian Motorcycle": "/catalog/brands/indian.jpg",
-
-    Zeekr: "/catalog/brands/zeekr.jpg",
-    Zeekrlife: "/catalog/brands/zeekr.jpg",
-
-    "Lynk & Co": "/catalog/brands/lynkco.jpg",
-  };
-
-  return covers[brandName] ?? "";
-}
-
 function getBrandLogo(brandName: string) {
   const logos: Record<string, string> = {
-    "Can-Am": "/catalog/brands/can-am.jpg",
+    "Can-Am": "/catalog/brands/can-am.png",
     Polaris: "/catalog/brands/polaris.jpg",
     "Sea-Doo": "/catalog/brands/sea-doo.jpg",
     "Sea Doo": "/catalog/brands/sea-doo.jpg",
     SeaDoo: "/catalog/brands/sea-doo.jpg",
-
-    Triumph: "/catalog/brands/triumph.jpg",
-    "Triumph Motorcycles": "/catalog/brands/triumph.jpg",
-
+    Triumph: "/catalog/brands/triumph.png",
+    "Triumph Motorcycles": "/catalog/brands/triumph.png",
     "Royal Enfield": "/catalog/brands/royal-enfield.jpg",
-
     Indian: "/catalog/brands/indian.jpg",
     "Indian Motorcycle": "/catalog/brands/indian.jpg",
-
-    Zeekr: "/catalog/brands/zeekr.jpg",
-    Zeekrlife: "/catalog/brands/zeekr.jpg",
-
-    "Lynk & Co": "/catalog/brands/lynkco.jpg",
+    Zeekr: "/catalog/brands/zeekNegro.png",
+    Zeekrlife: "/catalog/brands/zeekNegro.png",
+    "Lynk & Co": "/catalog/brands/lynkco.png",
   };
 
   return logos[brandName] ?? null;
 }
 
 function getBrandSortOrder(brandName: string) {
-  const slug = getBrandSlug(brandName);
-  const index = brandSlugOrder.indexOf(slug);
+  const index = brandSlugOrder.indexOf(getBrandSlug(brandName));
 
   return index === -1 ? 999 : index;
 }
 
 export default async function HomePage() {
   const [
-    featuredVehicleCandidates,
     branches,
     catalogBrands,
-    allActiveVehicles,
+    autoVehicle,
+    motorcycleVehicle,
+    offRoadVehicle,
   ] = await Promise.all([
-    prisma.vehicle.findMany({
-      where: {
-        active: true,
-        status: VehicleStatus.DISPONIBLE,
-        brand: {
-          active: true,
-        },
-        branch: {
-          active: true,
-        },
-      },
-      include: {
-        brand: true,
-        branch: true,
-        images: {
-          where: {
-            type: VehicleMediaType.IMAGE,
-          },
-          orderBy: {
-            order: "asc",
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 80,
-    }),
-
     prisma.branch.findMany({
       where: {
         active: true,
@@ -196,35 +130,17 @@ export default async function HomePage() {
           in: catalogBrandNames,
         },
       },
-      include: {
-        vehicles: {
-          where: {
-            active: true,
-            condition: VehicleCondition.NUEVO,
-            status: VehicleStatus.DISPONIBLE,
-            branch: {
-              active: true,
-            },
-          },
-          include: {
-            images: {
-              where: {
-                type: VehicleMediaType.IMAGE,
-              },
-              orderBy: {
-                order: "asc",
-              },
-              take: 1,
-            },
-          },
-        },
+      select: {
+        id: true,
+        name: true,
       },
     }),
 
-    prisma.vehicle.findMany({
+    prisma.vehicle.findFirst({
       where: {
         active: true,
         status: VehicleStatus.DISPONIBLE,
+        category: VehicleCategory.AUTO,
         brand: {
           active: true,
         },
@@ -232,144 +148,370 @@ export default async function HomePage() {
           active: true,
         },
       },
+      orderBy: [
+        {
+          isFeatured: "desc",
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
       select: {
-        category: true,
+        mainImage: true,
+        images: {
+          where: {
+            type: VehicleMediaType.IMAGE,
+          },
+          orderBy: {
+            order: "asc",
+          },
+          take: 1,
+          select: {
+            url: true,
+          },
+        },
+      },
+    }),
+
+    prisma.vehicle.findFirst({
+      where: {
+        active: true,
+        status: VehicleStatus.DISPONIBLE,
+        category: VehicleCategory.MOTO,
+        brand: {
+          active: true,
+        },
+        branch: {
+          active: true,
+        },
+      },
+      orderBy: [
+        {
+          isFeatured: "desc",
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
+      select: {
+        mainImage: true,
+        images: {
+          where: {
+            type: VehicleMediaType.IMAGE,
+          },
+          orderBy: {
+            order: "asc",
+          },
+          take: 1,
+          select: {
+            url: true,
+          },
+        },
+      },
+    }),
+
+    prisma.vehicle.findFirst({
+      where: {
+        active: true,
+        status: VehicleStatus.DISPONIBLE,
+        category: VehicleCategory.TODOTERRENO,
+        brand: {
+          active: true,
+        },
+        branch: {
+          active: true,
+        },
+      },
+      orderBy: [
+        {
+          isFeatured: "desc",
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
+      select: {
+        mainImage: true,
+        images: {
+          where: {
+            type: VehicleMediaType.IMAGE,
+          },
+          orderBy: {
+            order: "asc",
+          },
+          take: 1,
+          select: {
+            url: true,
+          },
+        },
       },
     }),
   ]);
 
-  const featuredVehiclesByBrand = new Map<
+  const autoImage =
+    autoVehicle?.mainImage ||
+    autoVehicle?.images[0]?.url ||
+    null;
+
+  const motorcycleImage =
+    motorcycleVehicle?.mainImage ||
+    motorcycleVehicle?.images[0]?.url ||
+    null;
+
+  const offRoadImage =
+    offRoadVehicle?.mainImage ||
+    offRoadVehicle?.images[0]?.url ||
+    null;
+
+  const brandCardsBySlug = new Map<
     string,
-    (typeof featuredVehicleCandidates)[number]
+    {
+      id: number;
+      name: string;
+      slug: string;
+      logo: string | null;
+    }
   >();
 
-  const orderedFeaturedCandidates = [...featuredVehicleCandidates].sort(
-    (a, b) => {
-      const brandOrder =
-        getBrandSortOrder(a.brand.name) - getBrandSortOrder(b.brand.name);
+  catalogBrands.forEach((brand) => {
+    const slug = getBrandSlug(brand.name);
 
-      if (brandOrder !== 0) {
-        return brandOrder;
-      }
-
-      if (a.isFeatured !== b.isFeatured) {
-        return Number(b.isFeatured) - Number(a.isFeatured);
-      }
-
-      return b.createdAt.getTime() - a.createdAt.getTime();
-    }
-  );
-
-  orderedFeaturedCandidates.forEach((vehicle) => {
-    const brandSlug = getBrandSlug(vehicle.brand.name);
-
-    if (!brandSlugOrder.includes(brandSlug)) {
-      return;
-    }
-
-    if (!featuredVehiclesByBrand.has(brandSlug)) {
-      featuredVehiclesByBrand.set(brandSlug, vehicle);
+    if (!brandCardsBySlug.has(slug)) {
+      brandCardsBySlug.set(slug, {
+        id: brand.id,
+        name: brand.name,
+        slug,
+        logo: getBrandLogo(brand.name),
+      });
     }
   });
 
-  const vehicles = Array.from(featuredVehiclesByBrand.values()).sort(
+  const formattedBrandCards = Array.from(
+    brandCardsBySlug.values()
+  ).sort(
     (a, b) =>
-      getBrandSortOrder(a.brand.name) - getBrandSortOrder(b.brand.name)
+      getBrandSortOrder(a.name) - getBrandSortOrder(b.name)
   );
-
-  const formattedVehicles = vehicles.map((vehicle) => ({
-    id: vehicle.id,
-    category: vehicle.category,
-    condition: vehicle.condition,
-    status: vehicle.status,
-    brandName: vehicle.brand.name,
-    branchId: vehicle.branchId,
-    branchCity: vehicle.branch.city,
-    branchWhatsapp: vehicle.branch.whatsapp,
-    name: vehicle.name,
-    model: vehicle.model,
-    year: vehicle.year,
-    price: vehicle.price,
-    type: vehicle.type,
-    specs: vehicle.specs
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean),
-    mainImage: vehicle.mainImage || vehicle.images[0]?.url || "",
-  }));
-
-  /*
-   * Seleccionamos una imagen representativa de cada categoría.
-   * Se priorizan las unidades marcadas como destacadas y después las más nuevas.
-   */
-  const categoryVehicleCandidates = [...featuredVehicleCandidates].sort(
-    (a, b) => {
-      if (a.isFeatured !== b.isFeatured) {
-        return Number(b.isFeatured) - Number(a.isFeatured);
-      }
-
-      return b.createdAt.getTime() - a.createdAt.getTime();
-    }
-  );
-
-  function getCategoryImage(category: VehicleCategory) {
-    const vehicle = categoryVehicleCandidates.find(
-      (candidate) =>
-        candidate.category === category &&
-        Boolean(candidate.mainImage || candidate.images[0]?.url)
-    );
-
-    return vehicle?.mainImage || vehicle?.images[0]?.url || null;
-  }
-
-  const autoImage = getCategoryImage(VehicleCategory.AUTO);
-  const motorcycleImage = getCategoryImage(VehicleCategory.MOTO);
-  const offRoadImage = getCategoryImage(VehicleCategory.TODOTERRENO);
-
-  const formattedBrandCards = catalogBrands
-    .map((brand) => {
-      return {
-        id: brand.id,
-        name: brand.name,
-        slug: getBrandSlug(brand.name),
-        logo: getBrandLogo(brand.name),
-      };
-    })
-    .sort(
-      (a, b) => getBrandSortOrder(a.name) - getBrandSortOrder(b.name)
-    );
-
-  const stats = {
-    totalVehicles: allActiveVehicles.length,
-    autos: allActiveVehicles.filter(
-      (vehicle) => vehicle.category === VehicleCategory.AUTO
-    ).length,
-    motos: allActiveVehicles.filter(
-      (vehicle) => vehicle.category === VehicleCategory.MOTO
-    ).length,
-    todoTerreno: allActiveVehicles.filter(
-      (vehicle) => vehicle.category === VehicleCategory.TODOTERRENO
-    ).length,
-    branches: branches.length,
-  };
 
   return (
-    <main className="min-h-screen bg-[#f4f3ef] text-[#0a0f14]">
+    <main className="min-h-screen overflow-x-clip text-[var(--public-text)]">
       <Header />
 
-      <Hero vehicles={formattedVehicles} />
+      <div className="public-home">
+        <InstitutionalHero
+          heroImage={autoImage || motorcycleImage || offRoadImage}
+          brandCount={formattedBrandCards.length}
+          branchCount={branches.length}
+        />
 
-      <VehicleCategoryShowcase
-        autoImage={autoImage}
-        motorcycleImage={motorcycleImage}
-        offRoadImage={offRoadImage}
-      />
+        <section
+          id="grupo-rise"
+          className="relative overflow-hidden border-b border-[var(--home-border)] bg-[var(--home-surface)]"
+        >
+          <div className="pointer-events-none absolute right-0 top-0 h-full w-1/3 bg-[linear-gradient(135deg,transparent,rgba(38,58,75,0.07))]" />
 
-      <HomeBrandCatalogs brands={formattedBrandCards} />
+          <div className="public-container public-section relative">
+            <div className="grid items-center gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
+              <div>
+                <p className="public-eyebrow">
+                  Acerca del grupo
+                </p>
 
-      <FeaturedVehicles vehicles={formattedVehicles} />
+                <h2 className="public-title mt-5 max-w-xl text-4xl md:text-6xl">
+                  Una visión compartida por distintas marcas.
+                </h2>
+              </div>
 
-      <BranchesCarousel branches={branches} />
+              <div className="border-l-2 border-[var(--public-accent)] pl-6 md:pl-10">
+                <p className="max-w-3xl text-lg leading-8 text-[var(--public-muted)] md:text-xl md:leading-9">
+                  Grupo RISE integra agencias y marcas enfocadas en diferentes
+                  estilos de movilidad. Desde automóviles y motocicletas hasta
+                  vehículos todo terreno.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="bg-[var(--home-background)]">
+          <VehicleCategoryShowcase
+            autoImage={autoImage}
+            motorcycleImage={motorcycleImage}
+            offRoadImage={offRoadImage}
+          />
+        </div>
+
+        <div className="bg-[var(--home-surface)]">
+          <HomeBrandCatalogs brands={formattedBrandCards} />
+        </div>
+
+        <section
+          id="noticias"
+          className="public-section border-y border-[var(--home-border)] bg-[var(--home-background)]"
+        >
+          <div className="public-container">
+            <div className="flex flex-col justify-between gap-6 border-b border-[var(--home-border)] pb-8 md:flex-row md:items-end">
+              <div>
+                <p className="public-eyebrow">
+                  Noticias y novedades
+                </p>
+
+                <h2 className="public-title mt-5 text-4xl md:text-6xl">
+                  Lo nuevo en Grupo RISE.
+                </h2>
+              </div>
+
+              <p className="max-w-md text-sm leading-6 text-[var(--public-muted)]">
+                Espacio destinado a lanzamientos, noticias y novedades de las
+                marcas que forman parte del grupo.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {[1, 2, 3].map((item) => (
+                <article
+                  key={item}
+                  className="group relative min-h-[370px] overflow-hidden rounded-none border border-[var(--home-border)] bg-[var(--home-card)] shadow-[0_12px_32px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1.5 hover:border-[var(--home-border-strong)] hover:bg-[var(--home-card-hover)] hover:shadow-[var(--home-shadow)]"
+                >
+                  <div className="absolute inset-x-0 top-0 h-1 bg-[var(--public-accent)]" />
+
+                  <div className="flex h-full flex-col justify-between p-7">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-accent)]">
+                          Próximamente
+                        </span>
+
+                        <span className="text-xs font-semibold text-[var(--public-muted-light)]">
+                          0{item}
+                        </span>
+                      </div>
+
+                      <div className="relative mt-12 flex h-28 items-center justify-center overflow-hidden rounded-none border border-dashed border-[var(--home-border-strong)] bg-[var(--home-surface-alt)]">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--public-muted-light)]">
+                          Imagen de noticia
+                        </span>
+                      </div>
+
+                      <h3 className="mt-7 text-2xl font-bold tracking-[-0.03em] text-[var(--public-ink)]">
+                        Contenido por definir
+                      </h3>
+
+                      <p className="mt-3 text-sm leading-6 text-[var(--public-muted)]">
+                        Este espacio se utilizará para publicar información
+                        oficial, novedades y lanzamientos del grupo.
+                      </p>
+                    </div>
+
+                    <div className="mt-8 border-t border-[var(--home-border)] pt-5">
+                      <span className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--public-muted-light)]">
+                        Grupo RISE
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="eventos"
+          className="public-section border-b border-[var(--home-border)] bg-[var(--home-surface-alt)]"
+        >
+          <div className="public-container">
+            <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
+              <div>
+                <p className="public-eyebrow">
+                  Eventos y experiencias
+                </p>
+
+                <h2 className="public-title mt-5 text-4xl md:text-6xl">
+                  Experiencias que se viven.
+                </h2>
+
+                <p className="mt-6 max-w-md text-base leading-7 text-[var(--public-muted)]">
+                  Espacio preparado para rodadas, exhibiciones, pruebas de
+                  manejo, lanzamientos y actividades especiales.
+                </p>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <article className="relative min-h-[430px] overflow-hidden rounded-none bg-[var(--public-header)] p-8 text-white shadow-[0_22px_55px_rgba(18,24,28,0.18)] md:col-span-2 md:p-10">
+                  <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-none bg-white/[0.05] blur-3xl" />
+
+                  <div className="pointer-events-none absolute -bottom-20 -left-16 h-64 w-64 rounded-none bg-[var(--public-accent)]/40 blur-3xl" />
+
+                  <div className="relative flex h-full flex-col justify-between">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-5">
+                      <span className="text-xs font-black uppercase tracking-[0.2em] text-white/50">
+                        Evento destacado
+                      </span>
+
+                      <span className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs font-bold text-white/65">
+                        Próximamente
+                      </span>
+                    </div>
+
+                    <div className="mt-20 max-w-2xl">
+                      <p className="text-3xl font-semibold leading-tight tracking-[-0.04em] md:text-5xl">
+                        Próxima experiencia Grupo RISE.
+                      </p>
+
+                      <p className="mt-5 max-w-xl text-base leading-7 text-white/55">
+                        La información oficial del próximo evento se mostrará en
+                        este espacio.
+                      </p>
+                    </div>
+
+                    <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-5 text-xs font-bold uppercase tracking-[0.15em] text-white/40 sm:flex-row sm:items-center sm:justify-between">
+                      <span>
+                        Fecha por confirmar
+                      </span>
+
+                      <span>
+                        Ubicación por confirmar
+                      </span>
+                    </div>
+                  </div>
+                </article>
+
+                <article className="min-h-[220px] rounded-none border border-[var(--home-border)] bg-[var(--home-card)] p-7 shadow-[0_10px_28px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1 hover:bg-[var(--home-card-hover)] hover:shadow-[var(--home-shadow)]">
+                  <span className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-accent)]">
+                    Rodadas
+                  </span>
+
+                  <h3 className="mt-10 text-2xl font-bold tracking-[-0.03em] text-[var(--public-ink)]">
+                    Próximamente
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-6 text-[var(--public-muted)]">
+                    Espacio reservado para próximas experiencias en motocicleta.
+                  </p>
+                </article>
+
+                <article className="min-h-[220px] rounded-none border border-[var(--home-border)] bg-[var(--home-card)] p-7 shadow-[0_10px_28px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1 hover:bg-[var(--home-card-hover)] hover:shadow-[var(--home-shadow)]">
+                  <span className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-accent)]">
+                    Lanzamientos
+                  </span>
+
+                  <h3 className="mt-10 text-2xl font-bold tracking-[-0.03em] text-[var(--public-ink)]">
+                    Próximamente
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-6 text-[var(--public-muted)]">
+                    Espacio destinado a presentaciones y novedades de las marcas.
+                  </p>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="bg-[var(--home-background)]">
+          <BranchesCarousel branches={branches} />
+        </div>
+      </div>
 
       <Footer />
     </main>

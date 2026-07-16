@@ -1,73 +1,207 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Base general */
+  --background: #e7e8e6;
+  --foreground: #17191b;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-:root {
+  /* Colores históricos del proyecto */
   --rise-blue: #192a3a;
   --rise-blue-dark: #101c27;
   --rise-blue-hover: #29465c;
   --rise-blue-light: #7890a2;
   --rise-blue-soft: #dfe7ec;
   --rise-blue-pale: #f1f5f7;
+
+  /* Rediseño público Grupo RISE */
+  --public-background: #e7e8e6;
+  --public-surface: #f3f3f1;
+  --public-surface-alt: #dcddda;
+
+  --public-header: #303336;
+  --public-header-hover: #3b3f43;
+  --public-header-border: rgba(255, 255, 255, 0.12);
+
+  --public-text: #24272a;
+  --public-ink: #111315;
+  --public-muted: #666b70;
+  --public-muted-light: #8b9095;
+
+  --public-border: rgba(17, 19, 21, 0.14);
+  --public-border-strong: rgba(17, 19, 21, 0.24);
+
+  --public-accent: #263a4b;
+  --public-accent-dark: #172733;
+  --public-accent-soft: #d8e0e5;
+
+  --public-shadow-sm: 0 8px 24px rgba(17, 19, 21, 0.06);
+  --public-shadow-md: 0 18px 45px rgba(17, 19, 21, 0.1);
+
+  --home-background: #dfe1e1;
+  --home-surface: #e8e9e7;
+  --home-surface-alt: #d5d8d8;
+
+  --home-card: #ececea;
+  --home-card-hover: #e3e4e2;
+
+  --home-border: rgba(20, 24, 27, 0.14);
+  --home-border-strong: rgba(20, 24, 27, 0.24);
+
+  --home-text: #202326;
+  --home-muted: #656a6e;
+}
+
+.public-home {
+  min-height: 100vh;
+  background: var(--home-background);
+  color: var(--home-text);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-rise-blue: var(--rise-blue);
+  --color-rise-blue-dark: var(--rise-blue-dark);
+  --color-rise-blue-hover: var(--rise-blue-hover);
+
+  --color-public-background: var(--public-background);
+  --color-public-surface: var(--public-surface);
+  --color-public-header: var(--public-header);
+  --color-public-text: var(--public-text);
+  --color-public-ink: var(--public-ink);
+  --color-public-muted: var(--public-muted);
+  --color-public-accent: var(--public-accent);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
+  background: var(--public-background);
 }
 
 body {
+  min-height: 100vh;
+  margin: 0;
   background: var(--public-background);
   color: var(--public-text);
+  font-family:
+    var(--font-geist-sans),
+    Arial,
+    Helvetica,
+    sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
 ::selection {
   background: var(--public-accent);
-  color: white;
+  color: #ffffff;
 }
 
+/* Contenedor general del sitio público */
 .public-container {
-  width: min(100% - 2rem, 1440px);
+  width: min(calc(100% - 2rem), 1440px);
   margin-inline: auto;
 }
 
+@media (min-width: 768px) {
+  .public-container {
+    width: min(calc(100% - 4rem), 1440px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .public-container {
+    width: min(calc(100% - 5rem), 1440px);
+  }
+}
+
+/* Texto introductorio pequeño */
 .public-eyebrow {
   color: var(--public-accent-dark);
   font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.22em;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  line-height: 1.2;
   text-transform: uppercase;
 }
 
+/* Títulos principales */
 .public-title {
   color: var(--public-ink);
-  font-weight: 900;
-  letter-spacing: -0.04em;
+  font-weight: 800;
+  letter-spacing: -0.045em;
   line-height: 0.98;
+  text-wrap: balance;
 }
 
+/* Texto secundario */
 .public-muted {
   color: var(--public-muted);
+}
+
+/* Superficies reutilizables */
+.public-surface {
+  border: 1px solid var(--public-border);
+  background: var(--public-surface);
+}
+
+.public-section {
+  padding-block: 4.5rem;
+}
+
+@media (min-width: 768px) {
+  .public-section {
+    padding-block: 6rem;
+  }
+}
+
+/* Colores exclusivos de la página principal */
+.public-home {
+  --home-background: #dfe2e2;
+  --home-surface: #eceeec;
+  --home-surface-strong: #f3f4f2;
+  --home-surface-alt: #d3d7d6;
+
+  --home-card: #eef0ee;
+  --home-card-hover: #f5f6f4;
+
+  --home-border: rgba(17, 23, 27, 0.13);
+  --home-border-strong: rgba(17, 23, 27, 0.23);
+
+  --home-shadow:
+    0 16px 40px rgba(18, 24, 28, 0.08);
+
+  min-height: 100vh;
+  background: var(--home-background);
+  color: var(--public-text);
 }

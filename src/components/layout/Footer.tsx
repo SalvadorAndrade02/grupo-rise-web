@@ -108,10 +108,10 @@ export function Footer() {
             <Link
               href="/"
               aria-label="Ir al inicio de Grupo Rise"
-              className="inline-flex rounded-xl bg-white px-4 py-3"
+              className="inline-flex rounded-xl px-4 py-3"
             >
               <Image
-                src="/brand/logo-rise.jpeg"
+                src="/brand/logo-rise.png"
                 alt="Grupo Rise"
                 width={190}
                 height={58}
