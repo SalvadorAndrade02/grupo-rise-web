@@ -7,6 +7,7 @@ import {
   ArrowRight,
   ChevronDown,
   Menu,
+  MessageCircle,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -15,34 +16,78 @@ const catalogBrands = [
   {
     label: "Can-Am",
     href: "/catalogo/can-am",
+    logo: "/catalog/brands/can-am.png",
+    logoClass: "scale-110",
   },
   {
     label: "Polaris",
     href: "/catalogo/polaris",
+    logo: "/catalog/brands/polaris.jpg",
+    logoClass: "scale-140",
   },
   {
     label: "Sea-Doo",
     href: "/catalogo/sea-doo",
+    logo: "/catalog/brands/sea-doo.jpg",
+    logoClass: "scale-125",
   },
   {
     label: "Indian Motorcycle",
     href: "/catalogo/indian-motorcycle",
+    logo: "/catalog/brands/indian.jpg",
+    logoClass: "scale-140",
   },
   {
     label: "Triumph",
     href: "/catalogo/triumph-motorcycles",
+    logo: "/catalog/brands/triumph.png",
+    logoClass: "scale-125",
   },
   {
     label: "Royal Enfield",
     href: "/catalogo/royal-enfield",
+    logo: "/catalog/brands/royal-enfield.jpg",
+    logoClass: "scale-125",
   },
   {
     label: "Zeekr",
     href: "/catalogo/zeekrlife",
+    logo: "/catalog/brands/zeekNegro.png",
+    logoClass: "scale-100",
   },
   {
     label: "Lynk & Co",
     href: "/catalogo/lynk-co",
+    logo: "/catalog/brands/lynkco.png",
+    logoClass: "scale-125",
+  },
+];
+
+const navigationItems = [
+  {
+    label: "Inicio",
+    href: "/",
+    activePaths: ["/"],
+  },
+  {
+    label: "Grupo RISE",
+    href: "/#grupo-rise",
+    activePaths: ["/grupo-rise"],
+  },
+  {
+    label: "Agencias",
+    href: "/sucursales",
+    activePaths: ["/sucursales"],
+  },
+  {
+    label: "Noticias",
+    href: "/#noticias",
+    activePaths: ["/noticias"],
+  },
+  {
+    label: "Eventos",
+    href: "/#eventos",
+    activePaths: ["/eventos"],
   },
 ];
 
@@ -50,162 +95,200 @@ export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const catalogActive =
+  const brandsActive =
     pathname.startsWith("/catalogo") ||
-    pathname.startsWith("/vehiculos");
-
-  const seminuevosActive = pathname.startsWith("/inventario");
-  const branchesActive = pathname.startsWith("/sucursales");
-  const servicesActive = pathname.startsWith("/servicios");
+    pathname.startsWith("/vehiculos") ||
+    pathname.startsWith("/inventario");
 
   function closeMobileMenu() {
     setMobileMenuOpen(false);
   }
 
+  function isActive(paths: string[]) {
+    return paths.some((path) => {
+      if (path === "/") {
+        return pathname === "/";
+      }
+
+      return pathname.startsWith(path);
+    });
+  }
+
   function desktopLinkClass(active: boolean) {
-    return `group relative flex h-full items-center px-4 text-sm font-bold transition ${active
-        ? "text-[#1A2A3A]" // Color de la foto (azul marino oscuro) para el enlace activo
-        : "text-slate-600 hover:text-[#1A2A3A]" // Hover también usa el color de la foto
-      }`;
+    return [
+      "group relative flex h-full items-center px-3",
+      "text-[13px] font-semibold uppercase tracking-[0.08em]",
+      "transition-colors duration-200",
+      active
+        ? "text-white"
+        : "text-white/60 hover:text-white",
+    ].join(" ");
   }
 
   function activeLineClass(active: boolean) {
-    return `absolute bottom-0 left-4 right-4 h-[2px] origin-left bg-[#1A2A3A] transition-transform duration-300 ${ // Color de la foto para la línea
+    return [
+      "absolute bottom-0 left-3 right-3 h-px",
+      "origin-left bg-white transition-transform duration-300",
       active
         ? "scale-x-100"
-        : "scale-x-0 group-hover:scale-x-100"
-      }`;
+        : "scale-x-0 group-hover:scale-x-100",
+    ].join(" ");
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-black/5 bg-white/95 shadow-[0_6px_25px_rgba(15,23,42,0.04)] backdrop-blur-xl">
-      <div className="mx-auto flex h-[100px] w-full max-w-[1440px] items-center gap-7 px-5 md:px-8 lg:px-10">
-        {/* Logo */}
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#101418]/95 text-white shadow-[0_8px_30px_rgba(0,0,0,0.16)] backdrop-blur-xl">
+      <div className="mx-auto flex h-[80px] w-full max-w-[1435px] items-center px-5 md:h-[88px] md:px-8 lg:px-10">
         <Link
           href="/"
           onClick={closeMobileMenu}
-          aria-label="Ir al inicio de Grupo Rise"
-          className="flex min-w-0 shrink-0 items-center justify-start lg:w-[220px]"
+          aria-label="Ir al inicio de Grupo RISE"
+          className="flex min-w-0 shrink-0 items-center justify-start lg:w-[270px]"
         >
           <Image
-            src="/brand/logo-rise.jpeg"
-            alt="Grupo Rise"
-            width={220}
-            height={75}
+            src="/brand/logo-rise.png"
+            alt="Grupo RISE"
+            width={280}
+            height={90}
             priority
-            className="h-[52px] w-auto origin-left scale-[1.06] object-contain mix-blend-multiply"
+            className="h-[62px] w-auto origin-left object-contain md:h-[68px]"
           />
         </Link>
 
-        {/* Navegación de escritorio */}
-        <nav className="hidden h-full flex-1 items-center justify-center lg:flex">
-          <Link
-            href="/"
-            className={desktopLinkClass(pathname === "/")}
-          >
-            Inicio
-            <span className={activeLineClass(pathname === "/")} />
-          </Link>
+        <nav className="ml-10 hidden h-full flex-1 items-center justify-center lg:flex">
+          {navigationItems.slice(0, 2).map((item) => {
+            const active = isActive(item.activePaths);
 
-          {/* Catálogo desplegable */}
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={desktopLinkClass(active)}
+              >
+                {item.label}
+                <span className={activeLineClass(active)} />
+              </Link>
+            );
+          })}
+
           <div className="group relative flex h-full items-center">
             <Link
               href="/catalogo"
-              className={desktopLinkClass(catalogActive)}
+              className={desktopLinkClass(brandsActive)}
             >
               <span className="flex items-center gap-1.5">
-                Catálogo
+                Marcas
 
                 <ChevronDown
-                  size={15}
+                  size={14}
                   className="transition-transform duration-200 group-hover:rotate-180"
                 />
               </span>
 
-              <span className={activeLineClass(catalogActive)} />
+              <span className={activeLineClass(brandsActive)} />
             </Link>
 
-            {/* El padding superior evita que el dropdown parpadee */}
-            <div className="invisible absolute left-1/2 top-full z-50 w-[510px] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100">
-              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
-                <div className="border-b border-slate-100 bg-slate-50 px-5 py-4">
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-[#1A2A3A]"> {/* Color de la foto para el texto */}
-                    Marcas que manejamos.
-                  </p>
+            <div className="invisible absolute left-1/2 top-full z-50 w-[440px] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100">
+              <div className="overflow-hidden rounded-none border border-white/10 bg-[#eceeec] shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
+                <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-black">
+                      Nuestras marcas
+                    </p>
 
-                  <p className="mt-1 text-sm text-slate-500">
-                    Explora vehículos nuevos por marca.
-                  </p>
-                </div>
+                    <p className="mt-1 text-xs text-black">
+                      Automotriz, motocicletas y experiencias.
+                    </p>
+                  </div>
 
-                <div className="grid grid-cols-2 gap-1 p-3">
                   <Link
                     href="/catalogo"
-                    className="col-span-2 flex items-center justify-between rounded-lg bg-[#1A2A3A] px-4 py-3 text-sm font-black text-white transition hover:bg-[#1A2A3A]/90" // Botón usa el color de la foto
+                    className="flex items-center gap-2 text-xs font-bold text-black/70 transition hover:text-white"
                   >
-                    Ver todos los vehículos nuevos
-                    <ArrowRight size={17} />
-                  </Link>
+                    <span className="text-black">Ver todas</span>
 
+                    <ArrowRight className="text-black" size={14} />
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-2 gap-px bg-[#d3d7d6]">
                   {catalogBrands.map((brand) => (
                     <Link
                       key={brand.label}
                       href={brand.href}
-                      className="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-[#1A2A3A]/5 hover:text-[#1A2A3A]" // Hover usa fondo claro y texto del color de la foto
+                      className="group/brand bg-[#dfe2e2] px-5 py-4 transition hover:bg-white/[0.06]"
                     >
-                      {brand.label}
+                      <span className="flex items-center justify-between gap-3">
+                        <span>
+                          <span className="block text-sm font-semibold text-black">
+                            {brand.label}
+                          </span>
+                        </span>
 
-                      <ArrowRight
-                        size={14}
-                        className="text-[#1A2A3A]" // Color de la foto para la flecha
-                      />
+                        <span className="flex h-14 w-[130px] shrink-0 items-center justify-center overflow-hidden">
+                          <Image
+                            src={brand.logo}
+                            alt={`Logo de ${brand.label}`}
+                            width={140}
+                            height={56}
+                            className={`max-h-full w-auto max-w-full object-contain transition-transform duration-200 ${brand.logoClass ?? "scale-100"
+                              }`}
+                          />
+                        </span>
+                      </span>
                     </Link>
                   ))}
+                </div>
+
+                <div className="grid grid-cols-2 border-t border-white/10">
+                  <Link
+                    href="/catalogo"
+                    className="border-r border-white/10 px-5 py-3 text-center text-xs font-semibold text-black transition hover:bg-white/[0.05] hover:text-black"
+                  >
+                    <span className="text-black">
+                      Vehículos nuevos
+                    </span>
+
+                  </Link>
+
+                  <Link
+                    href="/inventario"
+                    className="px-5 py-3 text-center text-xs font-semibold text-black transition hover:bg-white/[0.05] hover:text-black"
+                  >
+                    <span className="text-black">
+                      Seminuevos
+                    </span>
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
 
-          <Link
-            href="/inventario"
-            className={desktopLinkClass(seminuevosActive)}
-          >
-            Seminuevos
-            <span className={activeLineClass(seminuevosActive)} />
-          </Link>
+          {navigationItems.slice(2).map((item) => {
+            const active = isActive(item.activePaths);
 
-          <Link
-            href="/sucursales"
-            className={desktopLinkClass(branchesActive)}
-          >
-            Sucursales
-            <span className={activeLineClass(branchesActive)} />
-          </Link>
-
-          <Link
-            href="/servicios"
-            className={desktopLinkClass(servicesActive)}
-          >
-            Servicios
-            <span className={activeLineClass(servicesActive)} />
-          </Link>
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={desktopLinkClass(active)}
+              >
+                {item.label}
+                <span className={activeLineClass(active)} />
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Acción derecha */}
-        <div className="hidden w-[220px] shrink-0 justify-end lg:flex">
+        <div className="hidden shrink-0 items-center gap-3 lg:flex">
           <Link
             href="/contacto"
-            className="group inline-flex h-12 items-center justify-center gap-3 rounded-lg border border-[#1A2A3A] bg-[#1A2A3A] px-6 text-sm font-black text-white shadow-[0_8px_22px_rgba(26,42,58,0.15)] transition hover:-translate-y-0.5 hover:border-[#1A2A3A]/90 hover:bg-[#1A2A3A]/90 active:scale-[0.98]" // Botón "Contáctanos" usa el color de la foto
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-none border border-white/20 px-4 text-xs font-bold uppercase tracking-[0.08em] text-white transition hover:border-white/40 hover:bg-white/10"
           >
-            Contáctanos
-
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-white/20 text-white transition group-hover:bg-white group-hover:text-[#1A2A3A]"> {/* Fondo de flecha usa blanco translúcido */}
-              <ArrowRight size={14} strokeWidth={2.6} />
-            </span>
+            Contactanos
+            <ArrowRight size={14} />
           </Link>
         </div>
 
-        {/* Botón móvil */}
         <button
           type="button"
           onClick={() => setMobileMenuOpen((current) => !current)}
@@ -215,20 +298,21 @@ export function Header() {
               ? "Cerrar menú de navegación"
               : "Abrir menú de navegación"
           }
-          className="ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-slate-200 bg-[#1A2A3A] text-white transition hover:bg-[#1A2A3A]/90 active:scale-95 lg:hidden" // Botón móvil usa el color de la foto
+          className="ml-auto grid h-10 w-10 place-items-center rounded-none border border-white/15 text-white transition hover:bg-white/10 active:scale-95 lg:hidden"
         >
-          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          {mobileMenuOpen ? <X size={21} /> : <Menu size={21} />}
         </button>
       </div>
 
-      {/* Menú móvil */}
       <div
-        className={`overflow-hidden border-t bg-white transition-all duration-300 lg:hidden ${mobileMenuOpen
-            ? "max-h-[600px] border-slate-100 opacity-100"
-            : "max-h-0 border-transparent opacity-0"
-          }`}
+        className={[
+          "overflow-hidden border-t bg-[#101418] transition-all duration-300 lg:hidden",
+          mobileMenuOpen
+            ? "max-h-[780px] border-white/10 opacity-100"
+            : "max-h-0 border-transparent opacity-0",
+        ].join(" ")}
       >
-        <nav className="mx-auto w-full max-w-[1440px] space-y-1 px-5 py-5 md:px-8">
+        <nav className="mx-auto w-full max-w-[1440px] px-5 py-5 md:px-8">
           <MobileLink
             href="/"
             label="Inicio"
@@ -237,40 +321,71 @@ export function Header() {
           />
 
           <MobileLink
-            href="/catalogo"
-            label="Catálogo"
-            active={catalogActive}
+            href="/#grupo-rise"
+            label="Grupo RISE"
+            active={pathname.startsWith("/grupo-rise")}
             onClick={closeMobileMenu}
           />
 
-          <MobileLink
-            href="/inventario"
-            label="Seminuevos"
-            active={seminuevosActive}
-            onClick={closeMobileMenu}
-          />
+          <div className="my-3 border-y border-white/10 py-3">
+            <p className="px-4 pb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-white/35">
+              Marcas
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+              {catalogBrands.map((brand) => (
+                <Link
+                  key={brand.label}
+                  href={brand.href}
+                  onClick={closeMobileMenu}
+                  className="flex min-h-[82px] flex-col items-center justify-center gap-2 rounded-none border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:bg-white/[0.08]"
+                >
+                  <span className="flex h-12 w-full items-center justify-center px-1">
+                    <Image
+                      src={brand.logo}
+                      alt={`Logo de ${brand.label}`}
+                      width={130}
+                      height={48}
+                      className="max-h-full w-auto max-w-full object-contain"
+                    />
+                  </span>
+
+                  <span className="text-center text-xs font-semibold text-white/70">
+                    {brand.label}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
 
           <MobileLink
             href="/sucursales"
-            label="Sucursales"
-            active={branchesActive}
+            label="Agencias"
+            active={pathname.startsWith("/sucursales")}
             onClick={closeMobileMenu}
           />
 
           <MobileLink
-            href="/servicios"
-            label="Servicios"
-            active={servicesActive}
+            href="/#noticias"
+            label="Noticias"
+            active={pathname.startsWith("/noticias")}
+            onClick={closeMobileMenu}
+          />
+
+          <MobileLink
+            href="/#eventos"
+            label="Eventos"
+            active={pathname.startsWith("/eventos")}
             onClick={closeMobileMenu}
           />
 
           <Link
             href="/contacto"
             onClick={closeMobileMenu}
-            className="mt-4 flex items-center justify-center gap-3 rounded-lg bg-[#1A2A3A] px-5 py-4 text-sm font-black text-white transition hover:bg-[#1A2A3A]/90 active:scale-[0.98]" // Botón móvil usa el color de la foto
+            className="mt-4 flex items-center justify-center gap-2 rounded-none bg-white px-5 py-3.5 text-sm font-bold text-[#101418] transition hover:bg-white/85 active:scale-[0.98]"
           >
-            Contáctanos
-            <ArrowRight size={17} />
+            Contacto
+            <ArrowRight size={16} />
           </Link>
         </nav>
       </div>
@@ -293,16 +408,18 @@ function MobileLink({
     <Link
       href={href}
       onClick={onClick}
-      className={`flex items-center justify-between rounded-lg px-4 py-3.5 text-sm font-black transition ${active
-          ? "bg-[#1A2A3A]/5 text-[#1A2A3A]" // Enlace móvil activo usa color claro y texto del color de la foto
-          : "text-slate-600 hover:bg-[#1A2A3A]/5 hover:text-[#1A2A3A]" // Hover usa color claro y texto del color de la foto
-        }`}
+      className={[
+        "flex items-center justify-between rounded-none px-4 py-3.5 text-sm font-semibold transition",
+        active
+          ? "bg-white/10 text-white"
+          : "text-white/60 hover:bg-white/[0.06] hover:text-white",
+      ].join(" ")}
     >
       {label}
 
       <ArrowRight
-        size={16}
-        className={active ? "text-[#1A2A3A]" : "text-slate-400"} // Color de la foto para flecha activa
+        size={15}
+        className={active ? "text-white" : "text-white/25"}
       />
     </Link>
   );

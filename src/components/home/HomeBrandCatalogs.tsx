@@ -1,19 +1,27 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { useState } from "react";
 
-type BrandItem = {
+type BrandCard = {
   id: number;
   name: string;
   slug: string;
-  logo?: string | null;
+  logo: string | null;
 };
 
 type HomeBrandCatalogsProps = {
-  brands: BrandItem[];
+  brands: BrandCard[];
+};
+
+const logoSizes: Record<string, string> = {
+  "can-am": "scale-110",
+  polaris: "scale-110",
+  "sea-doo": "scale-110",
+  "triumph-motorcycles": "scale-110",
+  "royal-enfield": "scale-100",
+  "indian-motorcycle": "scale-110",
+  zeekrlife: "scale-110",
+  "lynk-co": "scale-105",
 };
 
 export function HomeBrandCatalogs({
@@ -26,86 +34,64 @@ export function HomeBrandCatalogs({
   return (
     <section
       id="marcas"
-      className="border-y border-black/5 bg-white py-16 md:py-20"
+      className="border-y border-[var(--home-border)] bg-[var(--home-surface)] py-16 md:py-20"
     >
-      <div className="mx-auto w-full max-w-[1440px] px-5 md:px-8 lg:px-10">
-        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+      <div className="public-container">
+        <div className="flex flex-col justify-between gap-6 border-b border-[var(--home-border)] pb-8 md:flex-row md:items-end">
           <div>
-            <div className="flex items-center gap-3">
-              <span className="h-px w-8 bg-[#1A2A3A]" /> {/* Dorado cambiado al azul de la foto */}
-
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#1A2A3A]"> {/* Dorado cambiado al azul de la foto */}
-                Grupo multimarca
-              </p>
-            </div>
-
-            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#0a0f14] md:text-4xl">
+            <p className="public-eyebrow">
               Nuestras marcas
-            </h2>
-
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-slate-500">
-              Explora los vehículos disponibles de las marcas que forman parte
-              de Grupo Rise.
             </p>
+
+            <h2 className="public-title mt-4 text-4xl md:text-6xl">
+              Marcas que forman
+              <span className="block text-[var(--public-accent)]">
+                Grupo RISE.
+              </span>
+            </h2>
           </div>
 
           <Link
             href="/catalogo"
-            className="group inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.15em] text-[#0a0f14]"
+            className="group inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-[var(--public-accent)] transition hover:text-[var(--public-accent-dark)]"
           >
             Ver catálogo
 
-            <span className="grid h-9 w-9 place-items-center rounded-full border border-black/15 transition group-hover:border-[#1A2A3A] group-hover:bg-[#1A2A3A] group-hover:text-white"> {/* Círculo en hover cambia al azul de la foto */}
-              <ArrowRight
-                size={15}
-                className="transition-transform group-hover:translate-x-0.5"
-              />
-            </span>
+            <ArrowRight
+              size={15}
+              className="transition-transform group-hover:translate-x-1"
+            />
           </Link>
         </div>
 
-        <div className="mt-9 grid grid-cols-2 border-l border-t border-slate-200 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
+        <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {brands.map((brand) => (
-            <BrandLogoCard key={brand.id} brand={brand} />
+            <Link
+              key={brand.id}
+              href={`/catalogo/${brand.slug}`}
+              aria-label={`Ver catálogo de ${brand.name}`}
+              className="group relative flex min-h-[145px] items-center justify-center overflow-hidden rounded-none border border-[var(--home-border)] bg-[var(--home-card)] px-6 py-7 shadow-[0_8px_24px_rgba(18,24,28,0.04)] transition duration-300 hover:-translate-y-1 hover:border-[var(--home-border-strong)] hover:bg-[var(--home-card-hover)] hover:shadow-[var(--home-shadow)] md:min-h-[175px]"
+            >
+              <div className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-[var(--public-accent)] transition-transform duration-300 group-hover:scale-x-100" />
+
+              {brand.logo ? (
+                <Image
+                  src={brand.logo}
+                  alt={`Logo de ${brand.name}`}
+                  width={240}
+                  height={110}
+                  className={`max-h-[78px] w-auto max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.08] md:max-h-[92px] ${logoSizes[brand.slug] ?? "scale-100"
+                    }`}
+                />
+              ) : (
+                <span className="text-xl font-black text-[var(--public-ink)]">
+                  {brand.name}
+                </span>
+              )}
+            </Link>
           ))}
         </div>
       </div>
     </section>
-  );
-}
-
-function BrandLogoCard({
-  brand,
-}: {
-  brand: BrandItem;
-}) {
-  const [imageError, setImageError] = useState(false);
-  const showLogo = Boolean(brand.logo) && !imageError;
-
-  return (
-    <Link
-      href={`/catalogo/${brand.slug}`}
-      aria-label={`Ver vehículos de ${brand.name}`}
-      className="group relative flex min-h-[150px] items-center justify-center overflow-hidden border-b border-r border-slate-200 bg-white px-5 py-7 transition duration-300 hover:z-10 hover:bg-[#1A2A3A]/5 hover:shadow-[0_16px_35px_rgba(15,23,42,0.08)]" // El fondo hover cambió de beige a un toque sutil del azul de la foto
-    >
-      <div className="relative flex h-[76px] w-full items-center justify-center">
-        {showLogo ? (
-          <Image
-            src={brand.logo!}
-            alt={`Logo ${brand.name}`}
-            fill
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 28vw, 12vw"
-            className="object-contain grayscale transition duration-300 group-hover:scale-105 group-hover:grayscale-0 group-active:scale-105 group-active:grayscale-0"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <span className="text-center text-lg font-black tracking-[-0.025em] text-slate-700 transition group-hover:text-[#1A2A3A]"> {/* Texto sin logo cambia al azul de la foto */}
-            {brand.name}
-          </span>
-        )}
-      </div>
-
-      <span className="absolute bottom-0 left-1/2 h-[3px] w-0 -translate-x-1/2 bg-[#1A2A3A] transition-all duration-300 group-hover:w-full" /> {/* Línea inferior expansiva usa el azul de la foto */}
-    </Link>
   );
 }

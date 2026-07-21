@@ -58,7 +58,7 @@ export function VehicleCategoryShowcase({
   return (
     <section
       id="categorias"
-      className="border-b border-black/5 bg-[#f5f4f0] py-14 md:py-16"
+      className="border-y border-[var(--home-border)] bg-[var(--home-background)] py-16 md:py-24"
     >
       <div className="mx-auto w-full max-w-[1440px] px-5 md:px-8 lg:px-10">
         <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
@@ -82,7 +82,7 @@ export function VehicleCategoryShowcase({
           >
             Ver todos
 
-            <span className="grid h-9 w-9 place-items-center rounded-full border border-black/15 bg-white transition group-hover:border-[#192a3a] group-hover:bg-[#192a3a] group-hover:text-white group-active:border-[#192a3a] group-active:bg-[#192a3a] group-active:text-white">
+            <span className="grid h-9 w-9 place-items-center rounded-none border border-black/15 bg-white transition group-hover:border-[#192a3a] group-hover:bg-[#192a3a] group-hover:text-white group-active:border-[#192a3a] group-active:bg-[#192a3a] group-active:text-white">
               <ArrowRight
                 size={15}
                 className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
@@ -114,12 +114,12 @@ function CategoryButton({
   return (
     <Link
       href={category.href}
-      className="group relative min-h-[172px] overflow-hidden rounded-2xl border border-black/8 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-1 hover:border-[#192a3a]/60 hover:shadow-[0_18px_45px_rgba(15,23,42,0.09)] active:scale-[0.98] active:border-[#192a3a]/60"
+      className="group relative min-h-[172px] overflow-hidden rounded-none border border-black/8 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-1 hover:border-[#192a3a]/60 hover:shadow-[0_18px_45px_rgba(15,23,42,0.09)] active:scale-[0.98] active:border-[#192a3a]/60"
     >
       <div className="relative z-10 flex min-h-[172px] items-center justify-between gap-4 px-5 py-5 md:px-6">
         <div className="max-w-[58%]">
           <div className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a] transition duration-300 group-hover:bg-[#192a3a] group-hover:text-white group-active:bg-[#192a3a] group-active:text-white">              <Icon size={17} strokeWidth={1.9} />
+            <span className="grid h-9 w-9 place-items-center rounded-none bg-[#e7edf1] text-[#192a3a] transition duration-300 group-hover:bg-[#192a3a] group-hover:text-white group-active:bg-[#192a3a] group-active:text-white">              <Icon size={17} strokeWidth={1.9} />
             </span>
 
             <p className="text-[9px] font-black uppercase tracking-[0.23em] text-[#192a3a]">
@@ -168,7 +168,7 @@ function CategoryButton({
 
       <div className="absolute bottom-0 left-0 h-[3px] w-0 bg-[#192a3a] transition-all duration-500 group-hover:w-full group-active:w-full" />
 
-      <div className="pointer-events-none absolute right-[-30px] top-[-45px] h-32 w-32 rounded-full bg-[#dbeafe]/60 blur-2xl transition duration-300 group-hover:bg-[#93c5fd]/50 group-active:bg-[#93c5fd]/50" />
+      <div className="pointer-events-none absolute right-[-30px] top-[-45px] h-32 w-32 rounded-none bg-[#dbeafe]/60 blur-2xl transition duration-300 group-hover:bg-[#93c5fd]/50 group-active:bg-[#93c5fd]/50" />
     </Link>
   );
 }
