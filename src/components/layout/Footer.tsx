@@ -1,43 +1,24 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
   Building2,
   CarFront,
   MapPin,
   MessageCircle,
+  ShieldCheck,
   Wrench,
 } from "lucide-react";
 
-const vehicleLinks = [
+const exploreLinks = [
   {
-    label: "Vehículos nuevos",
+    label: "Explorar marcas",
     href: "/catalogo",
   },
   {
-    label: "Seminuevos",
-    href: "/inventario",
-  },
-  {
-    label: "Autos",
-    href: "/catalogo?categoria=AUTO",
-  },
-  {
-    label: "Motocicletas",
-    href: "/catalogo?categoria=MOTO",
-  },
-  {
-    label: "Todoterreno",
-    href: "/catalogo?categoria=TODOTERRENO",
-  },
-];
-
-const companyLinks = [
-  {
-    label: "Inicio",
-    href: "/",
+    label: "Certificados RISE",
+    href: "/certificados-rise",
   },
   {
     label: "Sucursales",
@@ -47,6 +28,64 @@ const companyLinks = [
     label: "Servicios",
     href: "/servicios",
   },
+  {
+    label: "Contacto",
+    href: "/contacto",
+  },
+];
+
+const brandLinks = [
+  {
+    label: "ZEEKR",
+    href: "/catalogo/zeekrlife",
+  },
+  {
+    label: "Lynk & Co",
+    href: "/catalogo/lynk-co",
+  },
+  {
+    label: "Indian Motorcycle",
+    href: "/catalogo/indian-motorcycle",
+  },
+  {
+    label: "Triumph",
+    href: "/catalogo/triumph-motorcycles",
+  },
+  {
+    label: "Royal Enfield",
+    href: "/catalogo/royal-enfield",
+  },
+  {
+    label: "Can-Am",
+    href: "/catalogo/can-am",
+  },
+  {
+    label: "Polaris",
+    href: "/catalogo/polaris",
+  },
+  {
+    label: "Sea-Doo",
+    href: "/catalogo/sea-doo",
+  },
+];
+
+const attentionLinks = [
+  {
+    label: "Solicitar servicio",
+    href: "/servicios#servicio",
+  },
+  {
+    label: "Cotizar refacciones",
+    href: "/servicios#refacciones",
+  },
+  {
+    label: "Encontrar una agencia",
+    href: "/sucursales",
+  },
+  {
+    label: "Contactar a un asesor",
+    href: "/contacto",
+  },
 ];
 
 export function Footer() {
@@ -54,46 +93,50 @@ export function Footer() {
 
   return (
     <footer className="bg-[#090d12] text-white">
+      {/* Llamada principal */}
       <section className="border-b border-white/10">
-        <div className="mx-auto w-full max-w-[1440px] px-5 py-12 md:px-8 lg:px-10 lg:py-14">
-          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="public-container py-14 md:py-16">
+          <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,1fr)_auto]">
             <div>
-              <div className="flex items-center gap-3">
-                <span className="h-px w-8 bg-white" />
+              <div className="flex items-center gap-4">
+                <span className="h-px w-10 bg-[var(--public-accent)]" />
 
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white">
-                  Atención Grupo Rise
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-white/50">
+                  Atención Grupo RISE
                 </p>
               </div>
 
-              <h2 className="mt-4 max-w-3xl text-3xl font-black leading-tight tracking-[-0.04em] text-white md:text-4xl lg:text-5xl">
-                Encuentra el vehículo indicado para tu siguiente camino.
+              <h2 className="mt-5 max-w-4xl text-4xl font-black leading-[0.98] tracking-[-0.045em] text-white md:text-5xl lg:text-6xl">
+                Encuentra el vehículo
+                <span className="block text-white/45">
+                  para tu siguiente camino.
+                </span>
               </h2>
 
-              <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-white/55 md:text-base">
-                Explora nuestras unidades o solicita atención personalizada
-                para recibir información de vehículos, servicio y refacciones.
+              <p className="mt-6 max-w-2xl text-sm leading-7 text-white/50 md:text-base">
+                Explora nuestras marcas o solicita atención para conocer
+                unidades, servicios, refacciones y agencias.
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/catalogo"
-                className="group inline-flex h-13 items-center justify-center gap-3 rounded-lg bg-[#1A2A3A] px-6 py-4 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#263d54]"
+                className="group inline-flex h-12 items-center justify-center gap-3 bg-[var(--public-accent)] px-6 text-sm font-black !text-white transition hover:bg-[var(--public-accent-dark)]"
               >
-                Explorar catálogo
+                Explorar marcas
 
                 <ArrowRight
                   size={17}
-                  className="transition-transform group-hover:translate-x-1"
+                  className="text-white transition-transform group-hover:translate-x-0.5"
                 />
               </Link>
 
               <Link
                 href="/contacto"
-                className="group inline-flex h-13 items-center justify-center gap-3 rounded-lg border border-white/25 bg-white/5 px-6 py-4 text-sm font-black text-white transition hover:border-white hover:bg-white hover:text-[#0a0f14]"
+                className="group inline-flex h-12 items-center justify-center gap-3 border border-white/20 px-6 text-sm font-black !text-white transition hover:border-white hover:bg-white hover:!text-[#090d12]"
               >
-                Contáctanos
+                Contactar asesor
 
                 <MessageCircle size={17} />
               </Link>
@@ -102,99 +145,117 @@ export function Footer() {
         </div>
       </section>
 
+      {/* Navegación principal */}
       <section>
-        <div className="mx-auto grid w-full max-w-[1440px] gap-10 px-5 py-14 md:grid-cols-2 md:px-8 lg:grid-cols-[1.35fr_0.8fr_0.8fr_1fr] lg:px-10 lg:py-16">
+        <div className="public-container grid gap-12 py-14 md:grid-cols-2 lg:grid-cols-[1.3fr_0.85fr_1fr_1fr] lg:py-18">
+          {/* Identidad */}
           <div>
             <Link
               href="/"
-              aria-label="Ir al inicio de Grupo Rise"
-              className="inline-flex rounded-xl px-4 py-3"
+              aria-label="Ir al inicio de Grupo RISE"
+              className="inline-flex"
             >
               <Image
                 src="/brand/logo-rise.png"
-                alt="Grupo Rise"
-                width={190}
-                height={58}
-                className="h-12 w-auto object-contain"
+                alt="Grupo RISE"
+                width={210}
+                height={65}
+                className="h-14 w-auto object-contain"
               />
             </Link>
 
-            <p className="mt-6 max-w-md text-sm font-medium leading-7 text-white/55">
-              Grupo automotriz multimarca especializado en autos,
-              motocicletas y vehículos recreativos, con presencia en distintas
-              ciudades de México.
+            <p className="mt-7 max-w-md text-sm leading-7 text-white/50">
+              Grupo automotriz multimarca con opciones de autos,
+              motocicletas y vehículos de aventura.
             </p>
 
-            <div className="mt-6 flex items-start gap-3">
-              <MapPin
-                size={18}
-                className="mt-0.5 shrink-0 text-[#1A2A3A]"
-              />
+            <div className="mt-7 flex items-start gap-4 border-l-2 border-[var(--public-accent)] pl-4">
+              <span className="grid h-10 w-10 shrink-0 place-items-center border border-white/15 bg-white/[0.05] text-white">
+                <MapPin size={18} />
+              </span>
 
-              <p className="text-sm font-bold leading-6 text-white/70">
-                Nuevo León · Coahuila · Quintana Roo
-              </p>
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
+                  Presencia
+                </p>
+
+                <p className="mt-2 text-sm font-bold leading-6 text-white/70">
+                  Nuevo León, Coahuila y Quintana Roo
+                </p>
+              </div>
             </div>
           </div>
 
+          {/* Explorar */}
           <FooterColumn
-            title="Vehículos"
+            title="Explorar"
             icon={CarFront}
-            links={vehicleLinks}
+            links={exploreLinks}
           />
 
+          {/* Marcas */}
           <FooterColumn
-            title="Grupo Rise"
-            icon={Building2}
-            links={companyLinks}
+            title="Marcas"
+            icon={ShieldCheck}
+            links={brandLinks}
+            compact
           />
 
+          {/* Atención */}
           <div>
-            <div className="flex items-center gap-3">
-              <Wrench size={17} className="text-[#1A2A3A]" />
+            <FooterHeading
+              title="Atención"
+              icon={Wrench}
+            />
 
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">
-                Atención
-              </h3>
-            </div>
-
-            <p className="mt-5 text-sm font-medium leading-7 text-white/55">
-              Solicita información, agenda servicio o pide una cotización de
-              refacciones desde nuestros formularios.
+            <p className="mt-6 text-sm leading-7 text-white/50">
+              Envía una solicitud para recibir información o seguimiento
+              por parte de una de nuestras agencias.
             </p>
 
-            <div className="mt-6 space-y-3">
-              <FooterAction
-                href="/servicios"
-                label="Agendar servicio"
-              />
-
-              <FooterAction
-                href="/servicios"
-                label="Cotizar refacciones"
-              />
-
-              <FooterAction
-                href="/sucursales"
-                label="Encontrar una agencia"
-              />
-            </div>
+            <nav
+              aria-label="Opciones de atención"
+              className="mt-6 grid gap-px border border-white/10 bg-white/10"
+            >
+              {attentionLinks.map((link) => (
+                <FooterAction
+                  key={link.href}
+                  href={link.href}
+                  label={link.label}
+                />
+              ))}
+            </nav>
           </div>
         </div>
       </section>
 
+      {/* Franja inferior */}
       <section className="border-t border-white/10">
-        <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-5 py-6 text-xs font-semibold text-white/40 md:flex-row md:items-center md:justify-between md:px-8 lg:px-10">
+        <div className="public-container flex flex-col gap-5 py-6 text-xs font-semibold text-white/35 md:flex-row md:items-center md:justify-between">
           <p>
-            © {currentYear} Grupo Rise. Todos los derechos reservados.
+            © {currentYear} Grupo RISE. Todos los derechos reservados.
           </p>
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
             <span>Sitio informativo y comercial</span>
 
             <Link
+              href="/sucursales"
+              className="transition hover:text-white"
+            >
+              Sucursales
+            </Link>
+
+            <Link
+              href="/servicios"
+              className="transition hover:text-white"
+            >
+              Servicios
+            </Link>
+
+            <Link
               href="/contacto"
-              className="transition hover:text-[#1A2A3A]"
+              className="transition hover:text-white"
             >
               Contacto
             </Link>
@@ -207,42 +268,67 @@ export function Footer() {
 
 function FooterColumn({
   title,
-  icon: Icon,
+  icon,
   links,
+  compact = false,
 }: {
   title: string;
-  icon: typeof CarFront;
+  icon: LucideIcon;
   links: {
     label: string;
     href: string;
   }[];
+  compact?: boolean;
 }) {
   return (
     <div>
-      <div className="flex items-center gap-3">
-        <Icon size={17} className="text-[#1A2A3A]" />
+      <FooterHeading
+        title={title}
+        icon={icon}
+      />
 
-        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">
-          {title}
-        </h3>
-      </div>
-
-      <nav className="mt-5 space-y-1">
+      <nav
+        aria-label={title}
+        className={`mt-6 ${compact
+            ? "grid grid-cols-2 gap-x-5"
+            : "grid"
+          }`}
+      >
         {links.map((link) => (
           <Link
             key={`${link.href}-${link.label}`}
             href={link.href}
-            className="group flex items-center justify-between border-b border-white/5 py-3 text-sm font-semibold text-white/55 transition hover:border-[#1A2A3A]/40 hover:text-white"
+            className="group flex min-h-[45px] items-center justify-between gap-3 border-b border-white/[0.07] py-3 text-sm font-semibold text-white/50 transition hover:border-white/25 hover:text-white"
           >
-            {link.label}
+            <span>{link.label}</span>
 
             <ArrowRight
               size={14}
-              className="text-white/20 transition group-hover:translate-x-1 group-hover:text-[#1A2A3A]"
+              className="shrink-0 text-white/20 transition group-hover:translate-x-0.5 group-hover:text-white"
             />
           </Link>
         ))}
       </nav>
+    </div>
+  );
+}
+
+function FooterHeading({
+  title,
+  icon: Icon,
+}: {
+  title: string;
+  icon: LucideIcon;
+}) {
+  return (
+    <div className="flex items-center gap-4">
+      <span className="grid h-10 w-10 shrink-0 place-items-center border border-white/15 bg-white/[0.05] text-white">
+        <Icon size={18} />
+      </span>
+
+      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">
+        {title}
+      </h3>
     </div>
   );
 }
@@ -257,13 +343,13 @@ function FooterAction({
   return (
     <Link
       href={href}
-      className="group flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-bold text-white/65 transition hover:border-[#1A2A3A]/60 hover:bg-[#1A2A3A] hover:text-white"
+      className="group flex min-h-[52px] items-center justify-between gap-4 bg-[#090d12] px-4 text-sm font-bold text-white/60 transition hover:bg-white/[0.06] hover:text-white"
     >
       {label}
 
       <ArrowRight
         size={15}
-        className="transition-transform group-hover:translate-x-1"
+        className="shrink-0 text-white/25 transition-transform group-hover:translate-x-0.5 group-hover:text-white"
       />
     </Link>
   );

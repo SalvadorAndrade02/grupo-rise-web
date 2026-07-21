@@ -12,14 +12,12 @@ import {
   Phone,
   Settings,
   ShieldCheck,
-  Sparkles,
   User,
   Wrench,
 } from "lucide-react";
 import { LeadStatus, LeadType } from "@prisma/client";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { Container } from "@/components/ui/Container";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -385,149 +383,161 @@ export default async function ServicesPage({
     <>
       <Header />
 
-      <main className="min-h-screen bg-[#f4f6f7] text-[#0a0f14]">
-        {/* Encabezado */}
-        <section className="relative overflow-hidden bg-[#192a3a] text-white">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_30%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
+      <main className="public-home">
+        {/* Hero */}
+        <section className="relative overflow-hidden border-b border-white/10 bg-[var(--public-header)] text-white">
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.035),transparent_45%)]" />
 
-          <Container>
-            <div className="relative py-12 lg:py-16">
-              <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#dfe7ec] backdrop-blur-sm">
-                  <Sparkles size={15} />
-                  Servicios Grupo Rise
-                </div>
+          <div className="absolute right-0 top-0 hidden h-full w-[38%] border-l border-white/[0.06] lg:block" />
 
-                <h1 className="mt-5 text-4xl font-black leading-tight tracking-[-0.045em] md:text-5xl lg:text-6xl">
-                  Servicio y refacciones para tu vehículo
-                </h1>
+          <div className="public-container relative grid min-h-[500px] items-center gap-14 py-20 lg:grid-cols-[minmax(0,1fr)_390px] lg:py-24">
+            <div className="max-w-4xl">
+              <div className="flex items-center gap-4">
+                <span className="h-px w-10 bg-white" />
 
-                <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-white/65 md:text-base">
-                  Solicita mantenimiento, diagnóstico
-                  o una cotización de refacciones.
-                  Selecciona la sucursal y nuestro
-                  equipo dará seguimiento a tu
-                  solicitud.
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-white">
+                  Servicios Grupo RISE
                 </p>
-
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <a
-                    href="#servicio"
-                    className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
-                  >
-                    Solicitar servicio
-
-                    <ArrowRight
-                      size={17}
-                      className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
-                    />
-                  </a>
-
-                  <a
-                    href="#refacciones"
-                    className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-black text-white transition hover:bg-white/15 active:scale-[0.98]"
-                  >
-                    Cotizar refacciones
-
-                    <ArrowRight
-                      size={17}
-                      className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
-                    />
-                  </a>
-                </div>
               </div>
 
-              {/* Resumen compacto */}
-              <div className="mt-9 grid gap-3 md:grid-cols-3">
-                <ServiceSummary
-                  icon={Wrench}
-                  title="Servicio"
-                  description="Mantenimiento, revisión y diagnóstico."
-                />
+              <h1 className="mt-7 max-w-4xl text-5xl font-black leading-[0.92] tracking-[-0.055em] text-white md:text-6xl xl:text-7xl">
+                Atención para
+                <span className="block text-white">
+                  tu vehículo.
+                </span>
+              </h1>
 
-                <ServiceSummary
-                  icon={PackageSearch}
-                  title="Refacciones"
-                  description="Piezas, accesorios y disponibilidad."
-                />
+              <p className="mt-8 max-w-2xl text-base leading-8 text-white md:text-lg">
+                Envía una solicitud de servicio o consulta la disponibilidad
+                de piezas y refacciones seleccionando la agencia que deseas.
+              </p>
 
-                <ServiceSummary
-                  icon={MessageSquare}
-                  title="Seguimiento"
-                  description="La solicitud llega al equipo de la sucursal."
-                />
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <a
+                  href="#servicio"
+                  className="group inline-flex h-12 items-center justify-center gap-3 bg-[var(--public-accent)] px-6 text-sm font-black !text-white transition hover:bg-[var(--public-accent-dark)]"
+                >
+                  Solicitar servicio
+
+                  <ArrowRight
+                    size={17}
+                    className="text-white transition-transform group-hover:translate-x-0.5"
+                  />
+                </a>
+
+                <a
+                  href="#refacciones"
+                  className="group inline-flex h-12 items-center justify-center gap-3 border border-white/20 px-6 text-sm font-black !text-white transition hover:border-white hover:bg-white hover:!text-[var(--public-header)]"
+                >
+                  Cotizar refacciones
+
+                  <ArrowRight
+                    size={17}
+                    className="transition-transform group-hover:translate-x-0.5"
+                  />
+                </a>
               </div>
             </div>
-          </Container>
-        </section>
 
-        <section className="py-10 md:py-12 lg:py-14">
-          <Container>
-            {(params.success ||
-              params.error) && (
-                <div
-                  className={`mb-7 rounded-xl border px-5 py-4 text-sm font-black ${params.success
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                      : "border-red-200 bg-red-50 text-red-700"
-                    }`}
-                >
-                  {params.success ||
-                    params.error}
-                </div>
-              )}
+            <div className="grid gap-px border border-white/10 bg-white/10">
+              <ServiceSummary
+                icon={Wrench}
+                title="Servicio"
+                description="Mantenimiento, revisión y diagnóstico."
+              />
+
+              <ServiceSummary
+                icon={PackageSearch}
+                title="Refacciones"
+                description="Piezas, accesorios y disponibilidad."
+              />
+
+              <ServiceSummary
+                icon={MessageSquare}
+                title="Seguimiento"
+                description="La solicitud llegará a la agencia seleccionada."
+              />
+            </div>
+          </div>
+        </section>
+        <section className="bg-[var(--home-surface)]">
+          <div className="public-container py-14 md:py-20">
+            {(params.success || params.error) && (
+              <div
+                role="alert"
+                className={`mb-8 border px-5 py-4 text-sm font-black ${params.success
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                  : "border-red-300 bg-red-50 text-red-800"
+                  }`}
+              >
+                {params.success || params.error}
+              </div>
+            )}
 
             {/* Accesos */}
-            <div className="mb-8 grid gap-4 md:grid-cols-2">
+            <div className="mb-10 grid gap-px border border-[var(--home-border)] bg-[var(--home-border)] md:grid-cols-2">
               <a
                 href="#servicio"
-                className="group flex items-center justify-between rounded-[20px] border border-black/8 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.045)] transition hover:-translate-y-1 hover:border-[#192a3a]/40 active:border-[#192a3a]/40"
+                className="group flex min-h-[145px] items-center justify-between gap-6 bg-[var(--home-card)] p-6 transition hover:bg-[var(--home-card-hover)] md:p-8"
               >
-                <div className="flex items-center gap-4">
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
-                    <Settings size={22} />
+                <div className="flex items-center gap-5">
+                  <span className="grid h-14 w-14 shrink-0 place-items-center border border-[var(--home-border-strong)] bg-[var(--home-surface-alt)] text-[var(--public-accent)]">
+                    <Settings size={23} />
                   </span>
 
                   <div>
-                    <p className="text-lg font-black">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-muted)]">
+                      Mantenimiento
+                    </p>
+
+                    <p className="mt-2 text-2xl font-black tracking-[-0.035em] text-[var(--public-ink)]">
                       Solicitar servicio
                     </p>
 
-                    <p className="mt-1 text-sm text-slate-500">
-                      Mantenimiento o diagnóstico.
+                    <p className="mt-2 text-sm leading-6 text-[var(--public-muted)]">
+                      Mantenimiento, revisión o diagnóstico.
                     </p>
                   </div>
                 </div>
 
-                <ArrowRight
-                  size={19}
-                  className="shrink-0 text-[#192a3a] transition-transform group-hover:translate-x-1 group-active:translate-x-1"
-                />
+                <span className="grid h-12 w-12 shrink-0 place-items-center border border-[var(--home-border-strong)] text-[var(--public-ink)] transition group-hover:border-[var(--public-accent)] group-hover:bg-[var(--public-accent)] group-hover:!text-white">
+                  <ArrowRight
+                    size={18}
+                    className="transition-transform group-hover:translate-x-0.5"
+                  />
+                </span>
               </a>
 
               <a
                 href="#refacciones"
-                className="group flex items-center justify-between rounded-[20px] border border-black/8 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.045)] transition hover:-translate-y-1 hover:border-[#192a3a]/40 active:border-[#192a3a]/40"
+                className="group flex min-h-[145px] items-center justify-between gap-6 bg-[var(--home-card)] p-6 transition hover:bg-[var(--home-card-hover)] md:p-8"
               >
-                <div className="flex items-center gap-4">
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
-                    <PackageSearch size={22} />
+                <div className="flex items-center gap-5">
+                  <span className="grid h-14 w-14 shrink-0 place-items-center border border-[var(--home-border-strong)] bg-[var(--home-surface-alt)] text-[var(--public-accent)]">
+                    <PackageSearch size={23} />
                   </span>
 
                   <div>
-                    <p className="text-lg font-black">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-muted)]">
+                      Piezas y accesorios
+                    </p>
+
+                    <p className="mt-2 text-2xl font-black tracking-[-0.035em] text-[var(--public-ink)]">
                       Cotizar refacciones
                     </p>
 
-                    <p className="mt-1 text-sm text-slate-500">
-                      Piezas, accesorios y disponibilidad.
+                    <p className="mt-2 text-sm leading-6 text-[var(--public-muted)]">
+                      Consulta piezas, accesorios y disponibilidad.
                     </p>
                   </div>
                 </div>
 
-                <ArrowRight
-                  size={19}
-                  className="shrink-0 text-[#192a3a] transition-transform group-hover:translate-x-1 group-active:translate-x-1"
-                />
+                <span className="grid h-12 w-12 shrink-0 place-items-center border border-[var(--home-border-strong)] text-[var(--public-ink)] transition group-hover:border-[var(--public-accent)] group-hover:bg-[var(--public-accent)] group-hover:!text-white">
+                  <ArrowRight
+                    size={18}
+                    className="transition-transform group-hover:translate-x-0.5"
+                  />
+                </span>
               </a>
             </div>
 
@@ -535,7 +545,7 @@ export default async function ServicesPage({
               {/* Servicio */}
               <section
                 id="servicio"
-                className="scroll-mt-[125px] rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] md:p-7"
+                className="scroll-mt-[125px] border border-[var(--home-border)] bg-[var(--home-card)] p-6 shadow-[0_12px_30px_rgba(18,24,28,0.05)] md:p-8"
               >
                 <FormHeader
                   icon={Settings}
@@ -637,7 +647,7 @@ export default async function ServicesPage({
 
                   <button
                     type="submit"
-                    className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#29465c] active:scale-[0.98]"
+                    className="group inline-flex h-12 items-center justify-center gap-3 bg-[var(--public-header)] px-6 text-sm font-black !text-white transition hover:-translate-y-0.5 hover:bg-[var(--public-accent-dark)]"
                   >
                     Enviar solicitud
 
@@ -652,7 +662,7 @@ export default async function ServicesPage({
               {/* Refacciones */}
               <section
                 id="refacciones"
-                className="scroll-mt-[125px] rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] md:p-7"
+                className="scroll-mt-[125px] border border-[var(--home-border)] bg-[var(--home-card)] p-6 shadow-[0_12px_30px_rgba(18,24,28,0.05)] md:p-8"
               >
                 <FormHeader
                   icon={PackageSearch}
@@ -762,13 +772,13 @@ export default async function ServicesPage({
 
                   <button
                     type="submit"
-                    className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#29465c] active:scale-[0.98]"
+                    className="group inline-flex h-12 items-center justify-center gap-3 bg-[var(--public-header)] px-6 text-sm font-black !text-white transition hover:-translate-y-0.5 hover:bg-[var(--public-accent-dark)]"
                   >
                     Solicitar cotización
 
                     <ArrowRight
                       size={17}
-                      className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
+                      className="text-white transition-transform group-hover:translate-x-0.5"
                     />
                   </button>
                 </form>
@@ -776,8 +786,8 @@ export default async function ServicesPage({
             </div>
 
             {/* Información final */}
-            <section className="mt-8 rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)] md:p-7">
-              <div className="grid gap-4 md:grid-cols-3">
+            <section className="mt-8 border border-[var(--home-border)] bg-[var(--home-card)] shadow-[0_10px_28px_rgba(18,24,28,0.04)]">
+              <div className="grid gap-px bg-[var(--home-border)] md:grid-cols-3">
                 <InfoItem
                   icon={CheckCircle2}
                   title="Sin compromiso"
@@ -798,7 +808,7 @@ export default async function ServicesPage({
               </div>
             </section>
 
-            <div className="mt-8 text-center">
+            <div className="mt-10 flex flex-col items-center border-t border-[var(--home-border)] pt-8 text-center">
               <p className="text-sm font-semibold text-slate-500">
                 También puedes consultar las
                 ubicaciones y medios de contacto de
@@ -807,17 +817,17 @@ export default async function ServicesPage({
 
               <Link
                 href="/sucursales"
-                className="group mt-4 inline-flex items-center gap-2 text-sm font-black text-[#192a3a]"
+                className="group mt-5 inline-flex h-11 items-center justify-center gap-3 border border-[var(--home-border-strong)] bg-[var(--home-card)] px-6 text-sm font-black text-[var(--public-ink)] transition hover:border-[var(--public-header)] hover:bg-[var(--public-header)] hover:!text-white"
               >
                 Ver sucursales
 
                 <ArrowRight
                   size={16}
-                  className="transition-transform group-hover:translate-x-1 group-active:translate-x-1"
+                  className="transition-transform group-hover:translate-x-0.5"
                 />
               </Link>
             </div>
-          </Container>
+          </div>
         </section>
       </main>
 
@@ -836,9 +846,12 @@ function ServiceSummary({
   description: string;
 }) {
   return (
-    <div className="flex items-start gap-4 rounded-[18px] border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-[#dfe7ec]">
-        <Icon size={19} />
+    <div className="flex min-h-[115px] items-center gap-5 bg-[var(--public-header)] p-6">
+      <span className="grid h-12 w-12 shrink-0 place-items-center border border-white/20 bg-white/10 text-white">
+        <Icon
+          size={21}
+          className="text-white"
+        />
       </span>
 
       <div>
@@ -846,7 +859,7 @@ function ServiceSummary({
           {title}
         </p>
 
-        <p className="mt-1 text-xs font-medium leading-5 text-white/55">
+        <p className="mt-2 text-xs font-medium leading-5 text-white">
           {description}
         </p>
       </div>
@@ -866,24 +879,26 @@ function FormHeader({
   description: string;
 }) {
   return (
-    <div className="flex items-start gap-4">
-      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
-        <Icon size={22} />
-      </span>
+    <div>
+      <div className="flex items-center gap-4">
+        <span className="grid h-12 w-12 shrink-0 place-items-center border border-[var(--home-border-strong)] bg-[var(--home-surface-alt)] text-[var(--public-accent)]">
+          <Icon size={22} />
+        </span>
 
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#192a3a]">
-          {eyebrow}
-        </p>
-
-        <h2 className="mt-2 text-2xl font-black tracking-[-0.035em] md:text-3xl">
-          {title}
-        </h2>
-
-        <p className="mt-2 text-sm leading-6 text-slate-500">
-          {description}
-        </p>
+        <div className="h-px flex-1 bg-[var(--home-border)]" />
       </div>
+
+      <p className="mt-6 text-xs font-black uppercase tracking-[0.22em] text-[var(--public-muted)]">
+        {eyebrow}
+      </p>
+
+      <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[var(--public-ink)] md:text-4xl">
+        {title}
+      </h2>
+
+      <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--public-muted)]">
+        {description}
+      </p>
     </div>
   );
 }
@@ -900,7 +915,7 @@ function BranchSelect({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+      <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[var(--public-muted)]">
         Sucursal *
       </span>
 
@@ -908,7 +923,7 @@ function BranchSelect({
         name="branchId"
         required
         defaultValue=""
-        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#192a3a] focus:bg-white"
+        className="h-12 w-full border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] px-4 text-sm font-semibold text-[var(--public-ink)] outline-none transition focus:border-[var(--public-header)] focus:bg-white"
       >
         <option value="" disabled>
           Selecciona una sucursal
@@ -926,7 +941,6 @@ function BranchSelect({
     </label>
   );
 }
-
 function InputField({
   label,
   name,
@@ -971,7 +985,7 @@ function InputField({
 
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+      <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[var(--public-muted)]">
         {label}
       </span>
 
@@ -979,7 +993,7 @@ function InputField({
         {Icon && (
           <Icon
             size={17}
-            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--public-muted)]"
           />
         )}
 
@@ -990,7 +1004,7 @@ function InputField({
           placeholder={placeholder}
           autoComplete={autoComplete}
           inputMode={inputMode}
-          className={`h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white ${Icon ? "pl-11" : ""
+          className={`h-12 w-full border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] px-4 text-sm font-semibold text-[var(--public-ink)] outline-none transition placeholder:text-[var(--public-muted)] focus:border-[var(--public-header)] focus:bg-white ${Icon ? "pl-11" : ""
             }`}
         />
       </div>
@@ -1011,7 +1025,7 @@ function TextAreaField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+      <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[var(--public-muted)]">
         {label}
       </span>
 
@@ -1020,12 +1034,11 @@ function TextAreaField({
         required={required}
         rows={5}
         placeholder={placeholder}
-        className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#192a3a] focus:bg-white"
+        className="w-full resize-none border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] px-4 py-3 text-sm font-semibold leading-6 text-[var(--public-ink)] outline-none transition placeholder:text-[var(--public-muted)] focus:border-[var(--public-header)] focus:bg-white"
       />
     </label>
   );
 }
-
 function InfoItem({
   icon: Icon,
   title,
@@ -1036,16 +1049,16 @@ function InfoItem({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl bg-[#f8fafb] p-5">
-      <span className="grid h-10 w-10 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
-        <Icon size={19} />
+    <div className="min-h-[210px] bg-[var(--home-surface-strong)] p-6">
+      <span className="grid h-11 w-11 place-items-center border border-[var(--home-border-strong)] bg-[var(--home-surface-alt)] text-[var(--public-accent)]">
+        <Icon size={20} />
       </span>
 
-      <h3 className="mt-4 text-lg font-black">
+      <h3 className="mt-5 text-xl font-black tracking-[-0.025em] text-[var(--public-ink)]">
         {title}
       </h3>
 
-      <p className="mt-2 text-sm leading-6 text-slate-500">
+      <p className="mt-3 text-sm leading-7 text-[var(--public-muted)]">
         {description}
       </p>
     </div>

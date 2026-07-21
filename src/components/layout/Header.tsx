@@ -50,7 +50,7 @@ const catalogBrands = [
     logoClass: "scale-125",
   },
   {
-    label: "Zeekr",
+    label: "ZEEKR",
     href: "/catalogo/zeekrlife",
     logo: "/catalog/brands/zeekNegro.png",
     logoClass: "scale-100",
@@ -75,19 +75,14 @@ const navigationItems = [
     activePaths: ["/grupo-rise"],
   },
   {
-    label: "Agencias",
+    label: "Sucursales",
     href: "/sucursales",
     activePaths: ["/sucursales"],
   },
   {
-    label: "Noticias",
-    href: "/#noticias",
-    activePaths: ["/noticias"],
-  },
-  {
-    label: "Eventos",
-    href: "/#eventos",
-    activePaths: ["/eventos"],
+    label: "Servicios",
+    href: "/servicios",
+    activePaths: ["/servicios"],
   },
 ];
 
@@ -97,8 +92,7 @@ export function Header() {
 
   const brandsActive =
     pathname.startsWith("/catalogo") ||
-    pathname.startsWith("/vehiculos") ||
-    pathname.startsWith("/inventario");
+    pathname.startsWith("/vehiculos");
 
   function closeMobileMenu() {
     setMobileMenuOpen(false);
@@ -117,11 +111,11 @@ export function Header() {
   function desktopLinkClass(active: boolean) {
     return [
       "group relative flex h-full items-center px-3",
-      "text-[13px] font-semibold uppercase tracking-[0.08em]",
+      "text-[12px] font-bold uppercase tracking-[0.08em]",
       "transition-colors duration-200",
       active
         ? "text-white"
-        : "text-white/60 hover:text-white",
+        : "text-white/55 hover:text-white",
     ].join(" ");
   }
 
@@ -138,11 +132,12 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#101418]/95 text-white shadow-[0_8px_30px_rgba(0,0,0,0.16)] backdrop-blur-xl">
       <div className="mx-auto flex h-[80px] w-full max-w-[1435px] items-center px-5 md:h-[88px] md:px-8 lg:px-10">
+        {/* Logo */}
         <Link
           href="/"
           onClick={closeMobileMenu}
           aria-label="Ir al inicio de Grupo RISE"
-          className="flex min-w-0 shrink-0 items-center justify-start lg:w-[270px]"
+          className="flex min-w-0 shrink-0 items-center justify-start xl:w-[250px]"
         >
           <Image
             src="/brand/logo-rise.png"
@@ -154,7 +149,8 @@ export function Header() {
           />
         </Link>
 
-        <nav className="ml-10 hidden h-full flex-1 items-center justify-center lg:flex">
+        {/* Navegación de escritorio */}
+        <nav className="ml-7 hidden h-full flex-1 items-center justify-center xl:flex">
           {navigationItems.slice(0, 2).map((item) => {
             const active = isActive(item.activePaths);
 
@@ -170,6 +166,7 @@ export function Header() {
             );
           })}
 
+          {/* Menú de marcas */}
           <div className="group relative flex h-full items-center">
             <Link
               href="/catalogo"
@@ -180,57 +177,63 @@ export function Header() {
 
                 <ChevronDown
                   size={14}
-                  className="transition-transform duration-200 group-hover:rotate-180"
+                  className="transition-transform duration-200 group-hover:rotate-180 group-focus-within:rotate-180"
                 />
               </span>
 
               <span className={activeLineClass(brandsActive)} />
             </Link>
 
-            <div className="invisible absolute left-1/2 top-full z-50 w-[440px] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100">
-              <div className="overflow-hidden rounded-none border border-white/10 bg-[#eceeec] shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
-                <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+            <div className="invisible absolute left-1/2 top-full z-50 w-[500px] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+              <div className="overflow-hidden border border-black/10 bg-[#eceeec] shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
+                {/* Encabezado desplegable */}
+                <div className="flex items-center justify-between border-b border-black/10 px-5 py-4">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-black">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-black">
                       Nuestras marcas
                     </p>
 
                     <p className="mt-1 text-xs text-black">
-                      Automotriz, motocicletas y experiencias.
+                      Autos, motocicletas y vehículos de aventura.
                     </p>
                   </div>
 
                   <Link
                     href="/catalogo"
-                    className="flex items-center gap-2 text-xs font-bold text-black/70 transition hover:text-white"
+                    className="group/all flex items-center gap-2 text-xs font-black text-black transition hover:text-black/60"
                   >
-                    <span className="text-black">Ver todas</span>
+                    <span className="text-black">
+                      Ver todas
+                    </span>
 
-                    <ArrowRight className="text-black" size={14} />
+
+                    <ArrowRight
+                      size={14}
+                      className="transition-transform group-hover/all:translate-x-0.5 text-black"
+                    />
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-2 gap-px bg-[#d3d7d6]">
+                {/* Logotipos */}
+                <div className="grid grid-cols-2 gap-px bg-[#cfd3d2]">
                   {catalogBrands.map((brand) => (
                     <Link
                       key={brand.label}
                       href={brand.href}
-                      className="group/brand bg-[#dfe2e2] px-5 py-4 transition hover:bg-white/[0.06]"
+                      className="group/brand bg-[#e1e4e3] px-5 py-4 transition hover:bg-white"
                     >
                       <span className="flex items-center justify-between gap-3">
-                        <span>
-                          <span className="block text-sm font-semibold text-black">
-                            {brand.label}
-                          </span>
+                        <span className="text-sm font-bold text-black">
+                          {brand.label}
                         </span>
 
-                        <span className="flex h-14 w-[130px] shrink-0 items-center justify-center overflow-hidden">
+                        <span className="flex h-14 w-[135px] shrink-0 items-center justify-center overflow-hidden">
                           <Image
                             src={brand.logo}
                             alt={`Logo de ${brand.label}`}
                             width={140}
                             height={56}
-                            className={`max-h-full w-auto max-w-full object-contain transition-transform duration-200 ${brand.logoClass ?? "scale-100"
+                            className={`max-h-full w-auto max-w-full object-contain transition-transform duration-200 group-hover/brand:scale-105 ${brand.logoClass ?? "scale-100"
                               }`}
                           />
                         </span>
@@ -239,24 +242,35 @@ export function Header() {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-2 border-t border-white/10">
+                {/* Accesos inferiores */}
+                <div className="grid grid-cols-2 border-t border-black/10">
                   <Link
                     href="/catalogo"
-                    className="border-r border-white/10 px-5 py-3 text-center text-xs font-semibold text-black transition hover:bg-white/[0.05] hover:text-black"
+                    className="group/access flex items-center justify-center gap-2 border-r border-black/10 px-5 py-4 text-xs font-black text-black transition hover:bg-white"
                   >
                     <span className="text-black">
-                      Vehículos nuevos
+                      Explorar marcas
                     </span>
 
+
+                    <ArrowRight
+                      size={14}
+                      className="transition-transform group-hover/access:translate-x-0.5 text-black"
+                    />
                   </Link>
 
                   <Link
-                    href="/inventario"
-                    className="px-5 py-3 text-center text-xs font-semibold text-black transition hover:bg-white/[0.05] hover:text-black"
+                    href="/certificados-rise"
+                    className="group/access flex items-center justify-center gap-2 px-5 py-4 text-xs font-black text-black transition hover:bg-white"
                   >
                     <span className="text-black">
-                      Seminuevos
+                      Certificados RISE
                     </span>
+
+                    <ArrowRight
+                      size={14}
+                      className="transition-transform group-hover/access:translate-x-0.5 text-black"
+                    />
                   </Link>
                 </div>
               </div>
@@ -279,36 +293,46 @@ export function Header() {
           })}
         </nav>
 
-        <div className="hidden shrink-0 items-center gap-3 lg:flex">
+        {/* Contacto de escritorio */}
+        <div className="hidden shrink-0 items-center xl:flex">
           <Link
             href="/contacto"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-none border border-white/20 px-4 text-xs font-bold uppercase tracking-[0.08em] text-white transition hover:border-white/40 hover:bg-white/10"
+            className="group inline-flex h-11 items-center justify-center gap-2 border border-white/20 px-4 text-xs font-black uppercase tracking-[0.08em] !text-white transition hover:border-white hover:bg-white hover:!text-[#101418]"
           >
-            Contactanos
-            <ArrowRight size={14} />
+            Contáctanos
+
+            <MessageCircle size={15} />
           </Link>
         </div>
 
+        {/* Botón móvil */}
         <button
           type="button"
           onClick={() => setMobileMenuOpen((current) => !current)}
           aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-navigation"
           aria-label={
             mobileMenuOpen
               ? "Cerrar menú de navegación"
               : "Abrir menú de navegación"
           }
-          className="ml-auto grid h-10 w-10 place-items-center rounded-none border border-white/15 text-white transition hover:bg-white/10 active:scale-95 lg:hidden"
+          className="ml-auto grid h-11 w-11 place-items-center border border-white/15 text-white transition hover:bg-white/10 active:scale-95 xl:hidden"
         >
-          {mobileMenuOpen ? <X size={21} /> : <Menu size={21} />}
+          {mobileMenuOpen ? (
+            <X size={21} />
+          ) : (
+            <Menu size={21} />
+          )}
         </button>
       </div>
 
+      {/* Menú móvil */}
       <div
+        id="mobile-navigation"
         className={[
-          "overflow-hidden border-t bg-[#101418] transition-all duration-300 lg:hidden",
+          "overflow-y-auto border-t bg-[#101418] transition-all duration-300 xl:hidden",
           mobileMenuOpen
-            ? "max-h-[780px] border-white/10 opacity-100"
+            ? "max-h-[calc(100vh-80px)] border-white/10 opacity-100"
             : "max-h-0 border-transparent opacity-0",
         ].join(" ")}
       >
@@ -327,10 +351,22 @@ export function Header() {
             onClick={closeMobileMenu}
           />
 
-          <div className="my-3 border-y border-white/10 py-3">
-            <p className="px-4 pb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-white/35">
-              Marcas
-            </p>
+          {/* Marcas móvil */}
+          <section className="my-3 border-y border-white/10 py-4">
+            <div className="flex items-center justify-between px-4 pb-3">
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">
+                Nuestras marcas
+              </p>
+
+              <Link
+                href="/catalogo"
+                onClick={closeMobileMenu}
+                className="flex items-center gap-2 text-xs font-bold text-white"
+              >
+                Ver todas
+                <ArrowRight size={14} />
+              </Link>
+            </div>
 
             <div className="grid grid-cols-2 gap-2">
               {catalogBrands.map((brand) => (
@@ -338,54 +374,55 @@ export function Header() {
                   key={brand.label}
                   href={brand.href}
                   onClick={closeMobileMenu}
-                  className="flex min-h-[82px] flex-col items-center justify-center gap-2 rounded-none border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:bg-white/[0.08]"
+                  className="flex min-h-[96px] flex-col items-center justify-center gap-2 border border-white/10 bg-[#e1e4e3] px-3 py-3 transition hover:bg-white"
                 >
-                  <span className="flex h-12 w-full items-center justify-center px-1">
+                  <span className="flex h-12 w-full items-center justify-center overflow-hidden px-1">
                     <Image
                       src={brand.logo}
                       alt={`Logo de ${brand.label}`}
                       width={130}
                       height={48}
-                      className="max-h-full w-auto max-w-full object-contain"
+                      className={`max-h-full w-auto max-w-full object-contain ${brand.logoClass ?? "scale-100"
+                        }`}
                     />
                   </span>
 
-                  <span className="text-center text-xs font-semibold text-white/70">
+                  <span className="text-center text-xs font-bold text-black">
                     {brand.label}
                   </span>
                 </Link>
               ))}
             </div>
-          </div>
+          </section>
+
+          <MobileLink
+            href="/certificados-rise"
+            label="Certificados RISE"
+            active={pathname.startsWith("/certificados-rise")}
+            onClick={closeMobileMenu}
+          />
 
           <MobileLink
             href="/sucursales"
-            label="Agencias"
+            label="Sucursales"
             active={pathname.startsWith("/sucursales")}
             onClick={closeMobileMenu}
           />
 
           <MobileLink
-            href="/#noticias"
-            label="Noticias"
-            active={pathname.startsWith("/noticias")}
-            onClick={closeMobileMenu}
-          />
-
-          <MobileLink
-            href="/#eventos"
-            label="Eventos"
-            active={pathname.startsWith("/eventos")}
+            href="/servicios"
+            label="Servicios"
+            active={pathname.startsWith("/servicios")}
             onClick={closeMobileMenu}
           />
 
           <Link
             href="/contacto"
             onClick={closeMobileMenu}
-            className="mt-4 flex items-center justify-center gap-2 rounded-none bg-white px-5 py-3.5 text-sm font-bold text-[#101418] transition hover:bg-white/85 active:scale-[0.98]"
+            className="group inline-flex h-11 items-center justify-center gap-2 border border-white/20 px-4 text-xs font-black uppercase tracking-[0.08em] !text-white transition hover:border-white hover:bg-white hover:!text-[#101418]"
           >
-            Contacto
-            <ArrowRight size={16} />
+            Contáctanos
+            <MessageCircle size={17} />
           </Link>
         </nav>
       </div>
@@ -409,7 +446,7 @@ function MobileLink({
       href={href}
       onClick={onClick}
       className={[
-        "flex items-center justify-between rounded-none px-4 py-3.5 text-sm font-semibold transition",
+        "flex min-h-[50px] items-center justify-between px-4 py-3 text-sm font-bold transition",
         active
           ? "bg-white/10 text-white"
           : "text-white/60 hover:bg-white/[0.06] hover:text-white",

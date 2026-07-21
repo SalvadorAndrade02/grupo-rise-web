@@ -102,7 +102,7 @@ export function LeadForm({
 
     const formClassName =
         variant === "card"
-            ? "rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] md:p-7"
+            ? "border border-[var(--home-border)] bg-[var(--home-card)] p-6 shadow-[0_12px_30px_rgba(18,24,28,0.05)] md:p-8"
             : "";
 
     return (
@@ -125,31 +125,31 @@ export function LeadForm({
             )}
 
             {showHeader && (
-                <div className="border-b border-slate-100 pb-6">
+                <div className="border-b border-[var(--home-border)] pb-6">
                     {title && (
-                        <h2 className="text-2xl font-black tracking-[-0.035em] text-[#0a0f14] md:text-3xl">
+                        <h2 className="text-2xl font-black tracking-[-0.035em] text-[var(--public-ink)] md:text-3xl">
                             {title}
                         </h2>
                     )}
 
                     {description && (
-                        <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">
+                        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--public-muted)]">
                             {description}
                         </p>
                     )}
 
                     {vehicleName && (
-                        <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#192a3a]/10 bg-[#e7edf1] px-4 py-3">
-                            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-[#192a3a]">
+                        <div className="mt-5 flex items-center gap-4 border border-[var(--home-border-strong)] bg-[var(--home-surface-alt)] px-4 py-4">
+                            <span className="grid h-10 w-10 shrink-0 place-items-center border border-[var(--home-border-strong)] bg-[var(--home-card)] text-[var(--public-accent)]">
                                 <CheckCircle2 size={17} />
                             </span>
 
                             <div className="min-w-0">
-                                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">
+                                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[var(--public-muted)]">
                                     Vehículo seleccionado
                                 </p>
 
-                                <p className="mt-0.5 truncate text-sm font-black text-[#192a3a]">
+                                <p className="mt-1 truncate text-sm font-black text-[var(--public-ink)]">
                                     {vehicleName}
                                 </p>
                             </div>
@@ -204,8 +204,7 @@ export function LeadForm({
                             defaultValue={
                                 defaultBranchId ?? ""
                             }
-                            className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 outline-none transition hover:border-slate-300 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
-                        >
+                            className="h-12 w-full border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] px-4 text-sm font-semibold text-[var(--public-ink)] outline-none transition hover:border-[var(--public-muted)] focus:border-[var(--public-header)] focus:bg-white"                        >
                             <option value="">
                                 Seleccionar sucursal
                             </option>
@@ -253,7 +252,7 @@ export function LeadForm({
                         name="message"
                         rows={5}
                         placeholder="Cuéntanos qué necesitas..."
-                        className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-700 outline-none transition placeholder:font-medium placeholder:text-slate-400 hover:border-slate-300 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
+                        className="w-full resize-none border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] px-4 py-3 text-sm font-semibold leading-6 text-[var(--public-ink)] outline-none transition placeholder:font-medium placeholder:text-[var(--public-muted)] hover:border-[var(--public-muted)] focus:border-[var(--public-header)] focus:bg-white"
                     />
                 </label>
             </div>
@@ -262,7 +261,7 @@ export function LeadForm({
                 <div
                     role="alert"
                     aria-live="polite"
-                    className="mt-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 text-sm font-bold text-red-700"
+                    className="mt-5 flex items-start gap-3 border border-red-300 bg-red-50 px-4 py-4 text-sm font-bold text-red-800"
                 >
                     <AlertCircle
                         size={19}
@@ -277,7 +276,7 @@ export function LeadForm({
                 <div
                     role="status"
                     aria-live="polite"
-                    className="mt-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-sm font-bold text-emerald-700"
+                    className="mt-5 flex items-start gap-3 border border-emerald-300 bg-emerald-50 px-4 py-4 text-sm font-bold text-emerald-800"
                 >
                     <CheckCircle2
                         size={19}
@@ -296,12 +295,11 @@ export function LeadForm({
                 </div>
             )}
 
-            <div className="mt-6 border-t border-slate-100 pt-6">
+            <div className="mt-7 border-t border-[var(--home-border)] pt-7">
                 <button
                     type="submit"
                     disabled={isPending}
-                    className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-6 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#29465c] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 sm:w-auto sm:min-w-[220px]"
-                >
+                    className="group inline-flex h-12 w-full items-center justify-center gap-3 bg-[var(--public-header)] px-6 text-sm font-black !text-white transition hover:-translate-y-0.5 hover:bg-[var(--public-accent-dark)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 sm:w-auto sm:min-w-[220px]"                >
                     {isPending ? (
                         <>
                             <LoaderCircle
@@ -318,7 +316,7 @@ export function LeadForm({
                     )}
                 </button>
 
-                <p className="mt-3 text-xs font-medium leading-5 text-slate-400">
+                <p className="mt-4 max-w-xl text-xs font-medium leading-6 text-[var(--public-muted)]">
                     Al enviar tus datos, un asesor podrá
                     contactarte para atender esta solicitud.
                 </p>
@@ -367,7 +365,7 @@ function FormInput({
             <div className="relative">
                 <Icon
                     size={17}
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--public-muted)]"
                 />
 
                 <input
@@ -377,7 +375,7 @@ function FormInput({
                     placeholder={placeholder}
                     autoComplete={autoComplete}
                     inputMode={inputMode}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:font-medium placeholder:text-slate-400 hover:border-slate-300 focus:border-[#192a3a] focus:bg-white focus:ring-2 focus:ring-[#192a3a]/10"
+                    className="h-12 w-full border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] pl-11 pr-4 text-sm font-semibold text-[var(--public-ink)] outline-none transition placeholder:font-medium placeholder:text-[var(--public-muted)] hover:border-[var(--public-muted)] focus:border-[var(--public-header)] focus:bg-white"
                 />
             </div>
         </label>
@@ -394,17 +392,16 @@ function FormLabel({
     required?: boolean;
 }) {
     return (
-        <span className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.11em] text-slate-500">
-            <Icon
-                size={14}
-                className="text-[#192a3a]"
-            />
+        <span className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.11em] text-[var(--public-muted)]">
+            <span className="grid h-6 w-6 shrink-0 place-items-center bg-[var(--public-header)] text-white">
+                <Icon size={13} />
+            </span>
 
             {text}
 
             {required && (
                 <span
-                    className="text-red-500"
+                    className="text-red-600"
                     aria-hidden="true"
                 >
                     *

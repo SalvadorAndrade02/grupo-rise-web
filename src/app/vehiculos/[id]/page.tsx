@@ -101,17 +101,23 @@ function splitText(value: string | null | undefined) {
     .filter(Boolean);
 }
 
-function getBackHref(condition: VehicleCondition, brandName: string) {
+function getBackHref(
+  condition: VehicleCondition,
+  brandName: string
+) {
   if (condition === VehicleCondition.SEMINUEVO) {
-    return "/inventario";
+    return "/certificados-rise";
   }
 
   return `/catalogo/${getBrandSlug(brandName)}`;
 }
 
-function getBackLabel(condition: VehicleCondition, brandName: string) {
+function getBackLabel(
+  condition: VehicleCondition,
+  brandName: string
+) {
   return condition === VehicleCondition.SEMINUEVO
-    ? "Volver a seminuevos"
+    ? "Volver"
     : `Volver a ${brandName}`;
 }
 
@@ -376,47 +382,70 @@ export default async function VehicleDetailPage({
     <>
       <Header />
 
-      <main className="min-h-screen bg-[#f4f6f7] text-[#0a0f14]">
-        {/* Encabezado compacto */}
-        <section className="relative overflow-hidden bg-[#192a3a] text-white">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.12),transparent_32%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
+      <main className="public-home">
+        {/* Navegación y contexto */}
+        <section className="relative overflow-hidden border-b border-white/10 bg-[var(--public-header)] text-white">
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.035),transparent_45%)]" />
 
           <Container>
-            <div className="relative py-8 md:py-10">
+            <div className="relative py-10 md:py-12">
               <Link
                 href={backHref}
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-[#dfe7ec] transition hover:bg-white/15 active:scale-[0.98]"
+                className="inline-flex items-center gap-3 border-b border-white/20 pb-2 text-xs font-black uppercase tracking-[0.18em] !text-white/60 transition hover:border-white hover:!text-white"
               >
                 <ArrowLeft size={16} />
                 {backLabel}
               </Link>
 
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-[#dfe7ec]">
-                  <Sparkles size={14} />
-                  {isUsed ? "Unidad seminueva" : "Unidad nueva"}
-                </span>
+              <div className="mt-9 flex items-center gap-4">
+                <span className="h-px w-10 bg-white" />
 
-                <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-white/80">
-                  {vehicle.year}
-                </span>
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-white">
+                  {vehicle.brand.name}
+                </p>
+              </div>
 
-                <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-white/80">
-                  {categoryLabels[vehicle.category]}
-                </span>
+              <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-end">
+                <div>
+                  <p className="text-sm font-bold text-white">
+                    {vehicle.model}
+                  </p>
 
-                <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-white/80">
-                  {vehicle.branch.city}
-                </span>
+                  <h1 className="mt-2 max-w-4xl text-4xl font-black leading-[0.95] tracking-[-0.05em] text-white md:text-6xl">
+                    {vehicle.name}
+                  </h1>
+                </div>
+
+                <div className="grid grid-cols-2 gap-px border border-white/10 bg-white/10 md:grid-cols-4">
+                  <HeaderStat
+                    label="Condición"
+                    value={conditionLabels[vehicle.condition]}
+                  />
+
+                  <HeaderStat
+                    label="Año"
+                    value={String(vehicle.year)}
+                  />
+
+                  <HeaderStat
+                    label="Categoría"
+                    value={categoryLabels[vehicle.category]}
+                  />
+
+                  <HeaderStat
+                    label="Ubicación"
+                    value={vehicle.branch.city}
+                  />
+                </div>
               </div>
             </div>
           </Container>
         </section>
 
         {/* Galería + resumen */}
-        <section className="py-8 md:py-10 lg:py-12">
+        <section className="border-b border-[var(--home-border)] py-10 md:py-14 lg:py-16">
           <Container>
-            <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_390px] xl:items-start">
+            <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
               <div className="space-y-6">
                 <VehicleMediaGallery
                   items={galleryItems}
@@ -424,44 +453,39 @@ export default async function VehicleDetailPage({
                   vehicleName={title}
                 />
 
-                <section className="rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.04)] md:p-7">
-                  <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                <section className="border border-[var(--home-border)] bg-[var(--home-card)] p-6 shadow-[0_12px_30px_rgba(18,24,28,0.05)] md:p-8">
+                  <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
                     <div>
-                      <div className="flex items-center gap-3">
-                        <span className="h-px w-8 bg-[#192a3a]" />
+                      <div className="flex items-center gap-4">
+                        <span className="h-px w-10 bg-[var(--public-accent)]" />
 
-                        <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#192a3a]">
+                        <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--public-muted)]">
                           {vehicle.brand.name}
                         </p>
                       </div>
 
-                      <h1 className="mt-3 max-w-4xl text-3xl font-black leading-tight tracking-[-0.045em] md:text-4xl lg:text-5xl">
+                      <h2 className="mt-4 max-w-4xl text-3xl font-black leading-[0.98] tracking-[-0.045em] text-[var(--public-ink)] md:text-5xl">
                         {vehicle.name}
-                      </h1>
+                      </h2>
 
-                      <p className="mt-3 text-sm font-bold text-slate-500 md:text-base">
+                      <p className="mt-4 text-sm font-bold text-[var(--public-muted)] md:text-base">
                         {vehicle.model} · {vehicle.year} ·{" "}
                         {conditionLabels[vehicle.condition]}
                       </p>
                     </div>
 
-                    <span
-                      className={`w-fit rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider ${isUsed
-                          ? "bg-amber-50 text-amber-700"
-                          : "bg-[#e7edf1] text-[#192a3a]"
-                        }`}
-                    >
+                    <span className="w-fit border border-[var(--home-border-strong)] bg-[var(--home-surface-alt)] px-4 py-2 text-xs font-black uppercase tracking-[0.15em] text-[var(--public-ink)]">
                       Disponible
                     </span>
                   </div>
 
                   {vehicle.description && (
-                    <p className="mt-6 max-w-4xl text-sm leading-7 text-slate-600 md:text-base">
+                    <p className="mt-7 max-w-4xl text-sm leading-7 text-[var(--public-muted)] md:text-base">
                       {vehicle.description}
                     </p>
                   )}
 
-                  <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="mt-8 grid gap-px border border-[var(--home-border)] bg-[var(--home-border)] sm:grid-cols-2 lg:grid-cols-4">
                     <InfoStat
                       icon={Gauge}
                       label="Kilometraje"
@@ -513,7 +537,7 @@ export default async function VehicleDetailPage({
                     <div className="flex items-center gap-3">
                       <span className="h-px w-8 bg-[#192a3a]" />
 
-                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#192a3a]">
+                      <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--public-muted)]">
                         Disponibilidad
                       </p>
                     </div>
@@ -537,10 +561,9 @@ export default async function VehicleDetailPage({
                         return (
                           <article
                             key={branch.id}
-                            className="rounded-2xl border border-slate-100 bg-[#f8fafb] p-4 transition hover:border-[#192a3a]/35 active:border-[#192a3a]/35"
-                          >
+                            className="border border-[var(--home-border)] bg-[var(--home-surface-strong)] p-5 transition hover:border-[var(--home-border-strong)] hover:bg-[var(--home-card-hover)]"                          >
                             <div className="flex items-start gap-3">
-                              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#e7edf1] text-[#192a3a]">
+                              <span className="grid h-11 w-11 shrink-0 place-items-center border border-[var(--home-border-strong)] bg-[var(--home-surface-alt)] text-[var(--public-ink)]">
                                 <Building2 size={18} />
                               </span>
 
@@ -560,8 +583,7 @@ export default async function VehicleDetailPage({
                                 href={whatsappHref}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="mt-4 inline-flex items-center gap-2 text-sm font-black text-[#192a3a] transition hover:underline active:opacity-75"
-                              >
+                                className="mt-5 inline-flex items-center gap-2 border-b border-[var(--home-border-strong)] pb-1 text-sm font-black text-[var(--public-ink)] transition hover:border-[var(--public-accent)] hover:text-[var(--public-accent)]"                              >
                                 Contactar por WhatsApp
                                 <ArrowRight size={15} />
                               </a>
@@ -576,26 +598,28 @@ export default async function VehicleDetailPage({
 
               {/* Resumen lateral */}
               <aside className="xl:sticky xl:top-[120px] xl:self-start">
-                <div className="rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_18px_55px_rgba(15,23,42,0.1)] md:p-6">
-                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#192a3a]">
-                    {vehicle.brand.name}
-                  </p>
+                <div className="border border-[var(--home-border)] bg-[var(--home-card)] shadow-[0_18px_45px_rgba(18,24,28,0.09)]">
+                  <div className="border-b border-[var(--home-border)] p-6">
+                    <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--public-muted)]">
+                      {vehicle.brand.name}
+                    </p>
 
-                  <h2 className="mt-2 text-2xl font-black leading-tight tracking-[-0.035em] text-[#0a0f14]">
-                    {vehicle.name}
-                  </h2>
+                    <h2 className="mt-3 text-3xl font-black leading-[0.98] tracking-[-0.04em] text-[var(--public-ink)]">
+                      {vehicle.name}
+                    </h2>
+                  </div>
 
-                  <div className="mt-5 border-y border-slate-100 py-5">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                  <div className="border-b border-[var(--home-border)] bg-[var(--home-surface-strong)] p-6">
+                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[var(--public-muted)]">
                       Precio
                     </p>
 
-                    <p className="mt-1 text-4xl font-black tracking-[-0.04em] text-[#192a3a]">
+                    <p className="mt-2 text-4xl font-black tracking-[-0.045em] text-[var(--public-ink)]">
                       {formatCurrency(vehicle.price)}
                     </p>
                   </div>
 
-                  <div className="mt-5 grid gap-3 rounded-2xl bg-[#f8fafb] p-4">
+                  <div className="grid gap-px border-b border-[var(--home-border)] bg-[var(--home-border)]">
                     <SummaryLine
                       icon={BadgeCheck}
                       label="Estado"
@@ -615,20 +639,20 @@ export default async function VehicleDetailPage({
                     />
                   </div>
 
-                  <div className="mt-5 rounded-2xl bg-[#e7edf1] p-4">
-                    <p className="text-sm font-black text-[#192a3a]">
+                  <div className="border-b border-[var(--home-border)] p-6">
+                    <p className="text-sm font-black text-[var(--public-ink)]">
                       {isUsed
-                        ? "Seminuevo listo para cotizar"
-                        : "Nuevo disponible para información"}
+                        ? "Unidad disponible para información"
+                        : "Vehículo nuevo disponible"}
                     </p>
 
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      Solicita información y un asesor de Grupo Rise se pondrá en
+                    <p className="mt-3 text-sm leading-6 text-[var(--public-muted)]">
+                      Solicita información y un asesor de Grupo RISE se pondrá en
                       contacto contigo.
                     </p>
                   </div>
 
-                  <div className="mt-5">
+                  <div className="p-6">
                     <VehicleDetailActions
                       vehicleId={vehicle.id}
                       branchId={vehicle.branchId}
@@ -662,14 +686,14 @@ export default async function VehicleDetailPage({
 
                 <Link
                   href={backHref}
-                  className="group inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.15em] text-[#0a0f14]"
+                  className="group inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.15em] text-[var(--public-ink)]"
                 >
                   Ver más
 
-                  <span className="grid h-9 w-9 place-items-center rounded-full border border-black/15 bg-white transition group-hover:border-[#192a3a] group-hover:bg-[#192a3a] group-hover:text-white group-active:border-[#192a3a] group-active:bg-[#192a3a] group-active:text-white">
+                  <span className="grid h-10 w-10 place-items-center border border-[var(--home-border-strong)] transition group-hover:border-[var(--public-accent)] group-hover:bg-[var(--public-accent)] group-hover:!text-white">
                     <ArrowRight
-                      size={15}
-                      className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
+                      size={16}
+                      className="transition-transform group-hover:translate-x-0.5"
                     />
                   </span>
                 </Link>
@@ -700,20 +724,22 @@ function InfoStat({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl bg-[#f8fafb] p-4">
-      <Icon className="text-[#192a3a]" size={22} />
+    <div className="min-h-[150px] bg-[var(--home-surface-strong)] p-5">
+      <Icon
+        className="text-[var(--public-accent)]"
+        size={22}
+      />
 
-      <p className="mt-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+      <p className="mt-5 text-[9px] font-black uppercase tracking-[0.17em] text-[var(--public-muted)]">
         {label}
       </p>
 
-      <p className="mt-1 line-clamp-2 text-sm font-black leading-5 text-slate-700">
+      <p className="mt-2 line-clamp-2 text-sm font-black leading-5 text-[var(--public-ink)]">
         {value}
       </p>
     </div>
   );
 }
-
 function SummaryLine({
   icon: Icon,
   label,
@@ -724,15 +750,20 @@ function SummaryLine({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-3 text-sm">
-      <Icon size={18} className="shrink-0 text-[#192a3a]" />
+    <div className="flex min-h-[82px] items-center gap-4 bg-[var(--home-card)] px-6 py-4">
+      <Icon
+        size={19}
+        className="shrink-0 text-[var(--public-accent)]"
+      />
 
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
+        <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[var(--public-muted)]">
           {label}
         </p>
 
-        <p className="font-black text-slate-700">{value}</p>
+        <p className="mt-1 font-black text-[var(--public-ink)]">
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -747,21 +778,35 @@ function DetailList({
   items: string[];
   icon: "check" | "shield";
 }) {
-  const Icon = icon === "check" ? CheckCircle2 : ShieldCheck;
+  const Icon =
+    icon === "check" ? CheckCircle2 : ShieldCheck;
 
   return (
-    <section className="rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.04)] md:p-7">
-      <h2 className="text-2xl font-black tracking-[-0.035em]">{title}</h2>
+    <section className="border border-[var(--home-border)] bg-[var(--home-card)] p-6 shadow-[0_10px_28px_rgba(18,24,28,0.04)] md:p-8">
+      <div className="flex items-center gap-4">
+        <span className="h-px w-10 bg-[var(--public-accent)]" />
 
-      <div className="mt-5 grid gap-3">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--public-muted)]">
+          Información
+        </p>
+      </div>
+
+      <h2 className="mt-4 text-2xl font-black tracking-[-0.035em] text-[var(--public-ink)] md:text-3xl">
+        {title}
+      </h2>
+
+      <div className="mt-6 border-t border-[var(--home-border)]">
         {items.map((item) => (
           <div
             key={item}
-            className="flex gap-3 rounded-2xl bg-[#f8fafb] p-4"
+            className="flex gap-4 border-b border-[var(--home-border)] py-4"
           >
-            <Icon className="mt-0.5 shrink-0 text-[#192a3a]" size={18} />
+            <Icon
+              className="mt-0.5 shrink-0 text-[var(--public-accent)]"
+              size={18}
+            />
 
-            <p className="text-sm font-bold leading-6 text-slate-600">
+            <p className="text-sm font-bold leading-6 text-[var(--public-muted)]">
               {item}
             </p>
           </div>
@@ -787,53 +832,76 @@ function RelatedVehicleCard({
     }[];
   };
 }) {
-  const image = vehicle.mainImage || vehicle.images[0]?.url || "";
+  const image =
+    vehicle.mainImage || vehicle.images[0]?.url || "";
 
   return (
     <Link
       href={`/vehiculos/${vehicle.id}`}
-      className="group block overflow-hidden rounded-[20px] border border-black/8 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.045)] transition duration-300 hover:-translate-y-1 hover:border-[#192a3a]/50 hover:shadow-[0_22px_55px_rgba(15,23,42,0.1)] active:border-[#192a3a]/50"
+      className="group relative block overflow-hidden border border-[var(--home-border)] bg-[var(--home-card)] shadow-[0_10px_28px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1 hover:border-[var(--home-border-strong)] hover:shadow-[var(--home-shadow)]"
     >
-      <div className="relative h-[230px] overflow-hidden bg-[#e8ecef]">
+      <div className="absolute inset-x-0 top-0 z-20 h-[3px] origin-left scale-x-0 bg-[var(--public-accent)] transition-transform duration-300 group-hover:scale-x-100" />
+
+      <div className="relative h-[230px] overflow-hidden bg-[var(--home-surface-alt)]">
         {image ? (
           <img
             src={image}
             alt={`${vehicle.brand.name} ${vehicle.name}`}
-            className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045] group-active:scale-[1.045]"
+            className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045]"
           />
         ) : (
-          <div className="grid h-full place-items-center text-slate-400">
+          <div className="grid h-full place-items-center text-[var(--public-muted)]">
             <ImageIcon size={40} />
           </div>
         )}
 
-        <div className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white text-[#0a0f14] shadow-lg transition duration-300 group-hover:bg-[#192a3a] group-hover:text-white group-active:bg-[#192a3a] group-active:text-white">
+        <span className="absolute bottom-0 right-0 grid h-12 w-12 place-items-center bg-[var(--public-header)] !text-white transition group-hover:bg-[var(--public-accent)]">
           <ArrowRight
-            size={17}
-            className="transition-transform duration-300 group-hover:translate-x-0.5 group-active:translate-x-0.5"
+            size={18}
+            className="text-white transition-transform group-hover:translate-x-0.5"
           />
-        </div>
+        </span>
       </div>
 
-      <div className="p-5">
-        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#192a3a]">
+      <div className="p-6">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--public-muted)]">
           {vehicle.brand.name}
         </p>
 
-        <h3 className="mt-2 line-clamp-2 min-h-[56px] text-2xl font-black leading-tight tracking-[-0.035em] text-[#0a0f14]">
+        <h3 className="mt-3 line-clamp-2 min-h-[56px] text-2xl font-black leading-tight tracking-[-0.035em] text-[var(--public-ink)]">
           {vehicle.name}
         </h3>
 
-        <div className="mt-5 border-t border-slate-100 pt-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+        <div className="mt-5 border-t border-[var(--home-border)] pt-5">
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[var(--public-muted)]">
             Precio
           </p>
 
-          <p className="mt-1 text-2xl font-black tracking-[-0.035em] text-[#0a0f14]">
+          <p className="mt-1 text-2xl font-black tracking-[-0.035em] text-[var(--public-ink)]">
             {formatCurrency(vehicle.price)}
           </p>
         </div>
       </div>
     </Link>
+  );
+}
+
+function HeaderStat({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="min-h-[88px] bg-[var(--public-header)] p-4">
+      <p className="text-[9px] font-black uppercase tracking-[0.17em] text-white/35">
+        {label}
+      </p>
+
+      <p className="mt-2 line-clamp-2 text-sm font-black leading-5 text-white">
+        {value}
+      </p>
+    </div>
   );
 }

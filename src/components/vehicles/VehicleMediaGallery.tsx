@@ -83,7 +83,8 @@ export function VehicleMediaGallery({
 
   return (
     <div>
-      <div className="group relative overflow-hidden rounded-[22px] border border-black/8 bg-[#e9edef] shadow-[0_18px_55px_rgba(15,23,42,0.1)]">
+      <div className="group relative overflow-hidden border border-[var(--home-border)] bg-[var(--home-surface-alt)] shadow-[0_18px_45px_rgba(18,24,28,0.09)]">
+        {/* Imagen o video principal */}
         <div className="relative aspect-[4/3] w-full md:aspect-[16/10]">
           {selectedItem.type === "VIDEO" ? (
             <video
@@ -106,31 +107,35 @@ export function VehicleMediaGallery({
           )}
         </div>
 
+        {/* Etiqueta y contador */}
         <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-4">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/90 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#192a3a] shadow-sm backdrop-blur-sm">
+          <span className="inline-flex items-center gap-2 border border-white/50 bg-white/90 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--public-ink)] shadow-sm backdrop-blur-sm">
             {selectedItem.type === "VIDEO" ? (
               <PlayCircle size={14} />
             ) : (
               <ImageIcon size={14} />
             )}
 
-            {selectedItem.type === "VIDEO" ? "Video" : "Fotografía"}
+            {selectedItem.type === "VIDEO"
+              ? "Video"
+              : "Fotografía"}
           </span>
 
           {hasMultipleItems && (
-            <span className="rounded-full bg-[#192a3a]/90 px-3 py-1.5 text-xs font-black text-white shadow-sm backdrop-blur-sm">
+            <span className="bg-[#0a0f14]/90 px-3 py-2 text-xs font-black text-white shadow-sm backdrop-blur-sm">
               {selectedIndex + 1} / {normalizedItems.length}
             </span>
           )}
         </div>
 
+        {/* Flechas de navegación */}
         {hasMultipleItems && (
           <>
             <button
               type="button"
               onClick={showPrevious}
               aria-label="Mostrar contenido anterior"
-              className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/60 bg-white/90 text-[#192a3a] shadow-lg backdrop-blur-sm transition hover:bg-[#192a3a] hover:text-white active:scale-95 active:bg-[#192a3a] active:text-white md:left-5"
+              className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center border border-white/60 bg-white/90 text-[var(--public-ink)] shadow-lg backdrop-blur-sm transition hover:border-[var(--public-header)] hover:bg-[var(--public-header)] hover:text-white active:scale-95 md:left-5"
             >
               <ChevronLeft size={21} />
             </button>
@@ -139,7 +144,7 @@ export function VehicleMediaGallery({
               type="button"
               onClick={showNext}
               aria-label="Mostrar siguiente contenido"
-              className="absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/60 bg-white/90 text-[#192a3a] shadow-lg backdrop-blur-sm transition hover:bg-[#192a3a] hover:text-white active:scale-95 active:bg-[#192a3a] active:text-white md:right-5"
+              className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center border border-white/60 bg-white/90 text-[var(--public-ink)] shadow-lg backdrop-blur-sm transition hover:border-[var(--public-header)] hover:bg-[var(--public-header)] hover:text-white active:scale-95 md:right-5"
             >
               <ChevronRight size={21} />
             </button>
@@ -147,6 +152,7 @@ export function VehicleMediaGallery({
         )}
       </div>
 
+      {/* Miniaturas */}
       {hasMultipleItems && (
         <div className="mt-4 flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {normalizedItems.map((item, index) => {
@@ -159,13 +165,13 @@ export function VehicleMediaGallery({
                 onClick={() => setSelectedIndex(index)}
                 aria-label={`Mostrar contenido ${index + 1}`}
                 aria-current={active ? "true" : undefined}
-                className={`relative h-[76px] w-[98px] shrink-0 snap-start overflow-hidden rounded-xl border bg-[#e9edef] transition duration-300 active:scale-95 md:h-[86px] md:w-[112px] ${active
-                    ? "border-[#192a3a] ring-2 ring-[#192a3a]/25"
-                    : "border-slate-200 hover:border-[#192a3a]/50"
+                className={`relative h-[76px] w-[98px] shrink-0 snap-start overflow-hidden border bg-[var(--home-surface-alt)] transition duration-300 active:scale-95 md:h-[86px] md:w-[112px] ${active
+                    ? "border-[var(--public-ink)] ring-2 ring-black/15"
+                    : "border-[var(--home-border-strong)] hover:border-[var(--public-ink)]"
                   }`}
               >
                 {item.type === "VIDEO" ? (
-                  <div className="grid h-full w-full place-items-center bg-[#192a3a] text-white">
+                  <div className="grid h-full w-full place-items-center bg-[var(--public-header)] text-white">
                     <PlayCircle size={28} />
                   </div>
                 ) : (
@@ -182,7 +188,7 @@ export function VehicleMediaGallery({
                 )}
 
                 {active && (
-                  <span className="absolute inset-x-0 bottom-0 h-[3px] bg-[#192a3a]" />
+                  <span className="absolute inset-x-0 bottom-0 h-[3px] bg-[var(--public-accent)]" />
                 )}
               </button>
             );

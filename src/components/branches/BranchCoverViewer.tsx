@@ -83,8 +83,8 @@ export function BranchCoverViewer({
             : `Sin fotografía de ${branchName}`
         }
         className={`group relative block w-full overflow-hidden bg-[#e8ecef] text-left ${heightClassName} ${hasImage
-            ? "cursor-zoom-in"
-            : "cursor-default"
+          ? "cursor-zoom-in"
+          : "cursor-default"
           }`}
       >
         {coverImageUrl ? (
@@ -107,14 +107,14 @@ export function BranchCoverViewer({
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
 
         {hasImage && (
-          <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/35 px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-white backdrop-blur-sm transition group-hover:bg-[#192a3a] group-active:bg-[#192a3a]">
+          <div className="absolute left-4 top-4 inline-flex items-center gap-2 border border-white/30 bg-black/45 px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-white backdrop-blur-sm transition group-hover:bg-[var(--public-header)]">
             <Maximize2 size={14} />
             Ampliar
           </div>
         )}
 
         {showLogo && logoUrl && (
-          <div className="absolute right-4 top-4 flex h-14 w-20 items-center justify-center overflow-hidden rounded-xl border border-white/70 bg-white p-2 shadow-lg">
+          <div className="absolute right-4 top-4 flex h-16 w-24 items-center justify-center overflow-hidden border border-white/70 bg-white p-2 shadow-lg">
             <img
               src={logoUrl}
               alt={`Logo ${branchName}`}
@@ -152,8 +152,7 @@ export function BranchCoverViewer({
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Cerrar imagen"
-              className="absolute right-4 top-4 z-20 grid h-12 w-12 place-items-center rounded-full bg-white text-[#192a3a] shadow-xl transition hover:bg-[#e7edf1] active:scale-95 active:bg-[#e7edf1]"
-            >
+              className="absolute right-4 top-4 z-20 grid h-12 w-12 place-items-center border border-white/20 bg-white text-[var(--public-header)] shadow-xl transition hover:bg-[var(--home-surface-alt)] active:scale-95"            >
               <X size={23} />
             </button>
 
@@ -167,10 +166,10 @@ export function BranchCoverViewer({
                 src={coverImageUrl}
                 alt={`Fachada de ${branchName}`}
                 draggable={false}
-                className="mx-auto max-h-[82vh] w-auto max-w-full rounded-[20px] object-contain shadow-2xl"
+                className="mx-auto max-h-[82vh] w-auto max-w-full object-contain shadow-2xl"
               />
 
-              <div className="mx-auto mt-4 max-w-3xl rounded-2xl border border-white/10 bg-white/10 px-5 py-4 text-center text-white backdrop-blur-sm">
+              <div className="mx-auto mt-4 max-w-3xl border border-white/10 bg-white/10 px-5 py-4 text-center text-white backdrop-blur-sm">
                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#dfe7ec]">
                   Agencia Grupo Rise
                 </p>

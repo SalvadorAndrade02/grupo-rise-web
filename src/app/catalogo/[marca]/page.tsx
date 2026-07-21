@@ -204,25 +204,25 @@ function getBrandSlug(brandName: string) {
 
 function getBrandLogo(brandName: string) {
   const logos: Record<string, string> = {
-    "Can-Am": "/catalog/brands/can-am.jpg",
+    "Can-Am": "/catalog/brands/can-am.png",
     Polaris: "/catalog/brands/polaris.jpg",
 
     "Sea-Doo": "/catalog/brands/sea-doo.jpg",
     "Sea Doo": "/catalog/brands/sea-doo.jpg",
     SeaDoo: "/catalog/brands/sea-doo.jpg",
 
-    Triumph: "/catalog/brands/triumph.jpg",
-    "Triumph Motorcycles": "/catalog/brands/triumph.jpg",
+    Triumph: "/catalog/brands/triumph.png",
+    "Triumph Motorcycles": "/catalog/brands/triumph.png",
 
     "Royal Enfield": "/catalog/brands/royal-enfield.jpg",
 
     Indian: "/catalog/brands/indian.jpg",
     "Indian Motorcycle": "/catalog/brands/indian.jpg",
 
-    Zeekr: "/catalog/brands/zeekr.jpg",
-    Zeekrlife: "/catalog/brands/zeekr.jpg",
+    Zeekr: "/catalog/brands/zeekNegro.png",
+    Zeekrlife: "/catalog/brands/zeekNegro.png",
 
-    "Lynk & Co": "/catalog/brands/lynkco.jpg",
+    "Lynk & Co": "/catalog/brands/lynkco.png",
   };
 
   return logos[brandName] ?? null;
@@ -467,160 +467,88 @@ export default async function BrandCatalogPage({
     <>
       <Header />
 
-      <main className="min-h-screen bg-[#f4f6f7] text-[#0a0f14]">
+      <main className="public-home">
         {/* Encabezado de marca */}
-        <section className="relative overflow-hidden bg-[#192a3a] text-white">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.13),transparent_30%),linear-gradient(135deg,rgba(16,28,39,0.98),rgba(25,42,58,0.94))]" />
+        <section className="relative overflow-hidden border-b border-white/10 bg-[var(--public-header)] text-white">
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.035),transparent_45%)]" />
 
-          <div className="relative mx-auto w-full max-w-[1440px] px-5 py-12 md:px-8 lg:px-10 lg:py-16">
-            <Link
-              href="/catalogo"
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-[#dfe7ec] transition hover:bg-white/15 active:scale-[0.98]"
-            >
-              <ArrowLeft size={16} />
-              Volver al catálogo
-            </Link>
+          <div className="absolute right-0 top-0 hidden h-full w-[38%] border-l border-white/[0.06] lg:block" />
 
-            <div className="mt-7 grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-              <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#dfe7ec] backdrop-blur-sm">
-                  <Sparkles size={15} />
-                  Catálogo oficial
-                </div>
+          <div className="public-container relative grid min-h-[440px] items-center gap-12 py-16 lg:grid-cols-[minmax(0,1fr)_360px] lg:py-20">
+            <div className="max-w-4xl">
+              <Link
+                href="/catalogo"
+                className="inline-flex items-center gap-3 border-b border-white/20 pb-2 text-xs font-black uppercase tracking-[0.18em] !text-white/60 transition hover:border-white hover:!text-white"
+              >
+                <ArrowLeft size={16} />
+                Volver a marcas
+              </Link>
 
-                <h1 className="mt-5 text-4xl font-black leading-tight tracking-[-0.045em] md:text-5xl lg:text-6xl">
-                  Vehículos {brand.name}
-                </h1>
+              <div className="mt-10 flex items-center gap-4">
+                <span className="h-px w-10 bg-white" />
 
-                <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-white/65 md:text-base">
-                  Explora unidades nuevas de {brand.name},
-                  compara precios y entra al detalle para
-                  consultar disponibilidad.
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-white">
+                  Catálogo de marca
                 </p>
-
-                <div className="mt-7 flex flex-wrap gap-3">
-                  <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-white/80">
-                    {vehicles.length} unidades publicadas
-                  </span>
-
-                  <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-white/80">
-                    {availableTypes.length} categorías
-                  </span>
-                </div>
               </div>
 
-              <div className="flex justify-start lg:justify-end">
-                <div className="flex h-[150px] w-full max-w-[280px] items-center justify-center rounded-[22px] border border-white/15 bg-white p-7 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-                  {brandLogo ? (
-                    <img
-                      src={brandLogo}
-                      alt={`Logo ${brand.name}`}
-                      className="max-h-[90px] max-w-full object-contain"
-                    />
-                  ) : (
-                    <span className="text-center text-3xl font-black text-[#192a3a]">
-                      {brand.name}
-                    </span>
-                  )}
-                </div>
+              <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[0.92] tracking-[-0.055em] md:text-6xl xl:text-7xl">
+                Vehículos
+                <span className="block text-white">
+                  {brand.name}
+                </span>
+              </h1>
+
+              <p className="mt-7 max-w-2xl text-base leading-8 text-white md:text-lg">
+                Consulta únicamente las unidades nuevas disponibles de{" "}
+                {brand.name}.
+              </p>
+            </div>
+
+            <div className="flex justify-start lg:justify-end">
+              <div className="relative flex min-h-[210px] w-full items-center justify-center border border-white/10 bg-[#eef0ee] p-8 shadow-[0_25px_60px_rgba(0,0,0,0.18)] lg:min-h-[250px]">
+                <div className="absolute inset-x-0 top-0 h-[3px] bg-[var(--public-accent)]" />
+
+                {brandLogo ? (
+                  <img
+                    src={brandLogo}
+                    alt={`Logo ${brand.name}`}
+                    className="max-h-[145px] max-w-[90%] object-contain"
+                  />
+                ) : (
+                  <span className="text-center text-3xl font-black text-[var(--public-ink)]">
+                    {brand.name}
+                  </span>
+                )}
               </div>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-[1440px] px-5 py-10 md:px-8 lg:px-10 lg:py-12">
-          {/* Selector de marcas */}
-          <section className="rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.04)] md:p-6">
-            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-              <div>
-                <div className="flex items-center gap-3">
-                  <span className="h-px w-8 bg-[#192a3a]" />
-
-                  <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#192a3a]">
-                    Catálogos disponibles
-                  </p>
-                </div>
-
-                <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] md:text-3xl">
-                  Explora otras marcas
-                </h2>
-              </div>
-
-              <Link
-                href="/catalogo"
-                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-black uppercase tracking-[0.13em] text-slate-600 transition hover:border-[#192a3a] hover:bg-white hover:text-[#192a3a] active:scale-[0.98]"
-              >
-                Ver todas
-              </Link>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 border-l border-t border-slate-200 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
-              {activeBrands.map((item) => {
-                const itemSlug = getBrandSlug(item.name);
-                const itemLogo = getBrandLogo(item.name);
-                const isActive = item.id === brand.id;
-
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/catalogo/${itemSlug}`}
-                    title={item.name}
-                    aria-label={`Abrir catálogo de ${item.name}`}
-                    className={`group relative flex min-h-[118px] items-center justify-center overflow-hidden border-b border-r px-5 py-6 transition duration-300 hover:z-10 hover:bg-[#f1f5f7] active:bg-[#e7edf1] ${isActive
-                        ? "border-[#192a3a] bg-[#e7edf1]"
-                        : "border-slate-200 bg-white"
-                      }`}
-                  >
-                    {itemLogo ? (
-                      <img
-                        src={itemLogo}
-                        alt={`Logo ${item.name}`}
-                        className={`max-h-[55px] w-full object-contain transition duration-300 group-hover:scale-105 group-active:scale-105 ${isActive
-                            ? "grayscale-0"
-                            : "grayscale group-hover:grayscale-0 group-active:grayscale-0"
-                          }`}
-                      />
-                    ) : (
-                      <span className="text-center text-sm font-black text-[#192a3a]">
-                        {item.name}
-                      </span>
-                    )}
-
-                    <span
-                      className={`absolute bottom-0 left-0 h-[3px] bg-[#192a3a] transition-all duration-300 ${isActive
-                          ? "w-full"
-                          : "w-0 group-hover:w-full group-active:w-full"
-                        }`}
-                    />
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-
+        <section className="public-container py-14 md:py-20">
           {/* Filtros */}
           <form
             action={`/catalogo/${brandSlug}`}
-            className="mt-7 rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.04)] md:p-6"
+            className="rounded-[22px] border border-black/8 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.04)] md:p-6"
           >
-            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
               <div>
-                <div className="flex items-center gap-3">
-                  <span className="h-px w-8 bg-[#192a3a]" />
+                <div className="flex items-center gap-4">
+                  <span className="h-px w-10 bg-[var(--public-accent)]" />
 
-                  <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#192a3a]">
+                  <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--public-muted)]">
                     Buscar y filtrar
                   </p>
                 </div>
 
-                <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] md:text-3xl">
+                <h2 className="mt-4 text-3xl font-black tracking-[-0.04em] text-[var(--public-ink)] md:text-4xl">
                   Encuentra tu {brand.name}
                 </h2>
               </div>
 
               <Link
                 href={`/catalogo/${brandSlug}`}
-                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-black uppercase tracking-[0.13em] text-slate-600 transition hover:border-[#192a3a] hover:bg-white hover:text-[#192a3a] active:scale-[0.98]"
+                className="inline-flex h-11 items-center justify-center border border-[var(--home-border-strong)] px-5 text-xs font-black uppercase tracking-[0.13em] text-[var(--public-ink)] transition hover:border-[var(--public-ink)] hover:bg-[var(--public-ink)] hover:!text-white"
               >
                 Limpiar filtros
               </Link>
@@ -642,8 +570,7 @@ export default async function BrandCatalogPage({
                     name="q"
                     defaultValue={query}
                     placeholder={`Buscar modelo ${brand.name}`}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-[#192a3a] focus:bg-white"
-                  />
+                    className="h-12 w-full border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] pl-11 pr-4 text-sm font-semibold text-[var(--public-ink)] outline-none transition focus:border-[var(--public-ink)] focus:bg-white" />
                 </div>
               </label>
 
@@ -655,8 +582,7 @@ export default async function BrandCatalogPage({
                 <select
                   name="tipo"
                   defaultValue={selectedType}
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[#192a3a] focus:bg-white"
-                >
+                  className="h-12 w-full border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] px-4 text-sm font-semibold text-[var(--public-ink)] outline-none transition focus:border-[var(--public-ink)] focus:bg-white"                >
                   <option value="">Todas</option>
 
                   {availableTypes.map((category) => (
@@ -678,8 +604,7 @@ export default async function BrandCatalogPage({
                 <select
                   name="precio"
                   defaultValue={selectedPrice}
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[#192a3a] focus:bg-white"
-                >
+                  className="h-12 w-full border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] px-4 text-sm font-semibold text-[var(--public-ink)] outline-none transition focus:border-[var(--public-ink)] focus:bg-white"                >
                   {priceFilters.map((filter) => (
                     <option
                       key={filter.value || "all"}
@@ -699,8 +624,7 @@ export default async function BrandCatalogPage({
                 <select
                   name="orden"
                   defaultValue={selectedOrder}
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[#192a3a] focus:bg-white"
-                >
+                  className="h-12 w-full border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] px-4 text-sm font-semibold text-[var(--public-ink)] outline-none transition focus:border-[var(--public-ink)] focus:bg-white"                >
                   {orderOptions.map((option) => (
                     <option
                       key={option.value}
@@ -712,10 +636,9 @@ export default async function BrandCatalogPage({
                 </select>
               </label>
             </div>
-
             <button
               type="submit"
-              className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0a0f14] px-5 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#192a3a] active:scale-[0.98] md:w-auto"
+              className="mt-5 inline-flex h-12 w-full items-center justify-center gap-3 bg-[var(--public-header)] px-6 text-sm font-black !text-white transition hover:bg-[var(--public-accent-dark)] md:w-auto"
             >
               <SlidersHorizontal size={18} />
               Aplicar filtros
@@ -747,7 +670,7 @@ export default async function BrandCatalogPage({
               )}
             </div>
 
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600">
+            <div className="inline-flex w-fit items-center gap-3 border border-[var(--home-border)] bg-[var(--home-card)] px-4 py-3 text-sm font-black text-[var(--public-muted)]">
               <ArrowUpDown size={17} />
               {selectedOrderLabel}
             </div>
@@ -786,11 +709,10 @@ export default async function BrandCatalogPage({
                 )}
               </>
             ) : (
-              <div className="rounded-[22px] border border-dashed border-slate-300 bg-white p-10 text-center">
-                <Search
-                  size={46}
-                  className="mx-auto text-slate-400"
-                />
+              <div className="border border-dashed border-[var(--home-border-strong)] bg-[var(--home-card)] p-10 text-center">                <Search
+                size={46}
+                className="mx-auto text-slate-400"
+              />
 
                 <h3 className="mt-4 text-2xl font-black">
                   No encontramos unidades {brand.name}
@@ -803,7 +725,7 @@ export default async function BrandCatalogPage({
 
                 <Link
                   href={`/catalogo/${brandSlug}`}
-                  className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#0a0f14] px-5 text-sm font-black text-white transition hover:bg-[#192a3a] active:scale-[0.98]"
+                  className="mt-6 inline-flex h-11 items-center justify-center bg-[var(--public-header)] px-6 text-sm font-black !text-white transition hover:bg-[var(--public-accent-dark)]"
                 >
                   Ver todo {brand.name}
                 </Link>
@@ -831,55 +753,79 @@ function VehicleCard({
   return (
     <Link
       href={`/vehiculos/${vehicle.id}`}
-      className="group block overflow-hidden rounded-[20px] border border-black/8 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.045)] transition duration-300 hover:-translate-y-1 hover:border-[#192a3a]/50 hover:shadow-[0_22px_55px_rgba(15,23,42,0.1)] active:border-[#192a3a]/50"
+      className="group relative block overflow-hidden border border-[var(--home-border)] bg-[var(--home-card)] shadow-[0_10px_28px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1 hover:border-[var(--home-border-strong)] hover:bg-[var(--home-card-hover)] hover:shadow-[var(--home-shadow)]"
     >
-      <div className="relative h-[250px] overflow-hidden bg-[#e8ecef]">
+      <div className="absolute inset-x-0 top-0 z-20 h-[3px] origin-left scale-x-0 bg-[var(--public-accent)] transition-transform duration-300 group-hover:scale-x-100" />
+
+      <div className="relative h-[260px] overflow-hidden bg-[var(--home-surface-alt)]">
         {image ? (
           <img
             src={image}
             alt={`${vehicle.brand.name} ${vehicle.name}`}
-            className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045] group-active:scale-[1.045]"
+            className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045]"
           />
         ) : (
           <div className="flex h-full items-center justify-center">
             <ImageIcon
               size={46}
-              className="text-slate-400"
+              className="text-[var(--public-muted)]"
             />
           </div>
         )}
 
         {vehicle.isFeatured && (
-          <span className="absolute left-4 top-4 rounded-full border border-white/70 bg-white/90 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#192a3a] shadow-sm backdrop-blur-sm">
+          <span className="absolute left-0 top-5 bg-[var(--public-accent)] px-4 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-white">
             Destacado
           </span>
         )}
 
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
 
-        <div className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white text-[#0a0f14] shadow-lg transition duration-300 group-hover:bg-[#192a3a] group-hover:text-white group-active:bg-[#192a3a] group-active:text-white">
+        <span className="absolute bottom-0 right-0 grid h-12 w-12 place-items-center bg-[var(--public-header)] !text-white transition duration-300 group-hover:bg-[var(--public-accent)]">
           <ArrowRight
-            size={17}
-            className="transition-transform duration-300 group-hover:translate-x-0.5 group-active:translate-x-0.5"
+            size={18}
+            className="text-white transition-transform duration-300 group-hover:translate-x-0.5"
           />
-        </div>
+        </span>
       </div>
 
-      <div className="p-5">
-        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#192a3a]">
+      <div className="p-6">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--public-muted)]">
           {vehicle.brand.name}
         </p>
 
-        <h3 className="mt-2 line-clamp-2 min-h-[58px] text-2xl font-black leading-tight tracking-[-0.035em] text-[#0a0f14]">
+        <h3 className="mt-3 line-clamp-2 min-h-[58px] text-2xl font-black leading-tight tracking-[-0.035em] text-[var(--public-ink)]">
           {vehicle.name}
         </h3>
 
-        <div className="mt-5 border-t border-slate-100 pt-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+        <div className="mt-5 grid grid-cols-2 gap-px border border-[var(--home-border)] bg-[var(--home-border)]">
+          <div className="bg-[var(--home-card)] p-4">
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[var(--public-muted)]">
+              Año
+            </p>
+
+            <p className="mt-1 font-black text-[var(--public-ink)]">
+              {vehicle.year}
+            </p>
+          </div>
+
+          <div className="bg-[var(--home-card)] p-4">
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[var(--public-muted)]">
+              Categoría
+            </p>
+
+            <p className="mt-1 font-black text-[var(--public-ink)]">
+              {categoryLabels[vehicle.category]}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 border-t border-[var(--home-border)] pt-5">
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[var(--public-muted)]">
             Precio
           </p>
 
-          <p className="mt-1 text-2xl font-black tracking-[-0.035em] text-[#0a0f14]">
+          <p className="mt-1 text-2xl font-black tracking-[-0.035em] text-[var(--public-ink)]">
             {formatMoney(vehicle.price)}
           </p>
         </div>
@@ -908,76 +854,95 @@ function CatalogPagination({
   )
     .filter(
       (page) =>
-        page >= 1 && page <= totalPages
+        page >= 1 &&
+        page <= totalPages
     )
     .sort((a, b) => a - b);
 
   return (
     <nav
       aria-label="Paginación del catálogo de marca"
-      className="mt-10 flex flex-wrap items-center justify-center gap-2"
+      className="mt-12 border-t border-[var(--home-border)] pt-8"
     >
-      {currentPage > 1 ? (
-        <Link
-          href={buildHref(currentPage - 1)}
-          className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black uppercase tracking-[0.12em] text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#192a3a] hover:text-white active:scale-[0.98]"
-        >
-          Anterior
-        </Link>
-      ) : (
-        <span className="inline-flex h-11 cursor-not-allowed items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-4 text-xs font-black uppercase tracking-[0.12em] text-slate-400">
-          Anterior
-        </span>
-      )}
+      <div className="flex flex-col items-center justify-between gap-5 sm:flex-row">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--public-muted)]">
+          Página {currentPage} de {totalPages}
+        </p>
 
-      {pageNumbers.map((page, index) => {
-        const previousPage = pageNumbers[index - 1];
-
-        const showSeparator =
-          previousPage !== undefined &&
-          page - previousPage > 1;
-
-        return (
-          <div
-            key={page}
-            className="flex items-center gap-2"
-          >
-            {showSeparator && (
-              <span className="px-1 text-sm font-black text-slate-400">
-                …
-              </span>
-            )}
-
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {currentPage > 1 ? (
             <Link
-              href={buildHref(page)}
-              aria-current={
-                page === currentPage
-                  ? "page"
-                  : undefined
-              }
-              className={`grid h-11 w-11 place-items-center rounded-xl border text-sm font-black transition active:scale-95 ${page === currentPage
-                  ? "border-[#192a3a] bg-[#192a3a] text-white"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-[#192a3a] hover:text-[#192a3a]"
-                }`}
+              href={buildHref(currentPage - 1)}
+              className="inline-flex h-11 items-center justify-center border border-[var(--home-border-strong)] bg-[var(--home-card)] px-5 text-xs font-black uppercase tracking-[0.12em] text-[var(--public-ink)] transition hover:border-[var(--public-header)] hover:bg-[var(--public-header)] hover:!text-white"
             >
-              {page}
+              Anterior
             </Link>
-          </div>
-        );
-      })}
+          ) : (
+            <span
+              aria-disabled="true"
+              className="inline-flex h-11 cursor-not-allowed items-center justify-center border border-[var(--home-border)] bg-[var(--home-surface-alt)] px-5 text-xs font-black uppercase tracking-[0.12em] text-[var(--public-muted)] opacity-50"
+            >
+              Anterior
+            </span>
+          )}
 
-      {currentPage < totalPages ? (
-        <Link
-          href={buildHref(currentPage + 1)}
-          className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black uppercase tracking-[0.12em] text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#192a3a] hover:text-white active:scale-[0.98]"
-        >
-          Siguiente
-        </Link>
-      ) : (
-        <span className="inline-flex h-11 cursor-not-allowed items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-4 text-xs font-black uppercase tracking-[0.12em] text-slate-400">
-          Siguiente
-        </span>
-      )}
+          {pageNumbers.map((page, index) => {
+            const previousPage =
+              pageNumbers[index - 1];
+
+            const showSeparator =
+              previousPage !== undefined &&
+              page - previousPage > 1;
+
+            const isCurrent =
+              page === currentPage;
+
+            return (
+              <div
+                key={page}
+                className="flex items-center gap-2"
+              >
+                {showSeparator && (
+                  <span className="px-1 text-sm font-black text-[var(--public-muted)]">
+                    …
+                  </span>
+                )}
+
+                <Link
+                  href={buildHref(page)}
+                  aria-current={
+                    isCurrent
+                      ? "page"
+                      : undefined
+                  }
+                  className={`grid h-11 w-11 place-items-center border text-sm font-black transition ${isCurrent
+                    ? "border-[var(--public-header)] bg-[var(--public-header)] !text-white"
+                    : "border-[var(--home-border-strong)] bg-[var(--home-card)] text-[var(--public-ink)] hover:border-[var(--public-accent)] hover:bg-[var(--public-accent)] hover:!text-white"
+                    }`}
+                >
+                  {page}
+                </Link>
+              </div>
+            );
+          })}
+
+          {currentPage < totalPages ? (
+            <Link
+              href={buildHref(currentPage + 1)}
+              className="inline-flex h-11 items-center justify-center border border-[var(--home-border-strong)] bg-[var(--home-card)] px-5 text-xs font-black uppercase tracking-[0.12em] text-[var(--public-ink)] transition hover:border-[var(--public-header)] hover:bg-[var(--public-header)] hover:!text-white"
+            >
+              Siguiente
+            </Link>
+          ) : (
+            <span
+              aria-disabled="true"
+              className="inline-flex h-11 cursor-not-allowed items-center justify-center border border-[var(--home-border)] bg-[var(--home-surface-alt)] px-5 text-xs font-black uppercase tracking-[0.12em] text-[var(--public-muted)] opacity-50"
+            >
+              Siguiente
+            </span>
+          )}
+        </div>
+      </div>
     </nav>
   );
 }

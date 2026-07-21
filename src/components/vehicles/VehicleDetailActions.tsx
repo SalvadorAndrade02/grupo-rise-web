@@ -134,7 +134,7 @@ export function VehicleDetailActions({
         <button
           type="button"
           onClick={() => openModal("COTIZACION")}
-          className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white shadow-[0_8px_22px_rgba(25,42,58,0.18)] transition hover:-translate-y-0.5 hover:bg-[#29465c] active:scale-[0.98] active:bg-[#29465c]"
+          className="group inline-flex h-12 w-full items-center justify-center gap-3 bg-[var(--public-header)] px-5 text-sm font-black !text-white shadow-[0_8px_22px_rgba(18,24,28,0.14)] transition hover:-translate-y-0.5 hover:bg-[var(--public-accent-dark)]"
         >
           <Send
             size={18}
@@ -147,8 +147,7 @@ export function VehicleDetailActions({
         <button
           type="button"
           onClick={() => openModal("PRUEBA_MANEJO")}
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98] active:border-[#192a3a] active:bg-[#e7edf1]"
-        >
+          className="inline-flex h-12 w-full items-center justify-center gap-3 border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] px-5 text-sm font-black text-[var(--public-ink)] transition hover:border-[var(--public-ink)] hover:bg-[var(--public-ink)] hover:!text-white"        >
           <CalendarDays size={18} />
           Agendar prueba de manejo
         </button>
@@ -158,8 +157,7 @@ export function VehicleDetailActions({
             href={whatsappUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-5 text-sm font-black text-emerald-700 transition hover:border-emerald-500 hover:bg-emerald-100 active:scale-[0.98] active:bg-emerald-100"
-          >
+            className="inline-flex h-12 w-full items-center justify-center gap-3 border border-emerald-600 bg-emerald-600 px-5 text-sm font-black !text-white transition hover:bg-emerald-700"          >
             <MessageCircle size={18} />
             Solicitar información por WhatsApp
           </a>
@@ -176,8 +174,8 @@ export function VehicleDetailActions({
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_35px_rgba(15,23,42,0.12)] backdrop-blur-md lg:hidden">
         <div
           className={`mx-auto grid max-w-xl gap-2 ${hasWhatsapp
-              ? "grid-cols-2"
-              : "grid-cols-1"
+            ? "grid-cols-2"
+            : "grid-cols-1"
             }`}
         >
           <button
