@@ -70,11 +70,6 @@ const navigationItems = [
     activePaths: ["/"],
   },
   {
-    label: "Grupo RISE",
-    href: "/#grupo-rise",
-    activePaths: ["/grupo-rise"],
-  },
-  {
     label: "Sucursales",
     href: "/sucursales",
     activePaths: ["/sucursales"],
@@ -134,9 +129,9 @@ export function Header() {
       <div className="mx-auto flex h-[80px] w-full max-w-[1435px] items-center px-5 md:h-[88px] md:px-8 lg:px-10">
         {/* Logo */}
         <Link
-          href="/"
+          href="/#grupo-rise"
           onClick={closeMobileMenu}
-          aria-label="Ir al inicio de Grupo RISE"
+          aria-label="Conocer Grupo RISE"
           className="flex min-w-0 shrink-0 items-center justify-start xl:w-[250px]"
         >
           <Image
@@ -151,7 +146,7 @@ export function Header() {
 
         {/* Navegación de escritorio */}
         <nav className="ml-7 hidden h-full flex-1 items-center justify-center xl:flex">
-          {navigationItems.slice(0, 2).map((item) => {
+          {navigationItems.slice(0, 1).map((item) => {
             const active = isActive(item.activePaths);
 
             return (
@@ -220,24 +215,16 @@ export function Header() {
                     <Link
                       key={brand.label}
                       href={brand.href}
-                      className="group/brand bg-[#e1e4e3] px-5 py-4 transition hover:bg-white"
+                      aria-label={`Ver catálogo de ${brand.label}`}
+                      className="group/brand flex min-h-[108px] items-center justify-center bg-[#e1e4e3] px-6 py-5 transition hover:bg-white"
                     >
-                      <span className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-bold text-black">
-                          {brand.label}
-                        </span>
-
-                        <span className="flex h-14 w-[135px] shrink-0 items-center justify-center overflow-hidden">
-                          <Image
-                            src={brand.logo}
-                            alt={`Logo de ${brand.label}`}
-                            width={140}
-                            height={56}
-                            className={`max-h-full w-auto max-w-full object-contain transition-transform duration-200 group-hover/brand:scale-105 ${brand.logoClass ?? "scale-100"
-                              }`}
-                          />
-                        </span>
-                      </span>
+                      <Image
+                        src={brand.logo}
+                        alt={`Logo de ${brand.label}`}
+                        width={180}
+                        height={70}
+                        className="max-h-[64px] w-auto max-w-[180px] object-contain transition-transform duration-200 group-hover/brand:scale-105"
+                      />
                     </Link>
                   ))}
                 </div>
@@ -277,7 +264,7 @@ export function Header() {
             </div>
           </div>
 
-          {navigationItems.slice(2).map((item) => {
+          {navigationItems.slice(1).map((item) => {
             const active = isActive(item.activePaths);
 
             return (
@@ -344,13 +331,6 @@ export function Header() {
             onClick={closeMobileMenu}
           />
 
-          <MobileLink
-            href="/#grupo-rise"
-            label="Grupo RISE"
-            active={pathname.startsWith("/grupo-rise")}
-            onClick={closeMobileMenu}
-          />
-
           {/* Marcas móvil */}
           <section className="my-3 border-y border-white/10 py-4">
             <div className="flex items-center justify-between px-4 pb-3">
@@ -374,22 +354,16 @@ export function Header() {
                   key={brand.label}
                   href={brand.href}
                   onClick={closeMobileMenu}
-                  className="flex min-h-[96px] flex-col items-center justify-center gap-2 border border-white/10 bg-[#e1e4e3] px-3 py-3 transition hover:bg-white"
+                  aria-label={`Ver catálogo de ${brand.label}`}
+                  className="flex min-h-[92px] items-center justify-center border border-white/10 bg-[#e1e4e3] px-4 py-4 transition hover:bg-white"
                 >
-                  <span className="flex h-12 w-full items-center justify-center overflow-hidden px-1">
-                    <Image
-                      src={brand.logo}
-                      alt={`Logo de ${brand.label}`}
-                      width={130}
-                      height={48}
-                      className={`max-h-full w-auto max-w-full object-contain ${brand.logoClass ?? "scale-100"
-                        }`}
-                    />
-                  </span>
-
-                  <span className="text-center text-xs font-bold text-black">
-                    {brand.label}
-                  </span>
+                  <Image
+                    src={brand.logo}
+                    alt={`Logo de ${brand.label}`}
+                    width={150}
+                    height={60}
+                    className="max-h-[56px] w-auto max-w-[150px] object-contain"
+                  />
                 </Link>
               ))}
             </div>

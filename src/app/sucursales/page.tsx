@@ -92,6 +92,48 @@ function normalize(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+function getBranchBrandReferences(branchName: string) {
+  const name = normalize(branchName);
+
+  if (name.includes("bikes and boats")) {
+    return ["Can-Am", "Sea-Doo"];
+  }
+
+  if (name.includes("polaris")) {
+    return ["Polaris"];
+  }
+
+  if (name.includes("indian motorcycle")) {
+    return ["Indian Motorcycle"];
+  }
+
+  if (name.includes("triumph")) {
+    return ["Triumph"];
+  }
+
+  if (name.includes("royal enfield")) {
+    return ["Royal Enfield"];
+  }
+
+  if (name.includes("moto plex")) {
+    return ["Moto Plex"];
+  }
+
+  if (name.includes("zeekr")) {
+    return ["ZEEKR"];
+  }
+
+  if (
+    name.includes("lynk&co") ||
+    name.includes("lynk & co") ||
+    name.includes("lynkco")
+  ) {
+    return ["Lynk & Co"];
+  }
+
+  return [];
+}
+
 function buildBranchesHref(params: {
   q?: string;
   ciudad?: string;
@@ -187,6 +229,7 @@ export default async function BranchesPage({
           branch.city,
           branch.state,
           branch.services ?? "",
+          ...getBranchBrandReferences(branch.name),
         ].join(" ")
       );
 
@@ -511,6 +554,9 @@ function BranchCard({
     branch.services
   ).slice(0, 3);
 
+  const brandReferences =
+    getBranchBrandReferences(branch.name);
+
   const whatsappHref = getWhatsAppHref(
     branch.whatsapp,
     `Hola, me gustaría recibir información de ${branch.name}.`
@@ -544,6 +590,14 @@ function BranchCard({
             {branch.name}
           </h3>
         </Link>
+
+        {brandReferences.length > 0 && (
+          <div className="mt-4 min-h-[28px] border-l-2 border-[var(--public-accent)] pl-3">
+            <p className="text-xs font-black uppercase tracking-[0.13em] text-[var(--public-muted)]">
+              {brandReferences.join(" · ")}
+            </p>
+          </div>
+        )}
 
         <div className="mt-6 border-y border-[var(--home-border)]">
           <div className="flex min-h-[76px] items-start gap-3 border-b border-[var(--home-border)] py-4">

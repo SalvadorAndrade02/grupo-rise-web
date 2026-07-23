@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Wrench,
 } from "lucide-react";
+import { MexicoPresenceMap } from "@/components/layout/MexicoPresenceMap";
 
 const exploreLinks = [
   {
@@ -164,26 +165,12 @@ export function Footer() {
               />
             </Link>
 
-            <p className="mt-7 max-w-md text-sm leading-7 text-white/50">
+            <p className="mt-7 max-w-md text-sm leading-7 text-white">
               Grupo automotriz multimarca con opciones de autos,
               motocicletas y vehículos de aventura.
             </p>
 
-            <div className="mt-7 flex items-start gap-4 border-l-2 border-[var(--public-accent)] pl-4">
-              <span className="grid h-10 w-10 shrink-0 place-items-center border border-white/15 bg-white/[0.05] text-white">
-                <MapPin size={18} />
-              </span>
-
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
-                  Presencia
-                </p>
-
-                <p className="mt-2 text-sm font-bold leading-6 text-white/70">
-                  Nuevo León, Coahuila y Quintana Roo
-                </p>
-              </div>
-            </div>
+            <MexicoPresenceMap />
           </div>
 
           {/* Explorar */}
@@ -290,8 +277,8 @@ function FooterColumn({
       <nav
         aria-label={title}
         className={`mt-6 ${compact
-            ? "grid grid-cols-2 gap-x-5"
-            : "grid"
+          ? "grid grid-cols-2 gap-x-5"
+          : "grid"
           }`}
       >
         {links.map((link) => (

@@ -245,8 +245,11 @@ export function BranchesCarousel({
                         href="/sucursales"
                         className="inline-flex h-12 items-center justify-center gap-3 rounded-none bg-[#0a0f14] px-6 text-sm font-black text-white transition hover:bg-[#1A2A3A]"
                     >
-                        Ver todas las sucursales
-                        <ArrowRight size={17} />
+                        <span className="text-white">
+                            Ver todas las sucursales
+                        </span>
+                        
+                        <ArrowRight className="text-white" size={17} />
                     </Link>
                 </div>
             </div>
