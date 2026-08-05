@@ -11,6 +11,7 @@ import {
   MapPin,
   Phone,
   Save,
+  Share2,
   Store,
   Upload,
 } from "lucide-react";
@@ -29,6 +30,12 @@ import {
   deleteBranchImageFile,
   saveBranchImageFile,
 } from "@/lib/branch-uploads";
+
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+} from "react-icons/fa";
 
 export const dynamic = "force-dynamic";
 
@@ -178,6 +185,24 @@ async function createBranch(
     "email"
   );
 
+  const facebookUrl =
+    getOptionalTextValue(
+      formData,
+      "facebookUrl"
+    );
+
+  const instagramUrl =
+    getOptionalTextValue(
+      formData,
+      "instagramUrl"
+    );
+
+  const linkedinUrl =
+    getOptionalTextValue(
+      formData,
+      "linkedinUrl"
+    );
+
   const schedule =
     getOptionalTextValue(
       formData,
@@ -291,6 +316,9 @@ async function createBranch(
         phone,
         whatsapp,
         email,
+        facebookUrl,
+        instagramUrl,
+        linkedinUrl,
         schedule,
         googleMapsUrl,
         services,
@@ -309,6 +337,33 @@ async function createBranch(
     await safelyDeleteBranchImage(
       uploadedCoverImageUrl
     );
+
+    const socialUrls = [
+      {
+        label: "Facebook",
+        value: facebookUrl,
+      },
+      {
+        label: "Instagram",
+        value: instagramUrl,
+      },
+      {
+        label: "LinkedIn",
+        value: linkedinUrl,
+      },
+    ];
+
+    const invalidSocialUrl =
+      socialUrls.find(
+        ({ value }) =>
+          !validateOptionalUrl(value)
+      );
+
+    if (invalidSocialUrl) {
+      redirectBranchError(
+        `La URL de ${invalidSocialUrl.label} no es válida.`
+      );
+    }
 
     console.error(
       "Error creando sucursal:",
@@ -459,6 +514,39 @@ export default async function NewBranchPage({
                 name="schedule"
                 placeholder="Lunes a viernes de 9:00 a 19:00"
                 containerClassName="md:col-span-2"
+              />
+            </div>
+          </AdminSection>
+
+          <AdminSection
+            icon={Share2}
+            eyebrow="Canales digitales"
+            title="Redes sociales"
+            description="Registra los perfiles oficiales de esta sucursal."
+          >
+            <div className="grid gap-5">
+              <AdminInput
+                label="Facebook"
+                name="facebookUrl"
+                type="url"
+                placeholder="https://www.facebook.com/..."
+                description="Enlace completo del perfil oficial."
+              />
+
+              <AdminInput
+                label="Instagram"
+                name="instagramUrl"
+                type="url"
+                placeholder="https://www.instagram.com/..."
+                description="Enlace completo del perfil oficial."
+              />
+
+              <AdminInput
+                label="LinkedIn"
+                name="linkedinUrl"
+                type="url"
+                placeholder="https://www.linkedin.com/company/..."
+                description="Enlace completo de la página oficial."
               />
             </div>
           </AdminSection>

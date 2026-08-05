@@ -15,6 +15,13 @@ enum VehicleCategory {
   AUTO
   MOTO
   TODOTERRENO
+  NAUTICA
+}
+
+enum NewsStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }
 
 enum VehicleCondition {
@@ -81,7 +88,15 @@ model Branch {
   services      String?
   logoUrl       String?
   coverImageUrl String?
-  sortOrder     Int     @default(0)
+
+  countryCode String  @default("MX")
+  websiteUrl  String?
+
+  facebookUrl  String?
+  instagramUrl String?
+  linkedinUrl  String?
+
+  sortOrder Int @default(0)
 
   active Boolean @default(true)
 
@@ -153,6 +168,11 @@ model Lead {
   phone   String
   email   String?
   message String?
+
+  cvStoredName   String?
+  cvOriginalName String?
+  cvMimeType     String?
+  cvSize         Int?
 
   preferredDate DateTime?
   preferredTime String?
@@ -288,4 +308,70 @@ model AdminSession {
 
   @@index([adminUserId])
   @@index([expiresAt])
+}
+
+model CompanyProfile {
+  id Int @id @default(autoincrement())
+
+  key String @unique @default("grupo-rise")
+
+  title        String?
+  introduction String?
+  history      String?
+  mission      String?
+  vision       String?
+
+  heroImageUrl String?
+  imageUrl     String?
+
+  active Boolean @default(true)
+
+  values CompanyValue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CompanyValue {
+  id Int @id @default(autoincrement())
+
+  companyProfileId Int
+  companyProfile   CompanyProfile @relation(fields: [companyProfileId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String
+  iconKey     String?
+
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyProfileId, active, sortOrder])
+}
+
+model NewsArticle {
+  id Int @id @default(autoincrement())
+
+  title String
+  slug  String @unique
+
+  excerpt String
+  content String
+
+  coverImageUrl String?
+  coverImageAlt String?
+  authorName    String?
+
+  status   NewsStatus @default(DRAFT)
+  featured Boolean    @default(false)
+
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([featured, publishedAt])
 }

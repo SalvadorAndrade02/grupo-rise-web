@@ -49,6 +49,7 @@ function getBrandCategory(
     VehicleCategory.AUTO,
     VehicleCategory.MOTO,
     VehicleCategory.TODOTERRENO,
+    VehicleCategory.NAUTICA,
   ];
 
   return validCategories.includes(
@@ -68,6 +69,7 @@ function getCategoryLabel(
     AUTO: "Auto",
     MOTO: "Moto",
     TODOTERRENO: "Todoterreno",
+    NAUTICA: "Náutica",
   };
 
   return labels[category];
@@ -571,6 +573,12 @@ export default async function AdminBrandsPage({
             >
               Auto
             </option>
+
+            <option
+              value={VehicleCategory.NAUTICA}
+            >
+              Náutica
+            </option>
           </FormSelect>
 
           <label className="block">
@@ -772,8 +780,8 @@ function BrandCard({
               <div className="mt-4 flex flex-wrap gap-2">
                 <span
                   className={`rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] ${brand.active
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                      : "border-slate-200 bg-slate-100 text-slate-600"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-slate-200 bg-slate-100 text-slate-600"
                     }`}
                 >
                   {brand.active
@@ -852,6 +860,12 @@ function BrandCard({
                 value={VehicleCategory.AUTO}
               >
                 Auto
+              </option>
+
+              <option
+                value={VehicleCategory.NAUTICA}
+              >
+                Náutica
               </option>
             </FormSelect>
 
@@ -946,8 +960,8 @@ function BrandActions({
 
         <div
           className={`rounded-[16px] border p-4 ${hasRelations
-              ? "border-amber-200 bg-amber-50"
-              : "border-emerald-200 bg-emerald-50"
+            ? "border-amber-200 bg-amber-50"
+            : "border-emerald-200 bg-emerald-50"
             }`}
         >
           <div className="flex gap-3">
@@ -966,8 +980,8 @@ function BrandActions({
             <div>
               <p
                 className={`text-xs font-black ${hasRelations
-                    ? "text-amber-700"
-                    : "text-emerald-700"
+                  ? "text-amber-700"
+                  : "text-emerald-700"
                   }`}
               >
                 {hasRelations

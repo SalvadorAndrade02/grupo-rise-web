@@ -7,7 +7,7 @@ import {
   MessageCircle,
   Phone,
   Search,
-  Sparkles,
+  Share2,
 } from "lucide-react";
 import {
   VehicleCondition,
@@ -17,6 +17,12 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { prisma } from "@/lib/prisma";
 import { BranchCoverViewer } from "@/components/branches/BranchCoverViewer";
+
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+} from "react-icons/fa";
 
 export const dynamic = "force-dynamic";
 
@@ -36,25 +42,38 @@ function cleanPhone(value?: string | null) {
 
 function getWhatsAppHref(
   phone?: string | null,
+  countryCode = "MX",
   message?: string
 ) {
-  const phoneNumber = cleanPhone(phone);
+  const phoneNumber =
+    phone?.replace(/\D/g, "") ?? "";
 
   if (!phoneNumber) {
     return "";
   }
 
-  const finalPhone = phoneNumber.startsWith("52")
-    ? phoneNumber
-    : `52${phoneNumber}`;
+  const dialCode =
+    countryCode === "CO"
+      ? "57"
+      : "52";
+
+  const alreadyInternational =
+    phone?.trim().startsWith("+") ||
+    phoneNumber.startsWith(dialCode);
+
+  const finalPhone =
+    alreadyInternational
+      ? phoneNumber
+      : `${dialCode}${phoneNumber}`;
 
   const text = message
-    ? `?text=${encodeURIComponent(message)}`
+    ? `?text=${encodeURIComponent(
+      message
+    )}`
     : "";
 
   return `https://wa.me/${finalPhone}${text}`;
 }
-
 function getMapExternalUrl(branch: {
   address: string;
   city: string;
@@ -95,8 +114,15 @@ function normalize(value: string) {
 function getBranchBrandReferences(branchName: string) {
   const name = normalize(branchName);
 
-  if (name.includes("bikes and boats")) {
-    return ["Can-Am", "Sea-Doo"];
+  if (
+    name.includes("bikes and boats")
+  ) {
+    return [
+      "Can-Am",
+      "Sea-Doo",
+      "Slingshot",
+      "Bennington",
+    ];
   }
 
   if (name.includes("polaris")) {
@@ -179,38 +205,41 @@ export default async function BranchesPage({
       ? requestedPage
       : 1;
 
-  const branches = await prisma.branch.findMany({
-    where: {
-      active: true,
-    },
+  const branches =
+    await prisma.branch.findMany({
+      where: {
+        active: true,
+        countryCode: "MX",
+      },
 
-    include: {
-      vehicles: {
-        where: {
-          active: true,
-          status: VehicleStatus.DISPONIBLE,
-
-          brand: {
+      include: {
+        vehicles: {
+          where: {
             active: true,
+            status:
+              VehicleStatus.DISPONIBLE,
+
+            brand: {
+              active: true,
+            },
+          },
+
+          select: {
+            id: true,
+            condition: true,
           },
         },
+      },
 
-        select: {
-          id: true,
-          condition: true,
+      orderBy: [
+        {
+          sortOrder: "asc",
         },
-      },
-    },
-
-    orderBy: [
-      {
-        sortOrder: "asc",
-      },
-      {
-        city: "asc",
-      },
-    ],
-  });
+        {
+          city: "asc",
+        },
+      ],
+    });
 
   const cities = Array.from(
     new Set(
@@ -557,13 +586,35 @@ function BranchCard({
   const brandReferences =
     getBranchBrandReferences(branch.name);
 
-  const whatsappHref = getWhatsAppHref(
-    branch.whatsapp,
-    `Hola, me gustaría recibir información de ${branch.name}.`
-  );
+  const whatsappHref =
+    getWhatsAppHref(
+      branch.whatsapp,
+      branch.countryCode,
+      `Hola, me gustaría recibir información de ${branch.name}.`
+    );
 
   const mapExternalUrl =
     getMapExternalUrl(branch);
+
+  const socialLinks = [
+    {
+      label: "Facebook",
+      href: branch.facebookUrl,
+      Icon: FaFacebookF,
+    },
+    {
+      label: "Instagram",
+      href: branch.instagramUrl,
+      Icon: FaInstagram,
+    },
+    {
+      label: "LinkedIn",
+      href: branch.linkedinUrl,
+      Icon: FaLinkedinIn,
+    },
+  ].filter(
+    (social) => Boolean(social.href)
+  );
 
   return (
     <article className="group relative overflow-hidden border border-[var(--home-border)] bg-[var(--home-card)] shadow-[0_10px_28px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1 hover:border-[var(--home-border-strong)] hover:shadow-[var(--home-shadow)]">
@@ -635,6 +686,36 @@ function BranchCard({
                 {service}
               </span>
             ))}
+          </div>
+        )}
+
+        {socialLinks.length > 0 && (
+          <div className="mt-5 flex items-center justify-between border-t border-[var(--home-border)] pt-5">
+            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[var(--public-muted)]">
+              Redes oficiales
+            </p>
+
+            <div className="flex gap-2">
+              {socialLinks.map(
+                ({
+                  label,
+                  href,
+                  Icon,
+                }) => (
+                  <a
+                    key={label}
+                    href={href!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${label} de ${branch.name}`}
+                    title={label}
+                    className="grid h-9 w-9 place-items-center border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] text-[var(--public-ink)] transition hover:border-[var(--public-header)] hover:bg-[var(--public-header)] hover:text-white"
+                  >
+                    <Icon size={16} />
+                  </a>
+                )
+              )}
+            </div>
           </div>
         )}
 

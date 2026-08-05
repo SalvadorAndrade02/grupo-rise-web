@@ -41,6 +41,7 @@ const categoryLabels: Record<VehicleCategory, string> = {
   AUTO: "Auto",
   MOTO: "Moto",
   TODOTERRENO: "Todoterreno",
+  NAUTICA: "Náutica"
 };
 
 const conditionLabels: Record<VehicleCondition, string> = {

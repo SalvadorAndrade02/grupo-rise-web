@@ -22,7 +22,7 @@ type InventoryVehicle = {
   id: number;
   name: string;
   brandName: string;
-  category: "AUTO" | "MOTO" | "TODOTERRENO";
+  category: "AUTO" | "MOTO" | "TODOTERRENO" | "NAUTICA";
   condition: "NUEVO" | "SEMINUEVO";
   status: string;
   year: number;
@@ -136,6 +136,7 @@ function getCategoryLabel(category: string) {
     AUTO: "Auto",
     MOTO: "Motocicleta",
     TODOTERRENO: "Todoterreno",
+    NAUTICA: "Náutica",
   };
 
   return labels[category] ?? category;

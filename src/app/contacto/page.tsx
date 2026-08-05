@@ -19,6 +19,7 @@ export default async function ContactPage() {
   const branches = await prisma.branch.findMany({
     where: {
       active: true,
+      countryCode: "MX",
     },
 
     orderBy: [
@@ -177,7 +178,7 @@ export default async function ContactPage() {
                   </p>
 
                   <div className="mt-7 grid gap-px border border-white bg-[var(--public-accent)]">
-                    <ContactFeature 
+                    <ContactFeature
                       icon={MessageCircle} text-white
                       title="Seguimiento directo"
                       description="Un asesor revisará el mensaje enviado."

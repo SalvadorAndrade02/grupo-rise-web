@@ -16,6 +16,7 @@ import {
   MessageCircle,
   Phone,
   Save,
+  Share2,
   Store,
   Tags,
   Upload,
@@ -40,6 +41,12 @@ import {
   deleteBranchImageFile,
   saveBranchImageFile,
 } from "@/lib/branch-uploads";
+
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+} from "react-icons/fa";
 
 export const dynamic = "force-dynamic";
 
@@ -102,18 +109,27 @@ function cleanPhone(
 
 function getWhatsAppHref(
   phone?: string | null,
+  countryCode = "MX",
   message?: string
 ) {
-  const phoneNumber = cleanPhone(phone);
+  const phoneNumber =
+    cleanPhone(phone);
 
   if (!phoneNumber) {
     return "";
   }
 
+  const dialCode =
+    countryCode === "CO"
+      ? "57"
+      : "52";
+
   const finalPhone =
-    phoneNumber.startsWith("52")
+    phoneNumber.startsWith(
+      dialCode
+    )
       ? phoneNumber
-      : `52${phoneNumber}`;
+      : `${dialCode}${phoneNumber}`;
 
   const text = message
     ? `?text=${encodeURIComponent(
@@ -178,8 +194,15 @@ function revalidateBranchPaths(
   );
 
   revalidatePath("/sucursales");
+
+  revalidatePath(
+    `/sucursales/${branchId}`
+  );
+
+  revalidatePath("/colombia");
   revalidatePath("/catalogo");
   revalidatePath("/inventario");
+  revalidatePath("/");
 }
 
 async function safelyDeleteBranchImage(
@@ -274,6 +297,12 @@ async function updateBranch(
     "address"
   );
 
+  const countryCode =
+    getTextValue(
+      formData,
+      "countryCode"
+    ) || "MX";
+
   const phone = getOptionalTextValue(
     formData,
     "phone"
@@ -289,6 +318,30 @@ async function updateBranch(
     formData,
     "email"
   );
+
+  const facebookUrl =
+    getOptionalTextValue(
+      formData,
+      "facebookUrl"
+    );
+
+  const instagramUrl =
+    getOptionalTextValue(
+      formData,
+      "instagramUrl"
+    );
+
+  const linkedinUrl =
+    getOptionalTextValue(
+      formData,
+      "linkedinUrl"
+    );
+
+  const websiteUrl =
+    getOptionalTextValue(
+      formData,
+      "websiteUrl"
+    );
 
   const schedule =
     getOptionalTextValue(
@@ -326,6 +379,33 @@ async function updateBranch(
     redirectBranchError(
       branchId,
       "Nombre, ciudad, estado y dirección son obligatorios."
+    );
+  }
+  const socialUrls = [
+    {
+      label: "Facebook",
+      value: facebookUrl,
+    },
+    {
+      label: "Instagram",
+      value: instagramUrl,
+    },
+    {
+      label: "LinkedIn",
+      value: linkedinUrl,
+    },
+  ];
+
+  const invalidSocialUrl =
+    socialUrls.find(
+      ({ value }) =>
+        !validateOptionalUrl(value)
+    );
+
+  if (invalidSocialUrl) {
+    redirectBranchError(
+      branchId,
+      `La URL de ${invalidSocialUrl.label} no es válida.`
     );
   }
 
@@ -398,6 +478,24 @@ async function updateBranch(
     );
   }
 
+  if (
+    !["MX", "CO"].includes(countryCode)
+  ) {
+    redirectBranchError(
+      branchId,
+      "El país seleccionado no es válido."
+    );
+  }
+
+  if (
+    !validateOptionalUrl(websiteUrl)
+  ) {
+    redirectBranchError(
+      branchId,
+      "La URL del sitio web no es válida."
+    );
+  }
+
   const manualLogoUrl =
     getOptionalTextValue(
       formData,
@@ -431,9 +529,14 @@ async function updateBranch(
         city,
         state,
         address,
+        countryCode,
         phone,
         whatsapp,
         email,
+        facebookUrl,
+        instagramUrl,
+        linkedinUrl,
+        websiteUrl,
         schedule,
         googleMapsUrl,
         services,
@@ -451,6 +554,9 @@ async function updateBranch(
 
     await safelyDeleteBranchImage(
       uploadedCoverImageUrl
+    );
+    revalidatePath(
+      `/sucursales/${branchId}`
     );
 
     console.error(
@@ -694,6 +800,28 @@ export default async function EditBranchPage({
                 containerClassName="md:col-span-2"
               />
 
+              <label className="block">
+                <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+                  País
+                </span>
+
+                <select
+                  name="countryCode"
+                  defaultValue={
+                    branch.countryCode
+                  }
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-[#192a3a]"
+                >
+                  <option value="MX">
+                    México
+                  </option>
+
+                  <option value="CO">
+                    Colombia
+                  </option>
+                </select>
+              </label>
+
               <AdminInput
                 label="Ciudad"
                 name="city"
@@ -765,6 +893,56 @@ export default async function EditBranchPage({
                 }
                 placeholder="Lunes a viernes de 9:00 a 19:00"
                 containerClassName="md:col-span-2"
+              />
+            </div>
+          </AdminSection>
+
+          <AdminSection
+            icon={Share2}
+            eyebrow="Canales digitales"
+            title="Redes sociales"
+            description="Actualiza los perfiles oficiales de esta sucursal."
+          >
+            <div className="grid gap-5">
+              <AdminInput
+                label="Facebook"
+                name="facebookUrl"
+                type="url"
+                defaultValue={
+                  branch.facebookUrl ?? ""
+                }
+                placeholder="https://www.facebook.com/..."
+              />
+
+              <AdminInput
+                label="Instagram"
+                name="instagramUrl"
+                type="url"
+                defaultValue={
+                  branch.instagramUrl ?? ""
+                }
+                placeholder="https://www.instagram.com/..."
+              />
+
+              <AdminInput
+                label="LinkedIn"
+                name="linkedinUrl"
+                type="url"
+                defaultValue={
+                  branch.linkedinUrl ?? ""
+                }
+                placeholder="https://www.linkedin.com/company/..."
+              />
+
+              <AdminInput
+                label="Sitio web oficial"
+                name="websiteUrl"
+                type="url"
+                defaultValue={
+                  branch.websiteUrl ?? ""
+                }
+                placeholder="https://www.indianmotorcycle-colombia.com/"
+                description="Sitio oficial de la sucursal o distribuidor."
               />
             </div>
           </AdminSection>

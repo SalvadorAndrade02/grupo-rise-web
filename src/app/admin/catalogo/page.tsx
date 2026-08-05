@@ -71,6 +71,7 @@ function getCategoryLabel(
     AUTO: "Auto",
     MOTO: "Moto",
     TODOTERRENO: "Todoterreno",
+    NAUTICA: "Náutica",
   };
 
   return labels[category];
@@ -535,18 +536,18 @@ export default async function AdminCatalogPage({
               href="/catalogo"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-black text-white transition hover:bg-white/15 active:scale-[0.98]"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white/25 bg-white/10 px-5 text-sm font-black !text-white transition hover:bg-white/15 hover:!text-white active:scale-[0.98] [&_*]:!text-current"
             >
               <Eye size={17} />
-              Ver catálogo público
+              <span>Ver catálogo público</span>
             </Link>
 
             <Link
               href="/admin/catalogo/nuevo"
-              className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+              className="group inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white bg-white px-5 text-sm font-black !text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
             >
               <Plus size={18} />
-              Nuevo modelo
+              <span>Nuevo modelo</span>
 
               <ArrowRight
                 size={16}
@@ -727,7 +728,7 @@ export default async function AdminCatalogPage({
 
           <button
             type="submit"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-6 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] xl:self-end"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-6 text-sm font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] xl:self-end [&_*]:!text-current"
           >
             <Search size={17} />
             Buscar
@@ -775,7 +776,7 @@ export default async function AdminCatalogPage({
           {hasFilters && (
             <Link
               href="/admin/catalogo"
-              className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+              className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-[#192a3a]/15 bg-[#eef0ee] px-4 text-xs font-black !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#e1e5e3] hover:!text-[#192a3a] active:scale-[0.98]"
             >
               Limpiar filtros
             </Link>
@@ -1053,7 +1054,7 @@ export default async function AdminCatalogPage({
               {hasFilters && (
                 <Link
                   href="/admin/catalogo"
-                  className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+                  className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-[#192a3a]/15 bg-[#eef0ee] px-4 text-xs font-black !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#e1e5e3] hover:!text-[#192a3a] active:scale-[0.98]"
                 >
                   Limpiar filtros
                 </Link>
@@ -1061,10 +1062,10 @@ export default async function AdminCatalogPage({
 
               <Link
                 href="/admin/catalogo/nuevo"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-5 text-sm font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] [&_*]:!text-current"
               >
                 <Plus size={17} />
-                Registrar modelo
+                <span>Registrar modelo</span>
               </Link>
             </div>
           </div>
@@ -1117,10 +1118,29 @@ function CatalogTypeLink({
   return (
     <Link
       href={href}
-      className={`shrink-0 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition ${active
-        ? "border-[#192a3a] bg-[#192a3a] text-white"
-        : "border-slate-200 bg-white text-slate-500 hover:border-[#192a3a] hover:text-[#192a3a]"
-        }`}
+      className={[
+        "inline-flex h-10 shrink-0 items-center justify-center",
+        "rounded-md border px-4",
+        "text-[10px] font-black uppercase tracking-[0.1em]",
+        "transition duration-200 active:scale-[0.98]",
+        active
+          ? [
+            "border-[#192a3a]",
+            "bg-[#192a3a]",
+            "!text-white",
+            "hover:!text-white",
+            "shadow-[0_5px_14px_rgba(25,42,58,0.16)]",
+            "[&_*]:!text-current",
+          ].join(" ")
+          : [
+            "border-[#192a3a]/10",
+            "bg-[#f7f8f7]",
+            "!text-slate-600",
+            "hover:border-[#192a3a]/25",
+            "hover:bg-[#eef0ee]",
+            "hover:!text-[#192a3a]",
+          ].join(" "),
+      ].join(" ")}
     >
       {label}
     </Link>
@@ -1179,7 +1199,7 @@ function CatalogModelActions({
   active: boolean;
 }) {
   return (
-    <aside className="border-t border-slate-100 bg-[#f8fafb] p-5 xl:border-l xl:border-t-0">
+    <aside className="border-t border-[#192a3a]/10 bg-[#f7f8f7] p-5 xl:border-l xl:border-t-0">
       <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
         Acciones
       </p>
@@ -1187,9 +1207,9 @@ function CatalogModelActions({
       <div className="mt-4 grid gap-3">
         <Link
           href={`/admin/catalogo/${modelId}/editar`}
-          className="group inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-4 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+          className="group inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-4 text-xs font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] [&_*]:!text-current"
         >
-          Editar modelo
+          <span>Editar modelo</span>
 
           <ArrowRight
             size={15}
@@ -1199,17 +1219,13 @@ function CatalogModelActions({
 
         <Link
           href="/admin/inventario/nuevo"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a]/15 bg-white px-4 text-xs font-black !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
         >
           <Car size={16} />
-          Crear unidad
+          <span>Crear unidad</span>
         </Link>
 
-        <form
-          action={
-            toggleCatalogModelActive
-          }
-        >
+        <form action={toggleCatalogModelActive}>
           <input
             type="hidden"
             name="modelId"
@@ -1218,17 +1234,17 @@ function CatalogModelActions({
 
           <button
             type="submit"
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a] active:scale-[0.98]"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#192a3a]/15 bg-white px-4 text-xs font-black !text-slate-600 transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
           >
             {active ? (
               <>
                 <EyeOff size={16} />
-                Ocultar modelo
+                <span>Ocultar modelo</span>
               </>
             ) : (
               <>
                 <Eye size={16} />
-                Mostrar modelo
+                <span>Mostrar modelo</span>
               </>
             )}
           </button>

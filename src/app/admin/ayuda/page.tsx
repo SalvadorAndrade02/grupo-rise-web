@@ -240,10 +240,10 @@ export default async function AdminHelpPage() {
 
           <Link
             href="/admin"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white bg-white px-5 text-sm font-black !text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
           >
             <LayoutDashboard size={17} />
-            Volver al dashboard
+            <span>Volver al dashboard</span>
           </Link>
         </div>
       </section>
@@ -432,7 +432,7 @@ export default async function AdminHelpPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.12),transparent_35%)]" />
 
           <div className="relative">
-            <span className="grid h-12 w-12 place-items-center rounded-xl border border-white/15 bg-white/10 text-[#dfe7ec]">
+            <span className="grid h-12 w-12 place-items-center rounded-md border border-white/15 bg-white/10 !text-[#dfe7ec] [&_*]:!text-current">
               <Lightbulb size={22} />
             </span>
 
@@ -450,17 +450,17 @@ export default async function AdminHelpPage() {
             <div className="mt-6 grid gap-3">
               <Link
                 href="/admin/catalogo"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 text-xs font-black text-[#192a3a] transition hover:bg-[#e7edf1] active:scale-[0.98]"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-white bg-white px-4 text-xs font-black !text-[#192a3a] transition hover:bg-[#e7edf1] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
               >
-                Ir al catálogo
+                <span>Ir al catálogo</span>
                 <ArrowRight size={15} />
               </Link>
 
               <Link
                 href="/admin/inventario/nuevo"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 text-xs font-black text-white transition hover:bg-white/15 active:scale-[0.98]"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-white/25 bg-white/10 px-4 text-xs font-black !text-white transition hover:bg-white/15 hover:!text-white active:scale-[0.98] [&_*]:!text-current"
               >
-                Registrar unidad
+                <span>Registrar unidad</span>
                 <ArrowRight size={15} />
               </Link>
             </div>
@@ -616,7 +616,7 @@ function QuickGuideCard({
     <article className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.04)] transition hover:border-[#192a3a]/20 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
       <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-[#f8fafb] p-5 md:p-6">
         <div className="flex items-start gap-4">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#192a3a] text-white">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[#192a3a] !text-white [&_*]:!text-current">
             <Icon size={20} />
           </span>
 
@@ -634,7 +634,7 @@ function QuickGuideCard({
         <Link
           href={guide.href}
           aria-label={`Abrir ${guide.title}`}
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-[#192a3a]/15 bg-white !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
         >
           <ArrowRight size={16} />
         </Link>
@@ -658,9 +658,9 @@ function QuickGuideCard({
 
         <Link
           href={guide.href}
-          className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+          className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a]/15 bg-[#eef0ee] px-4 text-xs font-black !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#e1e5e3] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
         >
-          Abrir sección
+          <span>Abrir sección</span>
           <ArrowRight size={14} />
         </Link>
       </div>

@@ -28,6 +28,9 @@ import {
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters";
 import { deletePublicFile } from "@/lib/uploads";
+import {
+  AdminButton,
+} from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -171,6 +174,7 @@ function getCategoryLabel(
     AUTO: "Auto",
     MOTO: "Moto",
     TODOTERRENO: "Todoterreno",
+    NAUTICA: ""
   };
 
   return labels[category];
@@ -683,18 +687,13 @@ export default async function InventoryHealthPage({
             </p>
           </div>
 
-          <Link
+          <AdminButton
             href="/admin/inventario/nuevo"
-            className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+            variant="primary"
           >
-            <Plus size={18} />
-            Registrar unidad
-
-            <ArrowRight
-              size={16}
-              className="transition-transform group-hover:translate-x-0.5"
-            />
-          </Link>
+            <Plus size={17} />
+            <span>Agregar unidad</span>
+          </AdminButton>
         </div>
       </section>
 
@@ -793,12 +792,13 @@ export default async function InventoryHealthPage({
             </span>
 
             {hasFilters && (
-              <Link
+              <AdminButton
                 href="/admin/inventario/salud"
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+                variant="secondary"
+                className="h-10"
               >
                 Limpiar filtros
-              </Link>
+              </AdminButton>
             )}
           </div>
         </div>
@@ -848,13 +848,13 @@ export default async function InventoryHealthPage({
             </select>
           </label>
 
-          <button
+          <AdminButton
             type="submit"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-6 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] lg:self-end"
+            className="h-12 px-6 text-sm lg:self-end"
           >
             <Search size={17} />
             Buscar
-          </button>
+          </AdminButton>
         </form>
 
         {/* Accesos por problema */}
@@ -878,18 +878,26 @@ export default async function InventoryHealthPage({
                   option.value,
                   search
                 )}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition ${issueFilter === option.value
-                    ? "border-[#192a3a] bg-[#192a3a] text-white"
-                    : "border-slate-200 bg-white text-slate-500 hover:border-[#192a3a] hover:text-[#192a3a]"
-                  }`}
+                className={[
+                  "inline-flex h-10 shrink-0 items-center gap-2",
+                  "rounded-md border px-4",
+                  "text-[10px] font-black uppercase tracking-[0.1em]",
+                  "transition duration-200",
+                  issueFilter === option.value
+                    ? "border-[#192a3a] bg-[#192a3a] !text-white"
+                    : "border-[#192a3a]/10 bg-[#f7f8f7] !text-slate-600 hover:border-[#192a3a]/25 hover:bg-[#eef0ee] hover:!text-[#192a3a]",
+                ].join(" ")}
               >
                 {option.label}
 
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[9px] ${issueFilter === option.value
-                      ? "bg-white/15 text-white"
-                      : "bg-slate-100 text-slate-500"
-                    }`}
+                  className={[
+                    "inline-flex min-w-6 items-center justify-center",
+                    "rounded px-1.5 py-0.5 text-[9px]",
+                    issueFilter === option.value
+                      ? "bg-white/15 !text-white"
+                      : "border border-[#192a3a]/10 bg-white text-slate-500",
+                  ].join(" ")}
                 >
                   {count}
                 </span>
@@ -983,11 +991,11 @@ export default async function InventoryHealthPage({
 
                         <span
                           className={`w-fit rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${publicTarget ===
-                              "Catálogo" ||
-                              publicTarget ===
-                              "Seminuevos"
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                              : "border-slate-200 bg-slate-100 text-slate-600"
+                            "Catálogo" ||
+                            publicTarget ===
+                            "Seminuevos"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 bg-slate-100 text-slate-600"
                             }`}
                         >
                           {publicTarget}
@@ -1070,12 +1078,13 @@ export default async function InventoryHealthPage({
             </p>
 
             {hasFilters && (
-              <Link
+              <AdminButton
                 href="/admin/inventario/salud"
-                className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+                variant="secondary"
+                className="h-10"
               >
                 Limpiar filtros
-              </Link>
+              </AdminButton>
             )}
           </div>
         )}
@@ -1164,13 +1173,13 @@ function HealthActions({
       </p>
 
       <div className="mt-4 grid gap-3">
-        <Link
+        <AdminButton
           href={`/admin/inventario/${vehicleId}/editar`}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-4 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+          variant="primary"
         >
           <Pencil size={16} />
-          Corregir unidad
-        </Link>
+          <span>Editar</span>
+        </AdminButton>
 
         <Link
           href={`/vehiculos/${vehicleId}`}

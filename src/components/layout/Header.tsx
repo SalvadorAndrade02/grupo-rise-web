@@ -61,6 +61,18 @@ const catalogBrands = [
     logo: "/catalog/brands/lynkco.png",
     logoClass: "scale-125",
   },
+  {
+    label: "Slingshot",
+    href: "/catalogo/slingshot",
+    logo: "/catalog/brands/slingshot.png",
+    logoClass: "scale-110",
+  },
+  {
+    label: "Bennington",
+    href: "/catalogo/bennington",
+    logo: "/catalog/brands/bennington.png",
+    logoClass: "scale-110",
+  },
 ];
 
 const navigationItems = [
@@ -79,6 +91,16 @@ const navigationItems = [
     href: "/servicios",
     activePaths: ["/servicios"],
   },
+  {
+    label: "Colombia",
+    href: "/colombia",
+    activePaths: ["/colombia"],
+  },
+  {
+    label: "Bolsa de trabajo",
+    href: "/bolsa-de-trabajo",
+    activePaths: ["/bolsa-de-trabajo"],
+  },
 ];
 
 export function Header() {
@@ -88,6 +110,9 @@ export function Header() {
   const brandsActive =
     pathname.startsWith("/catalogo") ||
     pathname.startsWith("/vehiculos");
+
+  const contactActive =
+    pathname.startsWith("/contacto");
 
   function closeMobileMenu() {
     setMobileMenuOpen(false);
@@ -103,14 +128,16 @@ export function Header() {
     });
   }
 
-  function desktopLinkClass(active: boolean) {
+  function desktopLinkClass(
+    active: boolean
+  ) {
     return [
-      "group relative flex h-full items-center px-3",
-      "text-[12px] font-bold uppercase tracking-[0.08em]",
+      "group relative flex h-full items-center whitespace-nowrap px-2 2xl:px-3",
+      "text-[10px] font-black uppercase tracking-[0.07em] 2xl:text-[11px]",
       "transition-colors duration-200",
       active
-        ? "text-white"
-        : "text-white/55 hover:text-white",
+        ? "!text-white"
+        : "!text-white/55 hover:!text-white",
     ].join(" ");
   }
 
@@ -129,10 +156,10 @@ export function Header() {
       <div className="mx-auto flex h-[80px] w-full max-w-[1435px] items-center px-5 md:h-[88px] md:px-8 lg:px-10">
         {/* Logo */}
         <Link
-          href="/#grupo-rise"
+          href="/grupo-rise"
           onClick={closeMobileMenu}
           aria-label="Conocer Grupo RISE"
-          className="flex min-w-0 shrink-0 items-center justify-start xl:w-[250px]"
+          className="flex min-w-0 shrink-0 items-center justify-start xl:w-[190px] 2xl:w-[225px]"
         >
           <Image
             src="/brand/logo-rise.png"
@@ -140,12 +167,12 @@ export function Header() {
             width={280}
             height={90}
             priority
-            className="h-[62px] w-auto origin-left object-contain md:h-[68px]"
+            className="h-[58px] w-auto origin-left object-contain md:h-[64px]"
           />
         </Link>
 
         {/* Navegación de escritorio */}
-        <nav className="ml-7 hidden h-full flex-1 items-center justify-center xl:flex">
+        <nav className="ml-4 hidden h-full flex-1 items-center justify-center xl:flex 2xl:ml-7">
           {navigationItems.slice(0, 1).map((item) => {
             const active = isActive(item.activePaths);
 
@@ -179,26 +206,26 @@ export function Header() {
               <span className={activeLineClass(brandsActive)} />
             </Link>
 
-            <div className="invisible absolute left-1/2 top-full z-50 w-[500px] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+            <div className="invisible absolute left-1/2 top-full z-50 w-[720px] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
               <div className="overflow-hidden border border-black/10 bg-[#eceeec] shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
                 {/* Encabezado desplegable */}
                 <div className="flex items-center justify-between border-b border-black/10 px-5 py-4">
                   <div>
                     <p className="text-xs font-black uppercase tracking-[0.18em] text-black">
-                      Nuestras marcas
+                      Marcas Grupo RISE
                     </p>
 
                     <p className="mt-1 text-xs text-black">
-                      Autos, motocicletas y vehículos de aventura.
+                      Automóviles, motocicletas, aventura y náutica.
                     </p>
                   </div>
 
                   <Link
                     href="/catalogo"
-                    className="group/all flex items-center gap-2 text-xs font-black text-black transition hover:text-black/60"
+                    className="group/all flex items-center justify-center gap-2 text-xs font-black text-black transition hover:text-black/60"
                   >
                     <span className="text-black">
-                      Ver todas
+                      Todas las marcas
                     </span>
 
 
@@ -210,7 +237,7 @@ export function Header() {
                 </div>
 
                 {/* Logotipos */}
-                <div className="grid grid-cols-2 gap-px bg-[#cfd3d2]">
+                <div className="grid grid-cols-3 gap-px bg-[#cfd3d2]">
                   {catalogBrands.map((brand) => (
                     <Link
                       key={brand.label}
@@ -233,30 +260,25 @@ export function Header() {
                 <div className="grid grid-cols-2 border-t border-black/10">
                   <Link
                     href="/catalogo"
-                    className="group/access flex items-center justify-center gap-2 border-r border-black/10 px-5 py-4 text-xs font-black text-black transition hover:bg-white"
+                    className="group/all flex items-center justify-center gap-2 text-xs font-black !text-[#101418] transition hover:!text-black/60 [&_*]:!text-current"
                   >
-                    <span className="text-black">
-                      Explorar marcas
-                    </span>
-
+                    <span>Todas las marcas</span>
 
                     <ArrowRight
                       size={14}
-                      className="transition-transform group-hover/access:translate-x-0.5 text-black"
+                      className="transition-transform group-hover/all:translate-x-0.5"
                     />
                   </Link>
 
                   <Link
                     href="/certificados-rise"
-                    className="group/access flex items-center justify-center gap-2 px-5 py-4 text-xs font-black text-black transition hover:bg-white"
+                    className="group/access flex items-center justify-center gap-2 px-5 py-4 text-xs font-black !text-[#101418] transition hover:bg-white hover:!text-[#101418] [&_*]:!text-current"
                   >
-                    <span className="text-black">
-                      Certificados RISE
-                    </span>
+                    <span>Certificados RISE</span>
 
                     <ArrowRight
                       size={14}
-                      className="transition-transform group-hover/access:translate-x-0.5 text-black"
+                      className="transition-transform group-hover/access:translate-x-0.5"
                     />
                   </Link>
                 </div>
@@ -284,10 +306,17 @@ export function Header() {
         <div className="hidden shrink-0 items-center xl:flex">
           <Link
             href="/contacto"
-            className="group inline-flex h-11 items-center justify-center gap-2 border border-white/20 px-4 text-xs font-black uppercase tracking-[0.08em] !text-white transition hover:border-white hover:bg-white hover:!text-[#101418]"
+            className={[
+              "group inline-flex h-10 items-center justify-center gap-2",
+              "whitespace-nowrap border px-3",
+              "text-[10px] font-black uppercase tracking-[0.07em]",
+              "transition 2xl:h-11 2xl:px-4 2xl:text-xs",
+              contactActive
+                ? "border-white bg-white !text-[#101418]"
+                : "border-white/20 !text-white hover:border-white hover:bg-white hover:!text-[#101418]",
+            ].join(" ")}
           >
-            Contáctanos
-
+            <span>Contáctanos</span>
             <MessageCircle size={15} />
           </Link>
         </div>
@@ -390,12 +419,43 @@ export function Header() {
             onClick={closeMobileMenu}
           />
 
+          <MobileLink
+            href="/colombia"
+            label="Colombia"
+            active={pathname.startsWith("/colombia")}
+            onClick={closeMobileMenu}
+          />
+
+          <MobileLink
+            href="/bolsa-de-trabajo"
+            label="Bolsa de trabajo"
+            active={pathname.startsWith(
+              "/bolsa-de-trabajo"
+            )}
+            onClick={closeMobileMenu}
+          />
+
+          <MobileLink
+            href="/bolsa-de-trabajo"
+            label="Bolsa de trabajo"
+            active={pathname.startsWith(
+              "/bolsa-de-trabajo"
+            )}
+            onClick={closeMobileMenu}
+          />
+
           <Link
             href="/contacto"
             onClick={closeMobileMenu}
-            className="group inline-flex h-11 items-center justify-center gap-2 border border-white/20 px-4 text-xs font-black uppercase tracking-[0.08em] !text-white transition hover:border-white hover:bg-white hover:!text-[#101418]"
+            className={[
+              "group mt-3 inline-flex h-11 w-full items-center justify-center gap-2 border px-4",
+              "text-xs font-black uppercase tracking-[0.08em] transition",
+              contactActive
+                ? "border-white bg-white !text-[#101418]"
+                : "border-white/20 !text-white hover:border-white hover:bg-white hover:!text-[#101418]",
+            ].join(" ")}
           >
-            Contáctanos
+            <span>Contáctanos</span>
             <MessageCircle size={17} />
           </Link>
         </nav>

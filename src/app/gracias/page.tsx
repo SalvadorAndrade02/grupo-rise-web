@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Building2,
+  BriefcaseBusiness,
   Car,
   CheckCircle2,
   Clock3,
@@ -104,6 +105,16 @@ const thanksContent: Record<string, ThanksContent> = {
     primaryHref: "/catalogo",
     primaryLabel: "Explorar marcas",
   },
+
+  empleo: {
+    eyebrow: "Postulación recibida",
+    title: "Tu información fue registrada correctamente",
+    description:
+      "El equipo correspondiente podrá revisar los datos proporcionados y ponerse en contacto contigo en caso de existir una oportunidad relacionada con tu perfil.",
+    icon: BriefcaseBusiness,
+    primaryHref: "/bolsa-de-trabajo",
+    primaryLabel: "Volver a bolsa de trabajo",
+  },
 };
 
 function getThanksContent(type?: string) {
@@ -171,6 +182,7 @@ export default async function ThanksPage({
 
                 <Link
                   href="/"
+                  replace
                   className="inline-flex h-12 items-center justify-center gap-3 border border-white/20 px-6 text-sm font-black !text-white transition hover:border-white hover:bg-white hover:!text-[var(--public-header)]"
                 >
                   <Home size={17} />
@@ -386,15 +398,15 @@ function NavigationAction({
     <Link
       href={href}
       className={`group flex min-h-[76px] items-center justify-between gap-4 px-6 text-sm font-black transition ${primary
-          ? "bg-[var(--public-header)] !text-white hover:bg-[var(--public-accent-dark)]"
-          : "bg-[#eef0ee] text-[var(--public-ink)] hover:bg-[var(--home-card)]"
+        ? "bg-[var(--public-header)] !text-white hover:bg-[var(--public-accent-dark)]"
+        : "bg-[#eef0ee] text-[var(--public-ink)] hover:bg-[var(--home-card)]"
         }`}
     >
       <span className="inline-flex items-center gap-4">
         <span
           className={`grid h-10 w-10 place-items-center ${primary
-              ? "border border-white/20 bg-white/10 text-white"
-              : "bg-[var(--public-header)] text-white"
+            ? "border border-white/20 bg-white/10 text-white"
+            : "bg-[var(--public-header)] text-white"
             }`}
         >
           <Icon size={17} />

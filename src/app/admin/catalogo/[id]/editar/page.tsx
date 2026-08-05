@@ -192,6 +192,7 @@ function getCategoryTypeLabel(
     AUTO: "Auto",
     MOTO: "Moto",
     TODOTERRENO: "Todo terreno",
+    NAUTICA: "Náutica",
   };
 
   return labels[category];

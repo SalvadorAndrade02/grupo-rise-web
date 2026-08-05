@@ -18,7 +18,8 @@ export const metadata: Metadata = {
 type BrandGroupKey =
   | "AUTOMOVILES"
   | "MOTOCICLETAS"
-  | "AVENTURA";
+  | "AVENTURA"
+  | "NAUTICA";
 
 type BrandDefinition = {
   name: string;
@@ -89,6 +90,20 @@ const brandDefinitions: BrandDefinition[] = [
     logo: "/catalog/brands/sea-doo.jpg",
     group: "AVENTURA",
   },
+  {
+    name: "Slingshot",
+    slug: "slingshot",
+    aliases: ["Slingshot", "Polaris Slingshot"],
+    logo: "/catalog/brands/slingshot.png",
+    group: "AVENTURA",
+  },
+  {
+    name: "Bennington",
+    slug: "bennington",
+    aliases: ["Bennington", "Bennington Marine"],
+    logo: "/catalog/brands/bennington.png",
+    group: "NAUTICA",
+  },
 ];
 
 const brandGroups: Array<{
@@ -121,6 +136,14 @@ const brandGroups: Array<{
       title: "Experiencias dentro y fuera del camino.",
       description:
         "Explora individualmente las marcas enfocadas en vehículos recreativos y aventura.",
+    },
+    {
+      key: "NAUTICA",
+      number: "04",
+      eyebrow: "Náutica",
+      title: "Experiencias para disfrutar el agua.",
+      description:
+        "Explora las marcas y embarcaciones enfocadas en navegación, recreación y convivencia.",
     },
   ];
 
@@ -265,6 +288,10 @@ export default async function CatalogPage() {
                   {
                     number: "03",
                     label: "Aventura",
+                  },
+                  {
+                    number: "04",
+                    label: "Náutica",
                   },
                 ].map((category) => (
                   <div

@@ -13,4 +13,5 @@ services:
     volumes:
       - ./docker-data/sqlite:/app/data
       - ./docker-data/uploads:/app/public/uploads
+      - ./docker-data/job-applications:/app/storage/job-applications
     restart: unless-stopped

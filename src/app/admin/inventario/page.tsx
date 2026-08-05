@@ -126,6 +126,7 @@ function getCategoryLabel(
     AUTO: "Auto",
     MOTO: "Moto",
     TODOTERRENO: "Todo terreno",
+    NAUTICA: "Náutica",
   };
 
   return labels[category] ?? category;
@@ -908,18 +909,18 @@ export default async function AdminInventoryPage({
               href="/inventario"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-black text-white transition hover:bg-white/15 active:scale-[0.98]"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white/25 bg-white/10 px-5 text-sm font-black !text-white transition hover:bg-white/15 hover:!text-white active:scale-[0.98] [&_*]:!text-current"
             >
-              Ver inventario público
+              <span>Ver inventario público</span>
               <ExternalLink size={16} />
             </Link>
 
             <Link
               href="/admin/inventario/nuevo"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+              className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-5 text-sm font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] [&_*]:!text-current"
             >
               <Plus size={17} />
-              Registrar unidad
+              <span>Registrar unidad</span>
             </Link>
           </>
         }
@@ -1176,10 +1177,9 @@ export default async function AdminInventoryPage({
 
           <button
             type="submit"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-6 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] xl:self-end"
-          >
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-6 text-sm font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] xl:self-end [&_*]:!text-current"          >
             <Search size={17} />
-            Filtrar
+            <span>Filtrar</span>
           </button>
         </form>
 
@@ -1187,7 +1187,7 @@ export default async function AdminInventoryPage({
           <div className="mt-4 border-t border-slate-100 pt-4">
             <Link
               href="/admin/inventario"
-              className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+              className="inline-flex h-10 items-center justify-center rounded-md border border-[#192a3a]/15 bg-[#eef0ee] px-4 text-xs font-black !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#e1e5e3] hover:!text-[#192a3a] active:scale-[0.98]"
             >
               Limpiar filtros
             </Link>
@@ -1417,20 +1417,20 @@ export default async function AdminInventoryPage({
                       <div className="grid gap-3">
                         <Link
                           href={`/admin/inventario/${vehicle.id}/editar`}
-                          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+                          className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-5 text-xs font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] [&_*]:!text-current"
                         >
                           <Pencil size={16} />
-                          Editar unidad
+                          <span>Editar unidad</span>
                         </Link>
 
                         <Link
                           href={`/vehiculos/${vehicle.id}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+                          className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a]/15 bg-white px-5 text-xs font-black !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
                         >
                           <Eye size={16} />
-                          Ver público
+                          <span>Ver público</span>
                         </Link>
 
                         <div className="grid grid-cols-2 gap-2">
@@ -1457,21 +1457,20 @@ export default async function AdminInventoryPage({
 
                             <button
                               type="submit"
-                              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a] active:scale-[0.98]"
-                            >
+                              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#192a3a]/15 bg-white px-3 text-xs font-black !text-slate-600 transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"                            >
                               {vehicle.active ? (
                                 <>
                                   <EyeOff
                                     size={15}
                                   />
-                                  Ocultar
+                                  <span>Ocultar</span>
                                 </>
                               ) : (
                                 <>
                                   <Eye
                                     size={15}
                                   />
-                                  Mostrar
+                                  <span>Mostrar</span>
                                 </>
                               )}
                             </button>
@@ -1503,7 +1502,7 @@ export default async function AdminInventoryPage({
 
                             <button
                               type="submit"
-                              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a] active:scale-[0.98]"
+                              className="inline-flex h-11 w-full items-center justify-center rounded-md border border-[#192a3a]/15 bg-white px-3 text-xs font-black !text-slate-600 transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a] active:scale-[0.98]"
                             >
                               {vehicle.condition ===
                                 VehicleCondition.NUEVO
@@ -1583,7 +1582,7 @@ export default async function AdminInventoryPage({
 
                           <button
                             type="submit"
-                            className="h-11 rounded-xl bg-[#e7edf1] px-4 text-xs font-black text-[#192a3a] transition hover:bg-[#192a3a] hover:text-white active:scale-[0.98]"
+                            className="h-11 rounded-md border border-[#192a3a]/15 bg-[#e7edf1] px-4 text-xs font-black !text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#192a3a] hover:!text-white active:scale-[0.98]"
                           >
                             OK
                           </button>
@@ -1638,7 +1637,7 @@ export default async function AdminInventoryPage({
 
                               <button
                                 type="submit"
-                                className="h-11 rounded-xl bg-red-600 px-5 text-xs font-black uppercase tracking-wider text-white transition hover:bg-red-700 active:scale-[0.98]"
+                                className="h-11 rounded-md border border-red-600 bg-red-600 px-5 text-xs font-black uppercase tracking-wider !text-white transition hover:border-red-700 hover:bg-red-700 hover:!text-white active:scale-[0.98]"
                               >
                                 Eliminar definitivamente
                               </button>

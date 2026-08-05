@@ -416,10 +416,10 @@ export default async function CatalogCategoriesPage({
           <div className="max-w-3xl">
             <Link
               href="/admin/catalogo"
-              className="inline-flex items-center gap-2 text-xs font-black text-white/60 transition hover:text-white"
+              className="inline-flex items-center gap-2 text-xs font-black !text-white/70 transition hover:!text-white [&_*]:!text-current"
             >
               <ArrowLeft size={16} />
-              Volver al catálogo
+              <span>Volver al catálogo</span>
             </Link>
 
             <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#dfe7ec] backdrop-blur-sm">
@@ -441,10 +441,11 @@ export default async function CatalogCategoriesPage({
 
           <Link
             href="/admin/catalogo/nuevo"
-            className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+            className="group inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white bg-white px-5 text-sm font-black !text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
           >
             <Plus size={18} />
-            Nuevo modelo
+
+            <span>Nuevo modelo</span>
 
             <ArrowRight
               size={16}
@@ -523,7 +524,7 @@ export default async function CatalogCategoriesPage({
                   </p>
                 </div>
 
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#192a3a] text-white">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[#192a3a] !text-white [&_*]:!text-current">
                   <FolderTree size={20} />
                 </span>
               </div>
@@ -608,10 +609,10 @@ export default async function CatalogCategoriesPage({
 
               <button
                 type="submit"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-5 text-sm font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] [&_*]:!text-current"
               >
                 <Save size={17} />
-                Guardar categoría
+                <span>Guardar categoría</span>
               </button>
             </div>
           </form>
@@ -914,17 +915,17 @@ function CategoryCard({
 
           <button
             type="submit"
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:bg-[#e7edf1] hover:text-[#192a3a] active:scale-[0.98]"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#192a3a]/15 bg-white px-4 text-xs font-black !text-slate-600 transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
           >
             {category.active ? (
               <>
                 <EyeOff size={16} />
-                Ocultar categoría
+                <span>Ocultar categoría</span>
               </>
             ) : (
               <>
                 <Eye size={16} />
-                Mostrar categoría
+                <span>Mostrar categoría</span>
               </>
             )}
           </button>
@@ -966,13 +967,15 @@ function CategoryCard({
               confirmMessage={`¿Seguro que deseas eliminar la categoría "${category.name}"? Esta acción no se puede deshacer.`}
               pendingText="Eliminando categoría..."
               disabled={!canDelete}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-red-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-red-200 disabled:text-red-400"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-red-600 bg-red-600 px-4 text-[10px] font-black uppercase tracking-[0.1em] !text-white transition hover:border-red-700 hover:bg-red-700 hover:!text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:border-red-200 disabled:bg-red-200 disabled:!text-red-400 [&_*]:!text-current"
             >
               <Trash2 size={15} />
 
-              {canDelete
-                ? "Eliminar categoría"
-                : "No se puede eliminar"}
+              <span>
+                {canDelete
+                  ? "Eliminar categoría"
+                  : "No se puede eliminar"}
+              </span>
             </ConfirmSubmitButton>
           </form>
         </div>

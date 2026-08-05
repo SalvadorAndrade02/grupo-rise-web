@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-type VehicleCategoryValue = "AUTO" | "MOTO" | "TODOTERRENO";
+type VehicleCategoryValue = "AUTO" | "MOTO" | "TODOTERRENO" | "NAUTICA";;
 
 type BrandOption = {
   id: number;
@@ -60,6 +60,7 @@ function getCategoryLabel(category: VehicleCategoryValue) {
     AUTO: "Auto",
     MOTO: "Moto",
     TODOTERRENO: "Todo terreno",
+    NAUTICA: "Náutica",
   };
 
   return labels[category];

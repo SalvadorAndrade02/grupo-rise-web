@@ -40,6 +40,7 @@ function cleanPhone(
 
 function getWhatsAppHref(
   phone?: string | null,
+  countryCode = "MX",
   message?: string
 ) {
   const phoneNumber = cleanPhone(phone);
@@ -48,10 +49,19 @@ function getWhatsAppHref(
     return "";
   }
 
+  const dialCode =
+    countryCode === "CO"
+      ? "57"
+      : "52";
+
+  const alreadyInternational =
+    phone?.trim().startsWith("+") ||
+    phoneNumber.startsWith(dialCode);
+
   const finalPhone =
-    phoneNumber.startsWith("52")
+    alreadyInternational
       ? phoneNumber
-      : `52${phoneNumber}`;
+      : `${dialCode}${phoneNumber}`;
 
   const text = message
     ? `?text=${encodeURIComponent(
@@ -61,7 +71,6 @@ function getWhatsAppHref(
 
   return `https://wa.me/${finalPhone}${text}`;
 }
-
 function splitServices(
   value?: string | null
 ) {
@@ -211,6 +220,7 @@ async function toggleBranchActive(
   });
 
   revalidateBranchPaths(branchId);
+  revalidatePath("/colombia");
 }
 
 export default async function AdminBranchesPage() {
@@ -327,18 +337,18 @@ export default async function AdminBranchesPage() {
               href="/sucursales"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-black text-white transition hover:bg-white/15 active:scale-[0.98]"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white/25 bg-white/10 px-5 text-sm font-black !text-white transition hover:bg-white/15 hover:!text-white active:scale-[0.98] [&_*]:!text-current"
             >
-              Ver sitio público
+              <span>Ver sitio público</span>
               <ExternalLink size={16} />
             </Link>
 
             <Link
               href="/admin/sucursales/nueva"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+              className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-5 text-sm font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] [&_*]:!text-current"
             >
               <Plus size={17} />
-              Nueva sucursal
+              <span>Nueva sucursal</span>
             </Link>
           </>
         }
@@ -439,6 +449,7 @@ export default async function AdminBranchesPage() {
               const whatsappHref =
                 getWhatsAppHref(
                   branch.whatsapp,
+                  branch.countryCode,
                   `Hola, me gustaría recibir información de ${branch.name}.`
                 );
 
@@ -473,8 +484,8 @@ export default async function AdminBranchesPage() {
                       <div className="min-w-0">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] ${branch.active
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                              : "border-slate-200 bg-slate-100 text-slate-500"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 bg-slate-100 text-slate-500"
                             }`}
                         >
                           {branch.active ? (
@@ -672,44 +683,37 @@ export default async function AdminBranchesPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <Link
                           href={`/admin/sucursales/${branch.id}/editar`}
-                          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-4 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+                          className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-4 text-xs font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] [&_*]:!text-current"
                         >
-                          Editar
-                          <ArrowRight
-                            size={15}
-                          />
+                          <span>Editar</span>
+
+                          <ArrowRight size={15} />
                         </Link>
 
                         <a
                           href={mapUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:text-[#192a3a] active:scale-[0.98]"
+                          className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a]/15 bg-white px-4 text-xs font-black !text-slate-600 transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
                         >
-                          Mapa
-                          <ExternalLink
-                            size={15}
-                          />
+                          <span>Mapa</span>
+                          <ExternalLink size={15} />
                         </a>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         {whatsappHref ? (
                           <a
-                            href={
-                              whatsappHref
-                            }
+                            href={whatsappHref}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-xs font-black text-emerald-700 transition hover:bg-emerald-100 active:scale-[0.98]"
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 text-xs font-black !text-emerald-700 transition hover:bg-emerald-100 hover:!text-emerald-700 active:scale-[0.98] [&_*]:!text-current"
                           >
-                            <MessageCircle
-                              size={15}
-                            />
-                            WhatsApp
+                            <MessageCircle size={15} />
+                            <span>WhatsApp</span>
                           </a>
                         ) : (
-                          <div className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-100 bg-slate-100 px-4 text-xs font-black text-slate-400">
+                          <div className="inline-flex h-11 items-center justify-center rounded-md border border-slate-100 bg-slate-100 px-4 text-xs font-black text-slate-400">
                             Sin WhatsApp
                           </div>
                         )}
@@ -722,24 +726,38 @@ export default async function AdminBranchesPage() {
                         >
                           <button
                             type="submit"
-                            className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-xs font-black transition active:scale-[0.98] ${branch.active
-                                ? "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
-                                : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                              }`}
+                            className={[
+                              "inline-flex h-11 w-full items-center justify-center gap-2",
+                              "rounded-md border px-4 text-xs font-black",
+                              "transition active:scale-[0.98]",
+                              "[&_*]:!text-current",
+                              branch.active
+                                ? [
+                                  "border-[#192a3a]/15",
+                                  "bg-white",
+                                  "!text-slate-600",
+                                  "hover:border-[#192a3a]/30",
+                                  "hover:bg-[#eef0ee]",
+                                  "hover:!text-[#192a3a]",
+                                ].join(" ")
+                                : [
+                                  "border-emerald-200",
+                                  "bg-emerald-50",
+                                  "!text-emerald-700",
+                                  "hover:bg-emerald-100",
+                                  "hover:!text-emerald-700",
+                                ].join(" "),
+                            ].join(" ")}
                           >
                             {branch.active ? (
                               <>
-                                <EyeOff
-                                  size={15}
-                                />
-                                Ocultar
+                                <EyeOff size={15} />
+                                <span>Ocultar</span>
                               </>
                             ) : (
                               <>
-                                <Eye
-                                  size={15}
-                                />
-                                Activar
+                                <Eye size={15} />
+                                <span>Activar</span>
                               </>
                             )}
                           </button>
@@ -769,10 +787,10 @@ export default async function AdminBranchesPage() {
 
             <Link
               href="/admin/sucursales/nueva"
-              className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+              className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-5 text-sm font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] [&_*]:!text-current"
             >
               <Plus size={17} />
-              Nueva sucursal
+              <span>Nueva sucursal</span>
             </Link>
           </div>
         )}

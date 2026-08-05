@@ -488,18 +488,30 @@ export default async function AdminDashboardPage() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               href="/admin/inventario/nuevo"
-              className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+              className="group inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white bg-white px-5 text-sm font-black !text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] hover:!text-[#192a3a] active:scale-[0.98]"
             >
-              <Plus size={18} />
-              Registrar unidad
+              <Plus
+                size={18}
+                className="!text-current"
+              />
+
+              <span className="!text-current">
+                Registrar unidad
+              </span>
             </Link>
 
             <Link
               href="/admin/leads"
-              className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-black text-white transition hover:bg-white/15 active:scale-[0.98]"
+              className="group inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white/25 bg-white/10 px-5 text-sm font-black !text-white transition hover:border-white/40 hover:bg-white/15 hover:!text-white active:scale-[0.98]"
             >
-              <MessageSquare size={18} />
-              Ver solicitudes
+              <MessageSquare
+                size={18}
+                className="!text-current"
+              />
+
+              <span className="!text-current">
+                Ver solicitudes
+              </span>
             </Link>
           </div>
         </div>
@@ -655,12 +667,10 @@ export default async function AdminDashboardPage() {
                       </div>
                     </div>
 
-                    <span className="inline-flex items-center gap-1 text-xs font-black text-[#192a3a]">
-                      Editar
-                      <ArrowRight
-                        size={14}
-                        className="transition-transform group-hover:translate-x-0.5"
-                      />
+                    <span className="inline-flex items-center gap-1 text-xs font-black !text-[#192a3a]">
+                      <span className="!text-current">
+                        Editar
+                      </span>
                     </span>
                   </Link>
                 );
@@ -939,13 +949,15 @@ function AdminSection({
 
         <Link
           href={actionHref}
-          className="group inline-flex w-fit items-center gap-2 text-xs font-black text-[#192a3a]"
+          className="group inline-flex h-10 w-fit items-center gap-2 rounded-md border border-[#192a3a]/15 bg-[#eef0ee] px-4 text-xs font-black !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#e1e5e3] hover:!text-[#192a3a]"
         >
-          {actionLabel}
+          <span className="!text-current">
+            {actionLabel}
+          </span>
 
           <ArrowRight
             size={14}
-            className="transition-transform group-hover:translate-x-0.5"
+            className="!text-current transition-transform group-hover:translate-x-0.5"
           />
         </Link>
       </div>
@@ -1023,8 +1035,8 @@ function EmptyState({
       <Icon
         size={40}
         className={`mx-auto ${positive
-            ? "text-emerald-600"
-            : "text-slate-400"
+          ? "text-emerald-600"
+          : "text-slate-400"
           }`}
       />
 
@@ -1055,39 +1067,70 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className={`group rounded-[20px] border p-5 transition duration-300 hover:-translate-y-1 ${primary
-          ? "border-[#192a3a] bg-[#192a3a] text-white hover:bg-[#29465c]"
-          : "border-black/8 bg-white text-[#0a0f14] hover:border-[#192a3a]/30 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]"
-        }`}
+      className={[
+        "group rounded-md border p-5 transition duration-300 hover:-translate-y-1",
+        primary
+          ? [
+            "border-[#192a3a]",
+            "bg-[#192a3a]",
+            "!text-white",
+            "hover:bg-[#29465c]",
+            "hover:!text-white",
+          ].join(" ")
+          : [
+            "border-black/8",
+            "bg-white",
+            "!text-[#0a0f14]",
+            "hover:border-[#192a3a]/30",
+            "hover:!text-[#0a0f14]",
+            "hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]",
+          ].join(" "),
+      ].join(" ")}
     >
       <div className="flex items-center justify-between">
         <span
-          className={`grid h-11 w-11 place-items-center rounded-full ${primary
-              ? "bg-white/10 text-white"
-              : "bg-[#e7edf1] text-[#192a3a]"
-            }`}
+          className={[
+            "grid h-11 w-11 place-items-center rounded-md",
+            primary
+              ? "bg-white/10 !text-white"
+              : "bg-[#e7edf1] !text-[#192a3a]",
+          ].join(" ")}
         >
-          <Icon size={20} />
+          <Icon
+            size={20}
+            className="!text-current"
+          />
         </span>
 
         <ArrowRight
           size={17}
-          className={`transition-transform group-hover:translate-x-0.5 ${primary
-              ? "text-white/60"
-              : "text-slate-300"
-            }`}
+          className={[
+            "transition-transform group-hover:translate-x-0.5",
+            primary
+              ? "!text-white/70"
+              : "!text-slate-400",
+          ].join(" ")}
         />
       </div>
 
-      <h3 className="mt-5 text-lg font-black">
+      <h3
+        className={[
+          "mt-5 text-lg font-black",
+          primary
+            ? "!text-white"
+            : "!text-[#0a0f14]",
+        ].join(" ")}
+      >
         {title}
       </h3>
 
       <p
-        className={`mt-2 text-sm leading-6 ${primary
-            ? "text-white/60"
-            : "text-slate-500"
-          }`}
+        className={[
+          "mt-2 text-sm leading-6",
+          primary
+            ? "!text-white/70"
+            : "!text-slate-500",
+        ].join(" ")}
       >
         {description}
       </p>

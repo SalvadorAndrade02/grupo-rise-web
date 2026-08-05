@@ -9,6 +9,7 @@ import {
     ExternalLink,
     Mail,
     MapPin,
+    Share2,
     MessageCircle,
     Phone,
     ShieldCheck,
@@ -21,6 +22,12 @@ import {
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { prisma } from "@/lib/prisma";
+
+import {
+    FaFacebookF,
+    FaInstagram,
+    FaLinkedinIn,
+} from "react-icons/fa";
 
 export const dynamic = "force-dynamic";
 
@@ -260,6 +267,26 @@ export default async function BranchDetailPage({
 
     const phone = cleanPhone(branch.phone);
 
+    const socialLinks = [
+        {
+            label: "Facebook",
+            href: branch.facebookUrl,
+            Icon: FaFacebookF,
+        },
+        {
+            label: "Instagram",
+            href: branch.instagramUrl,
+            Icon: FaInstagram,
+        },
+        {
+            label: "LinkedIn",
+            href: branch.linkedinUrl,
+            Icon: FaLinkedinIn,
+        },
+    ].filter(
+        (social) => Boolean(social.href)
+    );
+
     /*
      * Combina las marcas de la sucursal principal
      * y de las disponibilidades adicionales.
@@ -476,6 +503,48 @@ export default async function BranchDetailPage({
                                                     </div>
                                                 ))}
                                             </div>
+
+                                            {socialLinks.length > 0 && (
+                                                <div className="mt-8 border-t border-[var(--home-border)] pt-8">
+                                                    <div className="flex items-center gap-4">
+                                                        <span className="grid h-11 w-11 place-items-center bg-[var(--public-header)] text-white">
+                                                            <Share2 size={19} />
+                                                        </span>
+
+                                                        <div>
+                                                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--public-muted)]">
+                                                                Canales oficiales
+                                                            </p>
+
+                                                            <h3 className="mt-1 text-xl font-black tracking-[-0.03em] text-[var(--public-ink)]">
+                                                                Sigue a esta sucursal
+                                                            </h3>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="mt-5 flex flex-wrap gap-3">
+                                                        {socialLinks.map(
+                                                            ({
+                                                                label,
+                                                                href,
+                                                                Icon,
+                                                            }) => (
+                                                                <a
+                                                                    key={label}
+                                                                    href={href!}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    aria-label={`${label} de ${branch.name}`}
+                                                                    className="inline-flex h-12 items-center justify-center gap-3 border border-[var(--home-border-strong)] bg-[var(--home-surface-strong)] px-5 text-sm font-black text-[var(--public-ink)] transition hover:border-[var(--public-header)] hover:bg-[var(--public-header)] hover:!text-white"
+                                                                >
+                                                                    <Icon size={18} />
+                                                                    {label}
+                                                                </a>
+                                                            )
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
@@ -656,8 +725,8 @@ export default async function BranchDetailPage({
                 <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--home-border)] bg-[var(--home-card)]/95 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_35px_rgba(18,24,28,0.12)] backdrop-blur-md lg:hidden">
                     <div
                         className={`mx-auto grid max-w-xl gap-2 ${whatsappHref
-                                ? "grid-cols-2"
-                                : "grid-cols-1"
+                            ? "grid-cols-2"
+                            : "grid-cols-1"
                             }`}
                     >
                         {whatsappHref && (

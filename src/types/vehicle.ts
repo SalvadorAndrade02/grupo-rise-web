@@ -1,4 +1,4 @@
-export type VehicleCategory = "auto" | "moto" | "todoterreno";
+export type VehicleCategory = "auto" | "moto" | "todoterreno" | "nautica";
 
 export type VehicleCondition = "Nuevo" | "Seminuevo";
 

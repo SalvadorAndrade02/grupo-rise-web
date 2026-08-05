@@ -112,6 +112,7 @@ export default async function HomePage() {
     prisma.branch.findMany({
       where: {
         active: true,
+        countryCode: "MX",
       },
       orderBy: [
         {

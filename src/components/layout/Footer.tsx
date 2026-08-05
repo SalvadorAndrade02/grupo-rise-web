@@ -30,6 +30,14 @@ const exploreLinks = [
     href: "/servicios",
   },
   {
+    label: "Colombia",
+    href: "/colombia",
+  },
+  {
+    label: "Bolsa de trabajo",
+    href: "/bolsa-de-trabajo",
+  },
+  {
     label: "Contacto",
     href: "/contacto",
   },

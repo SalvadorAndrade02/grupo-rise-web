@@ -17,6 +17,8 @@ import {
   FolderTree,
   Gauge,
   Home,
+  Landmark,
+  Newspaper,
   LogOut,
   LucideIcon,
   Menu,
@@ -79,6 +81,16 @@ const mainLinks: AdminLink[] = [
     icon: Building2,
   },
   {
+    label: "Grupo RISE",
+    href: "/admin/grupo-rise",
+    icon: Landmark,
+  },
+  {
+    label: "Noticias",
+    href: "/admin/noticias",
+    icon: Newspaper,
+  },
+  {
     label: "Ayuda",
     href: "/admin/ayuda",
     icon: BookOpen,
@@ -94,6 +106,11 @@ const quickLinks: AdminLink[] = [
   {
     label: "Nuevo modelo",
     href: "/admin/catalogo/nuevo",
+    icon: Plus,
+  },
+  {
+    label: "Nueva noticia",
+    href: "/admin/noticias/nueva",
     icon: Plus,
   },
 ];
@@ -203,8 +220,8 @@ export function AdminDock({
       <aside className="hidden xl:block">
         <div
           className={`sticky top-6 overflow-hidden rounded-[22px] border border-black/8 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)] transition-all duration-300 ${collapsed
-              ? "w-[88px] p-3"
-              : "w-[270px] p-4"
+            ? "w-[88px] p-3"
+            : "w-[270px] p-4"
             }`}
         >
           <div
@@ -215,14 +232,14 @@ export function AdminDock({
 
             <div
               className={`relative flex items-center ${collapsed
-                  ? "flex-col justify-center gap-3"
-                  : "justify-between gap-3"
+                ? "flex-col justify-center gap-3"
+                : "justify-between gap-3"
                 }`}
             >
               <div
                 className={`flex items-center ${collapsed
-                    ? "justify-center"
-                    : "gap-3"
+                  ? "justify-center"
+                  : "gap-3"
                   }`}
               >
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10 text-[#dfe7ec]">
@@ -311,8 +328,8 @@ export function AdminDock({
                     : undefined
                 }
                 className={`flex min-h-11 items-center rounded-xl text-xs font-black text-slate-600 transition hover:bg-[#f1f5f7] hover:text-[#192a3a] active:bg-[#e7edf1] ${collapsed
-                    ? "justify-center px-3"
-                    : "gap-3 px-4"
+                  ? "justify-center px-3"
+                  : "gap-3 px-4"
                   }`}
               >
                 <ExternalLink size={17} />
@@ -334,8 +351,8 @@ export function AdminDock({
                       : undefined
                   }
                   className={`flex min-h-11 w-full items-center rounded-xl text-xs font-black text-red-600 transition hover:bg-red-50 active:bg-red-100 ${collapsed
-                      ? "justify-center px-3"
-                      : "gap-3 px-4"
+                    ? "justify-center px-3"
+                    : "gap-3 px-4"
                     }`}
                 >
                   <LogOut size={17} />
@@ -369,8 +386,8 @@ export function AdminDock({
                 key={item.href}
                 href={item.href}
                 className={`flex min-h-[58px] min-w-0 flex-col items-center justify-center gap-1 rounded-[14px] px-1 text-[9px] font-black transition ${active
-                    ? "bg-[#192a3a] text-white"
-                    : "text-slate-500 active:bg-[#e7edf1] active:text-[#192a3a]"
+                  ? "bg-[#192a3a] text-white"
+                  : "text-slate-500 active:bg-[#e7edf1] active:text-[#192a3a]"
                   }`}
               >
                 <Icon size={18} />
@@ -388,8 +405,8 @@ export function AdminDock({
               setMobileMenuOpen(true)
             }
             className={`flex min-h-[58px] min-w-0 flex-col items-center justify-center gap-1 rounded-[14px] px-1 text-[9px] font-black transition ${mobileMenuOpen
-                ? "bg-[#192a3a] text-white"
-                : "text-slate-500 active:bg-[#e7edf1] active:text-[#192a3a]"
+              ? "bg-[#192a3a] text-white"
+              : "text-slate-500 active:bg-[#e7edf1] active:text-[#192a3a]"
               }`}
           >
             <Menu size={18} />
@@ -465,8 +482,8 @@ export function AdminDock({
                       key={item.href}
                       href={item.href}
                       className={`flex min-h-[82px] flex-col justify-between rounded-[16px] border p-4 transition active:scale-[0.98] ${active
-                          ? "border-[#192a3a] bg-[#192a3a] text-white"
-                          : "border-slate-200 bg-[#f8fafb] text-[#192a3a] active:border-[#192a3a]"
+                        ? "border-[#192a3a] bg-[#192a3a] text-white"
+                        : "border-slate-200 bg-[#f8fafb] text-[#192a3a] active:border-[#192a3a]"
                         }`}
                     >
                       <Icon size={19} />
@@ -559,8 +576,8 @@ function DesktopNavigationLink({
           : undefined
       }
       className={`relative flex min-h-11 items-center overflow-hidden rounded-xl text-xs font-black transition ${collapsed
-          ? "justify-center px-3"
-          : "gap-3 px-4"
+        ? "justify-center px-3"
+        : "gap-3 px-4"
         } ${active
           ? quick
             ? "bg-[#192a3a] text-white"

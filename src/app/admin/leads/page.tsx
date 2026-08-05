@@ -591,7 +591,7 @@ function getLeadBusinessClasses(
     string
   > = {
     SERVICIO:
-      "border-[#192a3a] bg-[#192a3a] text-white",
+      "border-[#192a3a] bg-[#192a3a] !text-white [&_*]:!text-current",
 
     REFACCIONES:
       "border-amber-200 bg-amber-50 text-amber-700",
@@ -1239,18 +1239,18 @@ export default async function AdminLeadsPage({
                 statusFilter,
                 search
               )}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] active:scale-[0.98]"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white bg-white px-5 text-sm font-black !text-[#192a3a] transition hover:-translate-y-0.5 hover:bg-[#e7edf1] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
             >
               <Download size={17} />
-              Exportar CSV
+              <span>Exportar CSV</span>
             </a>
 
             <Link
               href="/admin/inventario"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-black text-white transition hover:bg-white/15 active:scale-[0.98]"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white/25 bg-white/10 px-5 text-sm font-black !text-white transition hover:bg-white/15 hover:!text-white active:scale-[0.98] [&_*]:!text-current"
             >
               <Car size={17} />
-              Inventario
+              <span>Inventario</span>
             </Link>
           </>
         }
@@ -1347,16 +1347,16 @@ export default async function AdminLeadsPage({
 
             <button
               type="submit"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-6 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98] lg:self-end"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-6 text-sm font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] lg:self-end [&_*]:!text-current"
             >
               <Search size={17} />
-              Buscar
+              <span>Buscar</span>
             </button>
 
             {hasFilters && (
               <Link
                 href="/admin/leads"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98] lg:self-end"
+                className="inline-flex h-12 items-center justify-center rounded-md border border-[#192a3a]/15 bg-[#eef0ee] px-5 text-sm font-black !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#e1e5e3] hover:!text-[#192a3a] active:scale-[0.98] lg:self-end"
               >
                 Limpiar
               </Link>
@@ -1505,7 +1505,7 @@ export default async function AdminLeadsPage({
                         )}`
                         : "/admin/leads"
                     }
-                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-xs font-black text-slate-600 transition hover:border-[#192a3a] hover:text-[#192a3a]"
+                    className="inline-flex h-11 items-center justify-center rounded-md border border-[#192a3a]/15 bg-white px-5 text-xs font-black !text-slate-600 transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a]"
                   >
                     Limpiar secundarios
                   </Link>
@@ -1513,7 +1513,7 @@ export default async function AdminLeadsPage({
 
                 <button
                   type="submit"
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-5 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-5 text-xs font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98]"
                 >
                   Aplicar filtros
                 </button>
@@ -1780,24 +1780,20 @@ export default async function AdminLeadsPage({
                           <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
                             <Link
                               href={`/admin/inventario/${lead.vehicle.id}/editar`}
-                              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#e7edf1] px-3 text-[10px] font-black text-[#192a3a] transition hover:bg-[#d9e2e8] active:scale-[0.98]"
+                              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#192a3a]/15 bg-[#eef0ee] px-3 text-[10px] font-black !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#e1e5e3] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
                             >
-                              Editar unidad
-                              <ArrowUpRight
-                                size={13}
-                              />
+                              <span>Editar unidad</span>
+                              <ArrowUpRight size={13} />
                             </Link>
 
                             <Link
                               href={`/vehiculos/${lead.vehicle.id}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-[10px] font-black text-slate-600 transition hover:border-[#192a3a] hover:text-[#192a3a] active:scale-[0.98]"
+                              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#192a3a]/15 bg-white px-3 text-[10px] font-black !text-slate-600 transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
                             >
-                              Ver en sitio
-                              <ArrowUpRight
-                                size={13}
-                              />
+                              <span>Ver en sitio</span>
+                              <ArrowUpRight size={13} />
                             </Link>
                           </div>
                         </div>
@@ -1869,14 +1865,11 @@ export default async function AdminLeadsPage({
                     <LeadActions
                       leadId={lead.id}
                       status={lead.status}
-                      whatsappHref={
-                        whatsappHref
-                      }
+                      whatsappHref={whatsappHref}
                       phoneHref={phoneHref}
                       mailHref={mailHref}
-                      hasEmail={Boolean(
-                        lead.email
-                      )}
+                      hasEmail={Boolean(lead.email)}
+                      hasCv={Boolean(lead.cvStoredName)}
                     />
                   </div>
                 </article>
@@ -1901,7 +1894,7 @@ export default async function AdminLeadsPage({
 
             <Link
               href="/admin/leads"
-              className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#192a3a] px-5 text-sm font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+              className="mt-5 inline-flex h-11 items-center justify-center rounded-md border border-[#192a3a] bg-[#192a3a] px-5 text-sm font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98]"
             >
               Limpiar filtros
             </Link>
@@ -1997,6 +1990,7 @@ function LeadActions({
   phoneHref,
   mailHref,
   hasEmail,
+  hasCv,
 }: {
   leadId: number;
   status: LeadStatus;
@@ -2004,9 +1998,10 @@ function LeadActions({
   phoneHref: string;
   mailHref: string;
   hasEmail: boolean;
+  hasCv: boolean;
 }) {
   return (
-    <aside className="border-t border-slate-100 bg-white p-5 md:p-6 xl:border-t-0">
+    <aside className="border-t border-[#192a3a]/10 bg-[#f7f8f7] p-5 md:p-6 xl:border-t-0">
       <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
         Gestión
       </p>
@@ -2046,48 +2041,58 @@ function LeadActions({
 
         <button
           type="submit"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#192a3a] px-4 text-xs font-black text-white transition hover:bg-[#29465c] active:scale-[0.98]"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a] bg-[#192a3a] px-4 text-xs font-black !text-white transition hover:border-[#29465c] hover:bg-[#29465c] hover:!text-white active:scale-[0.98] [&_*]:!text-current"
         >
           <BadgeCheck size={16} />
-          Actualizar estado
+          <span>Actualizar estado</span>
         </button>
       </form>
 
-      <div className="mt-5 border-t border-slate-100 pt-5">
+      <div className="mt-5 border-t border-[#192a3a]/10 pt-5">
         <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
           Contactar
         </p>
 
         <div className="mt-3 grid gap-2">
+          {hasCv && (
+            <a
+              href={`/admin/leads/${leadId}/cv`}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 text-xs font-black !text-blue-700 transition hover:bg-blue-100 hover:!text-blue-700 active:scale-[0.98] [&_*]:!text-current"
+            >
+              <Download size={16} />
+              <span>Descargar CV</span>
+            </a>
+          )}
+
           {whatsappHref && (
             <a
               href={whatsappHref}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-xs font-black text-emerald-700 transition hover:bg-emerald-100 active:scale-[0.98]"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 text-xs font-black !text-emerald-700 transition hover:bg-emerald-100 hover:!text-emerald-700 active:scale-[0.98] [&_*]:!text-current"
             >
               <MessageCircle size={16} />
-              WhatsApp
+              <span>WhatsApp</span>
             </a>
           )}
 
           {phoneHref && (
             <a
               href={phoneHref}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a]/15 bg-white px-4 text-xs font-black !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
             >
               <Phone size={16} />
-              Llamar
+              <span>Llamar</span>
             </a>
           )}
 
           {hasEmail && (
             <a
               href={mailHref}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-[#192a3a] transition hover:border-[#192a3a] hover:bg-[#e7edf1] active:scale-[0.98]"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#192a3a]/15 bg-white px-4 text-xs font-black !text-[#192a3a] transition hover:border-[#192a3a]/30 hover:bg-[#eef0ee] hover:!text-[#192a3a] active:scale-[0.98] [&_*]:!text-current"
             >
               <Mail size={16} />
-              Enviar correo
+              <span>Enviar correo</span>
             </a>
           )}
         </div>
@@ -2108,10 +2113,28 @@ function LeadFilterPill({
   return (
     <Link
       href={href}
-      className={`shrink-0 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.08em] transition ${active
-        ? "border-[#192a3a] bg-[#192a3a] text-white"
-        : "border-slate-200 bg-white text-slate-500 hover:border-[#192a3a] hover:text-[#192a3a]"
-        }`}
+      className={[
+        "inline-flex h-10 shrink-0 items-center justify-center",
+        "rounded-md border px-4",
+        "text-[10px] font-black uppercase tracking-[0.08em]",
+        "transition duration-200 active:scale-[0.98]",
+        active
+          ? [
+            "border-[#192a3a]",
+            "bg-[#192a3a]",
+            "!text-white",
+            "hover:!text-white",
+            "shadow-[0_5px_14px_rgba(25,42,58,0.16)]",
+          ].join(" ")
+          : [
+            "border-[#192a3a]/10",
+            "bg-[#f7f8f7]",
+            "!text-slate-600",
+            "hover:border-[#192a3a]/25",
+            "hover:bg-[#eef0ee]",
+            "hover:!text-[#192a3a]",
+          ].join(" "),
+      ].join(" ")}
     >
       {label}
     </Link>

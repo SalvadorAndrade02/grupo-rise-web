@@ -78,6 +78,7 @@ const categoryLabels: Record<VehicleCategory, string> = {
   AUTO: "Autos",
   MOTO: "Motocicletas",
   TODOTERRENO: "Todoterreno",
+  NAUTICA: "Naútica"
 };
 
 const catalogBrandNames = [
@@ -100,6 +101,12 @@ const catalogBrandNames = [
   "Zeekrlife",
 
   "Lynk & Co",
+
+  "Slingshot",
+  "Polaris Slingshot",
+
+  "Bennington",
+  "Bennington Marine",
 ];
 
 const priceFilters = [
@@ -197,6 +204,12 @@ function getBrandSlug(brandName: string) {
     Zeekrlife: "zeekrlife",
 
     "Lynk & Co": "lynk-co",
+
+    Slingshot: "slingshot",
+    "Polaris Slingshot": "slingshot",
+
+    Bennington: "bennington",
+    "Bennington Marine": "bennington",
   };
 
   return customSlugs[brandName] ?? slugifyBrand(brandName);
@@ -223,6 +236,18 @@ function getBrandLogo(brandName: string) {
     Zeekrlife: "/catalog/brands/zeekNegro.png",
 
     "Lynk & Co": "/catalog/brands/lynkco.png",
+
+    Slingshot:
+      "/catalog/brands/slingshot.png",
+
+    "Polaris Slingshot":
+      "/catalog/brands/slingshot.png",
+
+    Bennington:
+      "/catalog/brands/bennington.png",
+
+    "Bennington Marine":
+      "/catalog/brands/bennington.png",
   };
 
   return logos[brandName] ?? null;

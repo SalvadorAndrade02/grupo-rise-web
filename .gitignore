@@ -50,3 +50,6 @@ dev.db
 prisma/dev.db
 *.db
 *.db-journal
+
+/storage/job-applications/*
+!/storage/job-applications/.gitkeep

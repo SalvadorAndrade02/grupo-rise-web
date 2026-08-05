@@ -11,3 +11,4 @@ export { AdminHero } from "./AdminHero";
 export { AdminSection } from "./AdminSection";
 export { AdminSummaryCard } from "./AdminSummaryCard";
 export * from "./AdminPagination";
+export { AdminButton } from "./AdminButton";
