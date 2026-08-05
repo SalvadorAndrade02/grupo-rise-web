@@ -76,6 +76,14 @@ const brandLinks = [
     label: "Sea-Doo",
     href: "/catalogo/sea-doo",
   },
+  {
+    label: "Slingshot",
+    href: "/catalogo/slingshot",
+  },
+  {
+    label: "Bennington",
+    href: "/catalogo/bennington",
+  },
 ];
 
 const attentionLinks = [
