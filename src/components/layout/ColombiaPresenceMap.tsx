@@ -19,6 +19,9 @@ export function ColombiaPresenceMap() {
           <p className="mt-1 text-sm font-bold text-white">
             Indian Motorcycle Bogotá
           </p>
+          <p>
+            (Master Dealer)
+          </p>
         </div>
 
         <ArrowRight
