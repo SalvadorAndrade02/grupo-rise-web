@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { InstitutionalHero } from "@/components/home/InstitutionalHero";
 import { HomeBrandCatalogs } from "@/components/home/HomeBrandCatalogs";
+import { GroupRiseSection } from "@/components/home/GroupRiseSection";
 import { BranchesCarousel } from "@/components/home/BranchesCarousel";
 import { prisma } from "@/lib/prisma";
 import {
@@ -305,34 +306,7 @@ export default async function HomePage() {
           branchCount={branches.length}
         />
 
-        <section
-          id="grupo-rise"
-          className="relative overflow-hidden border-b border-[var(--home-border)] bg-[var(--home-surface)]"
-        >
-          <div className="pointer-events-none absolute right-0 top-0 h-full w-1/3 bg-[linear-gradient(135deg,transparent,rgba(38,58,75,0.07))]" />
-
-          <div className="public-container public-section relative">
-            <div className="grid items-center gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
-              <div>
-                <p className="public-eyebrow">
-                  Acerca del grupo
-                </p>
-
-                <h2 className="public-title mt-5 max-w-xl text-4xl md:text-6xl">
-                  Una visión compartida por distintas marcas.
-                </h2>
-              </div>
-
-              <div className="border-l-2 border-[var(--public-accent)] pl-6 md:pl-10">
-                <p className="max-w-3xl text-lg leading-8 text-[var(--public-muted)] md:text-xl md:leading-9">
-                  Grupo RISE integra agencias y marcas enfocadas en diferentes
-                  estilos de movilidad. Desde automóviles y motocicletas hasta
-                  vehículos todo terreno.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <GroupRiseSection />
 
         <div className="bg-[var(--home-background)]">
           <VehicleCategoryShowcase

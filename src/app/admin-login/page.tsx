@@ -70,9 +70,9 @@ export default async function AdminLoginPage({
             </div>
 
             <div className="mt-12 max-w-3xl">
-              <div className="inline-flex rounded-[20px] border border-white/70 bg-white p-4 shadow-[0_20px_55px_rgba(0,0,0,0.25)]">
+              <div className="inline-flex rounded-[20px] border border-white/70  p-4 shadow-[0_20px_55px_rgba(0,0,0,0.25)]">
                 <img
-                  src="/brand/logo-rise.jpeg"
+                  src="/brand/logo-rise.png"
                   alt="Grupo Rise"
                   className="h-14 w-auto max-w-[220px] object-contain"
                 />

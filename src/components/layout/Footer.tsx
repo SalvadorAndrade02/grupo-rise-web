@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Wrench,
 } from "lucide-react";
-import { MexicoPresenceMap } from "@/components/layout/MexicoPresenceMap";
+import { RegionalPresenceMap } from "@/components/layout/RegionalPresenceMap";
 
 const exploreLinks = [
   {
@@ -186,7 +186,7 @@ export function Footer() {
               motocicletas y vehículos de aventura.
             </p>
 
-            <MexicoPresenceMap />
+            <RegionalPresenceMap />
           </div>
 
           {/* Explorar */}
