@@ -60,6 +60,7 @@ const validCategories: VehicleCategory[] = [
   VehicleCategory.AUTO,
   VehicleCategory.MOTO,
   VehicleCategory.TODOTERRENO,
+  VehicleCategory.NAUTICA
 ];
 
 const validConditions: VehicleCondition[] = [

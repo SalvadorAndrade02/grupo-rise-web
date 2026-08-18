@@ -213,12 +213,12 @@ function getVehicleCategory(
     value || VehicleCategory.AUTO
   );
 
-  const validCategories: VehicleCategory[] =
-    [
-      VehicleCategory.AUTO,
-      VehicleCategory.MOTO,
-      VehicleCategory.TODOTERRENO,
-    ];
+  const validCategories: VehicleCategory[] = [
+    VehicleCategory.AUTO,
+    VehicleCategory.MOTO,
+    VehicleCategory.TODOTERRENO,
+    VehicleCategory.NAUTICA,
+  ];
 
   return validCategories.includes(
     category as VehicleCategory

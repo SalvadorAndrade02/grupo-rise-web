@@ -165,12 +165,12 @@ function getVehicleCategoryValue(
     VehicleCategory.TODOTERRENO
   );
 
-  const validCategories: VehicleCategory[] =
-    [
-      VehicleCategory.AUTO,
-      VehicleCategory.MOTO,
-      VehicleCategory.TODOTERRENO,
-    ];
+  const validCategories: VehicleCategory[] = [
+    VehicleCategory.AUTO,
+    VehicleCategory.MOTO,
+    VehicleCategory.TODOTERRENO,
+    VehicleCategory.NAUTICA,
+  ];
 
   return validCategories.includes(
     categoryValue as VehicleCategory
@@ -707,6 +707,12 @@ export default async function NewCatalogModelPage({
                   }
                 >
                   Todo terreno
+                </option>
+
+                <option
+                  value={VehicleCategory.NAUTICA}
+                >
+                  Náutica
                 </option>
               </AdminSelect>
 
