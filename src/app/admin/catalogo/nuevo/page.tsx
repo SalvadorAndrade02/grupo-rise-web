@@ -13,6 +13,7 @@ import {
   Upload,
 } from "lucide-react";
 import {
+  Currency,
   VehicleCategory,
   VehicleMediaType,
 } from "@prisma/client";
@@ -179,6 +180,25 @@ function getVehicleCategoryValue(
     : VehicleCategory.TODOTERRENO;
 }
 
+function getCurrencyValue(
+  value: FormDataEntryValue | null
+) {
+  const currencyValue = String(
+    value || Currency.MXN
+  );
+
+  const validCurrencies: Currency[] = [
+    Currency.MXN,
+    Currency.USD,
+  ];
+
+  return validCurrencies.includes(
+    currencyValue as Currency
+  )
+    ? (currencyValue as Currency)
+    : Currency.MXN;
+}
+
 function redirectCatalogError(
   message: string
 ): never {
@@ -319,6 +339,11 @@ async function createCatalogModel(
     getOptionalNumberValue(
       formData,
       "priceFrom"
+    );
+
+  const currency =
+    getCurrencyValue(
+      formData.get("currency")
     );
 
   const sortOrder =
@@ -494,6 +519,7 @@ async function createCatalogModel(
         categoryType,
         year,
         priceFrom,
+        currency,
         subtitle,
         description: description ?? undefined,
         specs: specs ?? undefined,
@@ -735,9 +761,23 @@ export default async function NewCatalogModelPage({
                 name="priceFrom"
                 type="number"
                 min={0}
-                step="0.01"
+                step="1"
                 placeholder="539900"
               />
+
+              <AdminSelect
+                label="Moneda"
+                name="currency"
+                defaultValue={Currency.MXN}
+              >
+                <option value={Currency.MXN}>
+                  MXN - Peso mexicano
+                </option>
+
+                <option value={Currency.USD}>
+                  USD - Dólar estadounidense
+                </option>
+              </AdminSelect>
 
               <AdminInput
                 label="Orden"

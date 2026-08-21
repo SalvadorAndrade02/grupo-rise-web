@@ -15,6 +15,7 @@ import {
   Upload,
 } from "lucide-react";
 import {
+  Currency,
   VehicleCategory,
   VehicleCondition,
   VehicleMediaType,
@@ -225,6 +226,25 @@ function getVehicleCategory(
   )
     ? (category as VehicleCategory)
     : VehicleCategory.AUTO;
+}
+
+function getCurrencyValue(
+  value: FormDataEntryValue | null
+) {
+  const currency = String(
+    value || Currency.MXN
+  );
+
+  const validCurrencies: Currency[] = [
+    Currency.MXN,
+    Currency.USD,
+  ];
+
+  return validCurrencies.includes(
+    currency as Currency
+  )
+    ? (currency as Currency)
+    : Currency.MXN;
 }
 
 function isValidMediaReference(
@@ -561,6 +581,15 @@ async function createVehicle(
       "price"
     );
 
+  const explicitCurrency =
+    getCurrencyValue(
+      formData.get("currency")
+    );
+
+  const currency =
+    selectedCatalogModel?.currency ??
+    explicitCurrency;
+
   const hiddenCatalogPrice =
     getOptionalNumberValue(
       formData,
@@ -779,6 +808,7 @@ async function createVehicle(
         status,
         year,
         price,
+        currency,
         mileage,
         description,
         specs,
@@ -973,9 +1003,9 @@ export default async function NewVehiclePage({
 
       <form
         action={createVehicle}
-        className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]"
+        className="mt-6 grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]"
       >
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <BrandCategorySelects
             mode="vehicle"
             brands={brands.map(
@@ -1018,6 +1048,9 @@ export default async function NewVehiclePage({
 
                 priceFrom:
                   model.priceFrom,
+
+                currency:
+                  model.currency,
 
                 subtitle:
                   model.subtitle,
@@ -1073,17 +1106,6 @@ export default async function NewVehiclePage({
               />
 
               <AdminInput
-                label="Precio"
-                name="price"
-                required
-                type="number"
-                min={0}
-                step="0.01"
-                placeholder="799000"
-                description="Precio público de esta unidad."
-              />
-
-              <AdminInput
                 label="Kilometraje"
                 name="mileage"
                 type="number"
@@ -1093,6 +1115,31 @@ export default async function NewVehiclePage({
                 description="En unidades nuevas puede dejarse vacío o en cero."
                 containerClassName="md:col-span-2"
               />
+
+              <AdminInput
+                label="Precio"
+                name="price"
+                required
+                type="number"
+                min={0}
+                step="1"
+                placeholder="799000"
+                description="Precio público de esta unidad."
+              />
+
+              <AdminSelect
+                label="Moneda"
+                name="currency"
+                defaultValue={Currency.MXN}
+              >
+                <option value={Currency.MXN}>
+                  MXN - Peso mexicano
+                </option>
+
+                <option value={Currency.USD}>
+                  USD - Dólar estadounidense
+                </option>
+              </AdminSelect>
             </div>
           </AdminSection>
 
@@ -1131,7 +1178,7 @@ export default async function NewVehiclePage({
                   Disponible también en
                 </p>
 
-                <div className="grid gap-3 rounded-[16px] border border-slate-200 bg-[#f8fafb] p-4 md:grid-cols-2">
+                <div className="grid gap-3 rounded-[16px] border border-slate-200 bg-[#f8fafb] p-4 lg:grid-cols-2">
                   {branches.map(
                     (branch) => (
                       <label
@@ -1147,12 +1194,12 @@ export default async function NewVehiclePage({
                           className="mt-0.5 h-5 w-5 rounded border-slate-300 accent-[#192a3a]"
                         />
 
-                        <span>
-                          <span className="block text-sm font-black text-[#192a3a]">
+                        <span className="min-w-0 flex-1">
+                          <span className="block break-words text-sm font-black leading-5 text-[#192a3a]">
                             {branch.name}
                           </span>
 
-                          <span className="mt-1 block text-xs font-semibold leading-5 text-slate-500">
+                          <span className="mt-1 block break-words text-xs font-semibold leading-5 text-slate-500">
                             {branch.city},{" "}
                             {branch.state}
                           </span>
@@ -1179,11 +1226,12 @@ export default async function NewVehiclePage({
             description="Información descriptiva que se mostrará en el detalle público de la unidad."
           >
             <div className="grid gap-5">
-              <AdminInput
+              <AdminTextarea
                 label="Especificaciones rápidas"
                 name="specs"
-                placeholder="689 cc, ABS, dos cilindros..."
-                description="Sepáralas por comas o saltos de línea."
+                rows={3}
+                placeholder="398 cc, 40 CV, 37.5 Nm, monocilíndrico DOHC, refrigeración líquida, 6 velocidades"
+                description="Sepáralas por comas."
               />
 
               <AdminTextarea
@@ -1205,7 +1253,7 @@ export default async function NewVehiclePage({
           </AdminSection>
         </div>
 
-        <aside className="xl:sticky xl:top-6 xl:self-start">
+        <aside className="min-w-0 xl:sticky xl:top-6 xl:self-start">
           <div className="space-y-5">
             <AdminSection
               icon={Eye}
@@ -1353,7 +1401,7 @@ export default async function NewVehiclePage({
                       type="file"
                       multiple
                       accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime"
-                      className="mt-4 block w-full text-xs font-semibold text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-[#192a3a] file:px-3 file:py-2 file:text-xs file:font-black file:text-white hover:file:bg-[#29465c]"
+                      className="mt-4 block w-full max-w-full text-xs font-semibold text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-[#192a3a] file:px-3 file:py-2 file:text-xs file:font-black file:text-white hover:file:bg-[#29465c]"
                     />
                   </div>
 
@@ -1395,7 +1443,7 @@ export default async function NewVehiclePage({
               </Link>
             </section>
 
-            <section className="rounded-[22px] border border-[#192a3a]/10 bg-[#e7edf1] p-5">
+            <section className="rounded-[22px] border border-slate-200 bg-slate-50 p-5">
               <Sparkles
                 size={20}
                 className="text-[#192a3a]"

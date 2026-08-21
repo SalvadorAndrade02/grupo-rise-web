@@ -92,6 +92,7 @@ export default async function InventoryPage() {
     status: vehicle.status,
     year: vehicle.year,
     price: vehicle.price,
+    currency: vehicle.currency,
     mileage: vehicle.mileage,
     branchId: vehicle.branchId,
     branchName: vehicle.branch.name,

@@ -60,6 +60,11 @@ enum VehicleMediaType {
   VIDEO
 }
 
+enum Currency {
+  MXN
+  USD
+}
+
 model Brand {
   id       Int             @id @default(autoincrement())
   name     String
@@ -125,6 +130,7 @@ model Vehicle {
   version     String?
   year        Int
   price       Int
+  currency    Currency @default(MXN)
   type        String
   color       String?
   mileage     Int?
@@ -253,6 +259,7 @@ model CatalogModel {
 
   year      Int?
   priceFrom Int?
+  currency  Currency @default(MXN)
 
   subtitle    String?
   description String  @default("")

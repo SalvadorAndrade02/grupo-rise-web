@@ -4,9 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
-  CalendarDays,
-  MapPin,
-  Sparkles,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 
@@ -23,6 +20,7 @@ type FeaturedVehicle = {
   model: string;
   year: number;
   price: number;
+  currency: "MXN" | "USD";
   type: string;
   specs: string[];
   mainImage?: string | null;
@@ -37,6 +35,7 @@ function getCategoryLabel(category: string) {
     AUTO: "Auto",
     MOTO: "Motocicleta",
     TODOTERRENO: "Todoterreno",
+    NAUTICA: "Náutica",
   };
 
   return labels[category] ?? category;
@@ -157,7 +156,7 @@ function VehicleCard({
         <div className="absolute bottom-4 right-4 grid h-11 w-11 place-items-center rounded-full bg-white text-[#0a0f14] shadow-lg transition duration-300 group-hover:bg-[#1A2A3A] group-hover:text-white group-active:text-white"> {/* Círculo flotante cambia al azul de la foto en hover */}
           <ArrowRight
             size={18}
-            className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"  
+            className="transition-transform group-hover:translate-x-0.5 group-active:translate-x-0.5"
           />
         </div>
       </Link>
@@ -171,14 +170,17 @@ function VehicleCard({
           {vehicle.name}
         </h3>
 
-        <div className="mt-5 flex items-end justify-between gap-4">
-          <div>
+        <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
               Precio
             </p>
 
-            <p className="mt-1 text-xl font-black tracking-[-0.03em] text-[#0a0f14]">
-              {formatCurrency(vehicle.price)}
+            <p className="mt-1 break-words text-xl font-black tracking-[-0.03em] text-[#0a0f14]">
+              {formatCurrency(
+                vehicle.price,
+                vehicle.currency
+              )}
             </p>
           </div>
 

@@ -21,6 +21,7 @@ import {
   Video,
 } from "lucide-react";
 import {
+  Currency,
   VehicleCategory,
   VehicleCondition,
   VehicleMediaType,
@@ -75,6 +76,11 @@ const validStatuses: VehicleStatus[] = [
   VehicleStatus.EN_TRANSITO,
   VehicleStatus.PROXIMAMENTE,
   VehicleStatus.INACTIVO,
+];
+
+const validCurrencies: Currency[] = [
+  Currency.MXN,
+  Currency.USD,
 ];
 
 function getTextValue(
@@ -163,7 +169,7 @@ function getCategoryLabel(
     AUTO: "Auto",
     MOTO: "Moto",
     TODOTERRENO: "Todo terreno",
-    NAUTICA: "Naútica"
+    NAUTICA: "Náutica"
   };
 
   return labels[category];
@@ -201,12 +207,27 @@ function getStatusLabel(
   return labels[status];
 }
 
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    maximumFractionDigits: 0,
-  }).format(value);
+function formatMoney(
+  value: number,
+  currency: Currency
+) {
+  const formatted =
+    new Intl.NumberFormat("es-MX", {
+      maximumFractionDigits: 0,
+    }).format(value);
+
+  return `$${formatted} ${currency}`;
+}
+
+function parseCurrency(
+  value: FormDataEntryValue | null,
+  fallback: Currency
+) {
+  return validCurrencies.includes(
+    value as Currency
+  )
+    ? (value as Currency)
+    : fallback;
 }
 
 function isValidMediaReference(
@@ -437,6 +458,12 @@ async function updateVehicle(
       formData,
       "price"
     ) ?? currentVehicle.price;
+
+  const currency =
+    parseCurrency(
+      formData.get("currency"),
+      currentVehicle.currency
+    );
 
   const mileage =
     getOptionalNumberValue(
@@ -715,6 +742,7 @@ async function updateVehicle(
         status,
         year,
         price,
+        currency,
         mileage,
         description,
         specs,
@@ -1194,7 +1222,8 @@ export default async function EditVehiclePage({
           icon={CalendarDays}
           label="Año y precio"
           value={`${vehicle.year} · ${formatMoney(
-            vehicle.price
+            vehicle.price,
+            vehicle.currency
           )}`}
           tone="violet"
         />
@@ -1211,7 +1240,7 @@ export default async function EditVehiclePage({
 
       <form
         action={updateVehicle}
-        className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]"
+        className="mt-6 grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]"
       >
         <input
           type="hidden"
@@ -1219,7 +1248,7 @@ export default async function EditVehiclePage({
           value={vehicle.id}
         />
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <AdminSection
             icon={Car}
             eyebrow="Información principal"
@@ -1368,14 +1397,27 @@ export default async function EditVehiclePage({
                 type="number"
                 required
                 min={0}
-                step="0.01"
-                defaultValue={
-                  vehicle.price
-                }
+                step={1}
+                defaultValue={vehicle.price}
                 description={`Precio actual: ${formatMoney(
-                  vehicle.price
+                  vehicle.price,
+                  vehicle.currency
                 )}`}
               />
+
+              <AdminSelect
+                label="Moneda"
+                name="currency"
+                defaultValue={vehicle.currency}
+              >
+                <option value={Currency.MXN}>
+                  MXN - Peso mexicano
+                </option>
+
+                <option value={Currency.USD}>
+                  USD - Dólar estadounidense
+                </option>
+              </AdminSelect>
 
               <AdminInput
                 label="Kilometraje"
@@ -1435,7 +1477,7 @@ export default async function EditVehiclePage({
             title="Sucursales donde aplica"
             description="La sucursal principal siempre se incluirá automáticamente."
           >
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 lg:grid-cols-2">
               {branches.map((branch) => (
                 <label
                   key={branch.id}
@@ -1451,12 +1493,12 @@ export default async function EditVehiclePage({
                     className="mt-0.5 h-5 w-5 rounded border-slate-300 accent-[#192a3a]"
                   />
 
-                  <span>
-                    <span className="block text-sm font-black text-[#192a3a]">
+                  <span className="min-w-0 flex-1">
+                    <span className="block break-words text-sm font-black leading-5 text-[#192a3a]">
                       {branch.name}
                     </span>
 
-                    <span className="mt-1 block text-xs font-semibold leading-5 text-slate-500">
+                    <span className="mt-1 block break-words text-xs font-semibold leading-5 text-slate-500">
                       {branch.city},{" "}
                       {branch.state}
                       {!branch.active
@@ -1470,7 +1512,7 @@ export default async function EditVehiclePage({
           </AdminSection>
         </div>
 
-        <aside className="xl:sticky xl:top-6 xl:self-start">
+        <aside className="min-w-0 xl:sticky xl:top-6 xl:self-start">
           <div className="space-y-5">
             <AdminSection
               icon={Eye}
@@ -1502,6 +1544,17 @@ export default async function EditVehiclePage({
                     {getStatusLabel(
                       vehicle.status
                     )}
+                  </div>
+
+                  <div className="mt-2 flex min-w-0 items-center gap-2 text-sm font-black text-slate-700">
+                    <Gauge size={16} className="shrink-0" />
+
+                    <span className="break-words">
+                      {formatMoney(
+                        vehicle.price,
+                        vehicle.currency
+                      )}
+                    </span>
                   </div>
 
                   <div className="mt-2 flex items-center gap-2 text-sm font-black text-slate-700">
@@ -1613,8 +1666,7 @@ export default async function EditVehiclePage({
                     type="file"
                     multiple
                     accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime"
-                    className="mt-4 block w-full text-xs font-semibold text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-[#192a3a] file:px-3 file:py-2 file:text-xs file:font-black file:text-white hover:file:bg-[#29465c]"
-                  />
+                    className="mt-4 block w-full max-w-full text-xs font-semibold text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-[#192a3a] file:px-3 file:py-2 file:text-xs file:font-black file:text-white hover:file:bg-[#29465c]" />
                 </div>
 
                 <span className="mt-2 block text-xs leading-5 text-slate-500">
@@ -1629,8 +1681,8 @@ export default async function EditVehiclePage({
               eyebrow="Galería"
               title="Archivos actuales"
               description={`${vehicle.images.length} archivo${vehicle.images.length === 1
-                  ? ""
-                  : "s"
+                ? ""
+                : "s"
                 } registrado${vehicle.images.length === 1
                   ? ""
                   : "s"

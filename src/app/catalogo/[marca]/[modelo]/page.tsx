@@ -31,11 +31,13 @@ const brandSlugMap: Record<string, string> = {
   "indian-motorcycle": "Indian",
   zeekrlife: "Zeekr",
   "lynk-co": "Lynk & Co",
+  slingshot: "Slingshot",
+  bennington: "Bennington",
 };
 
 function splitList(value?: string | null) {
   return String(value ?? "")
-    .split(",")
+    .split(/\n|,/)
     .map((item) => item.trim())
     .filter(Boolean);
 }
@@ -96,7 +98,7 @@ export default async function CatalogModelPage({
               Volver a {catalogModel.brand.name}
             </Link>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px] lg:items-end">
+            <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-end">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.25em] text-[var(--rise-blue)]">
                   {catalogModel.brand.name}
@@ -120,7 +122,10 @@ export default async function CatalogModelPage({
 
                 <p className="mt-1 text-3xl font-black">
                   {catalogModel.priceFrom
-                    ? formatCurrency(catalogModel.priceFrom)
+                    ? formatCurrency(
+                      catalogModel.priceFrom,
+                      catalogModel.currency
+                    )
                     : "Consultar"}
                 </p>
               </div>
@@ -131,7 +136,7 @@ export default async function CatalogModelPage({
 
       <section className="py-8">
         <Container>
-          <div className="grid gap-8 xl:grid-cols-[1fr_380px]">
+          <div className="grid min-w-0 gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]">
             <div className="space-y-8">
               <VehicleMediaGallery
                 items={catalogModel.images}
@@ -220,7 +225,10 @@ export default async function CatalogModelPage({
 
                   <h2 className="mt-3 text-3xl font-black">
                     {catalogModel.priceFrom
-                      ? formatCurrency(catalogModel.priceFrom)
+                      ? formatCurrency(
+                        catalogModel.priceFrom,
+                        catalogModel.currency
+                      )
                       : "Consultar precio"}
                   </h2>
 
@@ -237,17 +245,14 @@ export default async function CatalogModelPage({
                   />
 
                   <div className="mt-3 rounded-2xl bg-slate-50 p-4">
+                    <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400">
+                      <Tag size={15} />
+                      Año modelo
+                    </p>
 
-                    <div className="mt-3 rounded-2xl bg-slate-50 p-4">
-                      <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400">
-                        <Tag size={15} />
-                        Año modelo
-                      </p>
-
-                      <p className="mt-1 text-lg font-black">
-                        {catalogModel.year ?? "Por definir"}
-                      </p>
-                    </div>
+                    <p className="mt-1 text-lg font-black">
+                      {catalogModel.year ?? "Por definir"}
+                    </p>
                   </div>
                 </div>
               </div>

@@ -18,6 +18,9 @@ import {
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import {
+  formatCurrency,
+} from "@/lib/formatters";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +49,7 @@ type BrandVehicle = {
   category: VehicleCategory;
   year: number;
   price: number;
+  currency: "MXN" | "USD";
   mileage: number | null;
   description: string | null;
   mainImage: string | null;
@@ -160,14 +164,6 @@ const orderOptions = [
     value: "anio-desc",
   },
 ];
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 function normalize(value: string) {
   return value
@@ -851,7 +847,10 @@ function VehicleCard({
           </p>
 
           <p className="mt-1 text-2xl font-black tracking-[-0.035em] text-[var(--public-ink)]">
-            {formatMoney(vehicle.price)}
+            {formatCurrency(
+              vehicle.price,
+              vehicle.currency
+            )}
           </p>
         </div>
       </div>

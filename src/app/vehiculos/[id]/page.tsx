@@ -216,7 +216,10 @@ export async function generateMetadata({
   }
 
   const title = `${vehicle.brand.name} ${vehicle.name} ${vehicle.year} | Grupo Rise`;
-  const price = formatCurrency(vehicle.price);
+  const price = formatCurrency(
+    vehicle.price,
+    vehicle.currency
+  );
 
   const description = getSeoDescription(
     vehicle.description?.trim() ||
@@ -616,7 +619,10 @@ export default async function VehicleDetailPage({
                     </p>
 
                     <p className="mt-2 text-4xl font-black tracking-[-0.045em] text-[var(--public-ink)]">
-                      {formatCurrency(vehicle.price)}
+                      {formatCurrency(
+                        vehicle.price,
+                        vehicle.currency
+                      )}
                     </p>
                   </div>
 
@@ -879,7 +885,10 @@ function RelatedVehicleCard({
           </p>
 
           <p className="mt-1 text-2xl font-black tracking-[-0.035em] text-[var(--public-ink)]">
-            {formatCurrency(vehicle.price)}
+            {formatCurrency(
+              vehicle.price,
+              vehicle.currency
+            )}
           </p>
         </div>
       </div>

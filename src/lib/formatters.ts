@@ -1,9 +1,17 @@
-export function formatCurrency(value: number) {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    maximumFractionDigits: 0,
-  }).format(value);
+export type SupportedCurrency =
+  | "MXN"
+  | "USD";
+
+export function formatCurrency(
+  value: number,
+  currency: SupportedCurrency = "MXN"
+) {
+  const formatted =
+    new Intl.NumberFormat("es-MX", {
+      maximumFractionDigits: 0,
+    }).format(value);
+
+  return `$${formatted} ${currency}`;
 }
 
 export function formatNumber(value: number) {

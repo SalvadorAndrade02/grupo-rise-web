@@ -20,6 +20,7 @@ import {
   Video,
 } from "lucide-react";
 import {
+  Currency,
   VehicleCategory,
   VehicleMediaType,
 } from "@prisma/client";
@@ -168,18 +169,38 @@ function getVehicleCategoryValue(
     VehicleCategory.TODOTERRENO
   );
 
-  const validCategories: VehicleCategory[] =
-    [
-      VehicleCategory.AUTO,
-      VehicleCategory.MOTO,
-      VehicleCategory.TODOTERRENO,
-    ];
+  const validCategories: VehicleCategory[] = [
+    VehicleCategory.AUTO,
+    VehicleCategory.MOTO,
+    VehicleCategory.TODOTERRENO,
+    VehicleCategory.NAUTICA,
+  ];
 
   return validCategories.includes(
     categoryValue as VehicleCategory
   )
     ? (categoryValue as VehicleCategory)
     : VehicleCategory.TODOTERRENO;
+}
+
+function getCurrencyValue(
+  value: FormDataEntryValue | null,
+  fallback: Currency
+) {
+  const currencyValue = String(
+    value || fallback
+  );
+
+  const validCurrencies: Currency[] = [
+    Currency.MXN,
+    Currency.USD,
+  ];
+
+  return validCurrencies.includes(
+    currencyValue as Currency
+  )
+    ? (currencyValue as Currency)
+    : fallback;
 }
 
 function getCategoryTypeLabel(
@@ -394,6 +415,12 @@ async function updateCatalogModel(
     getOptionalNumberValue(
       formData,
       "priceFrom"
+    );
+
+  const currency =
+    getCurrencyValue(
+      formData.get("currency"),
+      currentModel.currency
     );
 
   const sortOrder =
@@ -616,6 +643,7 @@ async function updateCatalogModel(
         categoryType,
         year,
         priceFrom,
+        currency,
         subtitle,
         description,
         specs,
@@ -1074,7 +1102,7 @@ export default async function EditCatalogModelPage({
 
       <form
         action={updateCatalogModel}
-        className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]"
+        className="mt-6 grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]"
       >
         <input
           type="hidden"
@@ -1082,7 +1110,7 @@ export default async function EditCatalogModelPage({
           value={catalogModel.id}
         />
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <BrandCategorySelects
             mode="catalog"
             brands={brands.map(
@@ -1120,7 +1148,7 @@ export default async function EditCatalogModelPage({
             title="Datos del modelo"
             description="Actualiza la clasificación y la información comercial principal."
           >
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid gap-5 sm:grid-cols-2">
               <AdminInput
                 label="Nombre del modelo"
                 name="name"
@@ -1182,7 +1210,7 @@ export default async function EditCatalogModelPage({
                 name="priceFrom"
                 type="number"
                 min={0}
-                step="0.01"
+                step={1}
                 defaultValue={
                   catalogModel.priceFrom !==
                     null
@@ -1193,6 +1221,20 @@ export default async function EditCatalogModelPage({
                 }
               />
 
+              <AdminSelect
+                label="Moneda"
+                name="currency"
+                defaultValue={catalogModel.currency}
+              >
+                <option value={Currency.MXN}>
+                  MXN - Peso mexicano
+                </option>
+
+                <option value={Currency.USD}>
+                  USD - Dólar estadounidense
+                </option>
+              </AdminSelect>
+
               <AdminInput
                 label="Orden"
                 name="sortOrder"
@@ -1202,6 +1244,7 @@ export default async function EditCatalogModelPage({
                   catalogModel.sortOrder
                 }
                 description="Los valores menores aparecen primero."
+                containerClassName="sm:col-span-2"
               />
             </div>
           </AdminSection>
@@ -1247,7 +1290,7 @@ export default async function EditCatalogModelPage({
           </AdminSection>
         </div>
 
-        <aside className="xl:sticky xl:top-6 xl:self-start">
+        <aside className="min-w-0 xl:sticky xl:top-6 xl:self-start">
           <div className="space-y-5">
             <section className="overflow-hidden rounded-[22px] border border-black/[0.08] bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
               <div className="border-b border-slate-100 bg-[#f8fafb] p-5">
@@ -1365,8 +1408,7 @@ export default async function EditCatalogModelPage({
                     type="file"
                     multiple
                     accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime"
-                    className="mt-4 block w-full text-xs font-semibold text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-[#192a3a] file:px-3 file:py-2 file:text-xs file:font-black file:text-white hover:file:bg-[#29465c]"
-                  />
+                    className="mt-4 block w-full max-w-full text-xs font-semibold text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-[#192a3a] file:px-3 file:py-2 file:text-xs file:font-black file:text-white hover:file:bg-[#29465c]" />
                 </div>
 
                 <span className="mt-2 block text-xs leading-5 text-slate-500">
@@ -1380,9 +1422,9 @@ export default async function EditCatalogModelPage({
               eyebrow="Galería"
               title="Archivos actuales"
               description={`${catalogModel.images.length} archivo${catalogModel.images.length ===
-                  1
-                  ? ""
-                  : "s"
+                1
+                ? ""
+                : "s"
                 } registrado${catalogModel.images.length ===
                   1
                   ? ""
@@ -1427,16 +1469,15 @@ export default async function EditCatalogModelPage({
                               />
                             )}
 
-                            <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-white backdrop-blur">
-                              {isImage ? (
-                                <ImageIcon
-                                  size={12}
-                                />
-                              ) : (
-                                <Video
-                                  size={12}
-                                />
-                              )}
+                            <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-1 text-[8px] font-black uppercase tracking-[0.06em] text-white backdrop-blur">                              {isImage ? (
+                              <ImageIcon
+                                size={12}
+                              />
+                            ) : (
+                              <Video
+                                size={12}
+                              />
+                            )}
 
                               {isImage
                                 ? "Imagen"
@@ -1444,10 +1485,9 @@ export default async function EditCatalogModelPage({
                             </span>
 
                             {isMain && (
-                              <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-amber-600 shadow-sm">
-                                <Star
-                                  size={13}
-                                />
+                              <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[8px] font-black uppercase tracking-[0.06em] text-amber-600 shadow-sm">                                <Star
+                                size={13}
+                              />
                                 Principal
                               </span>
                             )}

@@ -88,14 +88,14 @@ const brandDefinitions: BrandDefinition[] = [
     slug: "sea-doo",
     aliases: ["Sea-Doo", "Sea Doo", "SeaDoo"],
     logo: "/catalog/brands/sea-doo.jpg",
-    group: "AVENTURA",
+    group: "NAUTICA",
   },
   {
     name: "Slingshot",
     slug: "slingshot",
     aliases: ["Slingshot", "Polaris Slingshot"],
     logo: "/catalog/brands/slingshot.png",
-    group: "AVENTURA",
+    group: "AUTOMOVILES",
   },
   {
     name: "Bennington",
