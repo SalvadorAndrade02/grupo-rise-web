@@ -830,6 +830,7 @@ function RelatedVehicleCard({
     id: number;
     name: string;
     price: number;
+    currency: "MXN" | "USD";
     mainImage: string | null;
     brand: {
       name: string;
