@@ -79,15 +79,15 @@ function getBrandSlug(brandName: string) {
 function getBrandLogo(brandName: string) {
   const logos: Record<string, string> = {
     "Can-Am": "/catalog/brands/can-am.png",
-    Polaris: "/catalog/brands/polaris.jpg",
+    Polaris: "/catalog/brands/polaris.png",
     "Sea-Doo": "/catalog/brands/sea-doo.jpg",
     "Sea Doo": "/catalog/brands/sea-doo.jpg",
     SeaDoo: "/catalog/brands/sea-doo.jpg",
     Triumph: "/catalog/brands/triumph.png",
     "Triumph Motorcycles": "/catalog/brands/triumph.png",
     "Royal Enfield": "/catalog/brands/royal-enfield.jpg",
-    Indian: "/catalog/brands/indian.jpg",
-    "Indian Motorcycle": "/catalog/brands/indian.jpg",
+    Indian: "/catalog/brands/indian.png",
+    "Indian Motorcycle": "/catalog/brands/indian.png",
     Zeekr: "/catalog/brands/zeekNegro.png",
     Zeekrlife: "/catalog/brands/zeekNegro.png",
     "Lynk & Co": "/catalog/brands/lynkco.png",
@@ -309,11 +309,7 @@ export default async function HomePage() {
         <GroupRiseSection />
 
         <div className="bg-[var(--home-background)]">
-          <VehicleCategoryShowcase
-            autoImage={autoImage}
-            motorcycleImage={motorcycleImage}
-            offRoadImage={offRoadImage}
-          />
+          <VehicleCategoryShowcase />
         </div>
 
         <div className="bg-[var(--home-surface)]">

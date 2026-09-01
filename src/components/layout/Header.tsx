@@ -22,7 +22,7 @@ const catalogBrands = [
   {
     label: "Polaris",
     href: "/catalogo/polaris",
-    logo: "/catalog/brands/polaris.jpg",
+    logo: "/catalog/brands/polaris.png",
     logoClass: "scale-140",
   },
   {
@@ -34,7 +34,7 @@ const catalogBrands = [
   {
     label: "Indian Motorcycle",
     href: "/catalogo/indian-motorcycle",
-    logo: "/catalog/brands/indian.jpg",
+    logo: "/catalog/brands/indian.png",
     logoClass: "scale-140",
   },
   {

@@ -23,34 +23,37 @@ type CategoryItem = {
   icon: LucideIcon;
 };
 
-export function VehicleCategoryShowcase({
-  autoImage,
-  motorcycleImage,
-  offRoadImage,
-}: VehicleCategoryShowcaseProps) {
+export function VehicleCategoryShowcase() {
   const categories: CategoryItem[] = [
     {
       title: "Autos",
       label: "Movilidad",
-      description: "Tecnología y comodidad para cada trayecto.",
+      description:
+        "Tecnología y comodidad para cada trayecto.",
       href: "/catalogo?categoria=AUTO",
-      imageUrl: autoImage,
+      imageUrl:
+        "/images/categories/aut.webp",
       icon: CarFront,
     },
     {
       title: "Motocicletas",
       label: "Libertad",
-      description: "Diseñadas para ciudad, carretera y aventura.",
+      description:
+        "Diseñadas para ciudad, carretera y aventura.",
       href: "/catalogo?categoria=MOTO",
-      imageUrl: motorcycleImage,
+      imageUrl:
+        "/images/categories/mot.webp",
       icon: Bike,
     },
     {
       title: "Todoterreno",
       label: "Aventura",
-      description: "Potencia y capacidad para caminos sin límites.",
-      href: "/catalogo?categoria=TODOTERRENO",
-      imageUrl: offRoadImage,
+      description:
+        "Potencia y capacidad para caminos sin límites.",
+      href:
+        "/catalogo?categoria=TODOTERRENO",
+      imageUrl:
+        "/images/categories/tt.webp",
       icon: Mountain,
     },
   ];
@@ -145,14 +148,14 @@ function CategoryButton({
           </span>
         </div>
 
-        <div className="relative h-[118px] w-[42%] shrink-0">
+        <div className="relative h-[125px] w-[44%] shrink-0">
           {category.imageUrl ? (
             <Image
               src={category.imageUrl}
               alt={category.title}
               fill
               sizes="(max-width: 768px) 40vw, 15vw"
-              className="object-contain object-center transition duration-500 group-hover:scale-105 group-active:scale-105"
+              className="object-contain object-center p-1 transition duration-500 group-hover:scale-105 group-active:scale-105"
             />
           ) : (
             <div className="flex h-full items-center justify-center">

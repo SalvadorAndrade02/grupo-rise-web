@@ -214,7 +214,7 @@ function getBrandSlug(brandName: string) {
 function getBrandLogo(brandName: string) {
   const logos: Record<string, string> = {
     "Can-Am": "/catalog/brands/can-am.png",
-    Polaris: "/catalog/brands/polaris.jpg",
+    Polaris: "/catalog/brands/polaris.png",
 
     "Sea-Doo": "/catalog/brands/sea-doo.jpg",
     "Sea Doo": "/catalog/brands/sea-doo.jpg",
@@ -225,8 +225,8 @@ function getBrandLogo(brandName: string) {
 
     "Royal Enfield": "/catalog/brands/royal-enfield.jpg",
 
-    Indian: "/catalog/brands/indian.jpg",
-    "Indian Motorcycle": "/catalog/brands/indian.jpg",
+    Indian: "/catalog/brands/indian.png",
+    "Indian Motorcycle": "/catalog/brands/indian.png",
 
     Zeekr: "/catalog/brands/zeekNegro.png",
     Zeekrlife: "/catalog/brands/zeekNegro.png",

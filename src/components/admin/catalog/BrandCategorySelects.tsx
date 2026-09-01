@@ -66,32 +66,56 @@ function getCategoryLabel(category: VehicleCategoryValue) {
   return labels[category];
 }
 function setFormFieldValue(
+  form: HTMLFormElement | null,
   name: string,
-  value: string | number | null | undefined,
+  value:
+    | string
+    | number
+    | null
+    | undefined,
   overwrite = false
 ) {
-  if (value === null || value === undefined || value === "") {
+  if (
+    !form ||
+    value === null ||
+    value === undefined
+  ) {
     return;
   }
 
-  const field = document.querySelector<
-    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-  >(`[name="${name}"]`);
+  const field =
+    form.elements.namedItem(name);
 
-  if (!field) {
+  if (
+    !(
+      field instanceof HTMLInputElement ||
+      field instanceof HTMLTextAreaElement ||
+      field instanceof HTMLSelectElement
+    )
+  ) {
     return;
   }
 
-  const currentValue = typeof field.value === "string" ? field.value : "";
-
-  if (!overwrite && currentValue.trim()) {
+  if (
+    !overwrite &&
+    field.value.trim()
+  ) {
     return;
   }
 
   field.value = String(value);
 
-  field.dispatchEvent(new Event("input", { bubbles: true }));
-  field.dispatchEvent(new Event("change", { bubbles: true }));
+  field.dispatchEvent(
+    new Event("input", {
+      bubbles: true,
+    })
+  );
+
+  field.dispatchEvent(
+    new Event("change", {
+      bubbles: true,
+    })
+  );
 }
 
 export function BrandCategorySelects({
@@ -178,27 +202,81 @@ export function BrandCategorySelects({
     }
   }
 
-  function handleCatalogModelChange(value: string) {
+  function handleCatalogModelChange(
+    value: string,
+    form: HTMLFormElement | null
+  ) {
     setSelectedCatalogModelId(value);
 
-    const model = catalogModels.find((item) => String(item.id) === value);
+    const model =
+      catalogModels.find(
+        (item) =>
+          String(item.id) === value
+      );
 
     if (!model) {
       return;
     }
 
+    console.log(
+      "MODELO SELECCIONADO:",
+      model.name
+    );
+
+    console.log(
+      "DESCRIPTION:",
+      model.description
+    );
+
     setVehicleName(model.name);
 
     if (model.categoryId) {
-      setSelectedCategoryId(String(model.categoryId));
+      setSelectedCategoryId(
+        String(model.categoryId)
+      );
     }
 
-    setFormFieldValue("year", model.year, true);
-    setFormFieldValue("price", model.priceFrom, true);
-    setFormFieldValue("description", model.description, true);
-    setFormFieldValue("specs", model.specs, true);
-    setFormFieldValue("features", model.features, true);
-    setFormFieldValue("mainImage", model.mainImage, true);
+    setFormFieldValue(
+      form,
+      "year",
+      model.year,
+      true
+    );
+
+    setFormFieldValue(
+      form,
+      "price",
+      model.priceFrom,
+      true
+    );
+
+    setFormFieldValue(
+      form,
+      "description",
+      model.description,
+      true
+    );
+
+    setFormFieldValue(
+      form,
+      "specs",
+      model.specs,
+      true
+    );
+
+    setFormFieldValue(
+      form,
+      "features",
+      model.features,
+      true
+    );
+
+    setFormFieldValue(
+      form,
+      "mainImage",
+      model.mainImage,
+      true
+    );
   }
 
   return (
@@ -282,9 +360,15 @@ export function BrandCategorySelects({
               </span>
 
               <select
-                value={selectedCatalogModelId}
+                name="catalogModelId"
+                value={
+                  selectedCatalogModelId
+                }
                 onChange={(event) =>
-                  handleCatalogModelChange(event.target.value)
+                  handleCatalogModelChange(
+                    event.target.value,
+                    event.currentTarget.form
+                  )
                 }
                 disabled={!selectedBrandId}
                 className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition focus:border-[var(--rise-blue)] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"

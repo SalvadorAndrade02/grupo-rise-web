@@ -52,7 +52,7 @@ const brandDefinitions: BrandDefinition[] = [
     name: "Indian Motorcycle",
     slug: "indian-motorcycle",
     aliases: ["Indian", "Indian Motorcycle"],
-    logo: "/catalog/brands/indian.jpg",
+    logo: "/catalog/brands/indian.png",
     group: "MOTOCICLETAS",
   },
   {
@@ -80,7 +80,7 @@ const brandDefinitions: BrandDefinition[] = [
     name: "Polaris",
     slug: "polaris",
     aliases: ["Polaris"],
-    logo: "/catalog/brands/polaris.jpg",
+    logo: "/catalog/brands/polaris.png",
     group: "AVENTURA",
   },
   {
