@@ -80,9 +80,9 @@ function getBrandLogo(brandName: string) {
   const logos: Record<string, string> = {
     "Can-Am": "/catalog/brands/can-am.png",
     Polaris: "/catalog/brands/polaris.png",
-    "Sea-Doo": "/catalog/brands/sea-doo.jpg",
-    "Sea Doo": "/catalog/brands/sea-doo.jpg",
-    SeaDoo: "/catalog/brands/sea-doo.jpg",
+    "Sea-Doo": "/catalog/brands/sea-doo.png",
+    "Sea Doo": "/catalog/brands/sea-doo.png",
+    SeaDoo: "/catalog/brands/sea-doo.png",
     Triumph: "/catalog/brands/triumph.png",
     "Triumph Motorcycles": "/catalog/brands/triumph.png",
     "Royal Enfield": "/catalog/brands/royal-enfield.jpg",

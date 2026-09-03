@@ -23,12 +23,12 @@ const catalogBrands = [
     label: "Polaris",
     href: "/catalogo/polaris",
     logo: "/catalog/brands/polaris.png",
-    logoClass: "scale-140",
+    logoClass: "scale-125",
   },
   {
     label: "Sea-Doo",
     href: "/catalogo/sea-doo",
-    logo: "/catalog/brands/sea-doo.jpg",
+    logo: "/catalog/brands/sea-doo.png",
     logoClass: "scale-125",
   },
   {

@@ -87,7 +87,7 @@ const brandDefinitions: BrandDefinition[] = [
     name: "Sea-Doo",
     slug: "sea-doo",
     aliases: ["Sea-Doo", "Sea Doo", "SeaDoo"],
-    logo: "/catalog/brands/sea-doo.jpg",
+    logo: "/catalog/brands/sea-doo.png",
     group: "NAUTICA",
   },
   {
