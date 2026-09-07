@@ -17,61 +17,61 @@ const catalogBrands = [
     label: "Can-Am",
     href: "/catalogo/can-am",
     logo: "/catalog/brands/can-am.png",
-    logoClass: "scale-110",
+    logoClass: "scale-90",
   },
   {
     label: "Polaris",
     href: "/catalogo/polaris",
     logo: "/catalog/brands/polaris.png",
-    logoClass: "scale-125",
+    logoClass: "scale-350",
   },
   {
     label: "Sea-Doo",
     href: "/catalogo/sea-doo",
     logo: "/catalog/brands/sea-doo.png",
-    logoClass: "scale-125",
+    logoClass: "scale-105",
   },
   {
     label: "Indian Motorcycle",
     href: "/catalogo/indian-motorcycle",
     logo: "/catalog/brands/indian.png",
-    logoClass: "scale-140",
+    logoClass: "scale-300",
   },
   {
     label: "Triumph",
     href: "/catalogo/triumph-motorcycles",
     logo: "/catalog/brands/triumph.png",
-    logoClass: "scale-125",
+    logoClass: "scale-150",
   },
   {
     label: "Royal Enfield",
     href: "/catalogo/royal-enfield",
     logo: "/catalog/brands/royal-enfield.jpg",
-    logoClass: "scale-125",
+    logoClass: "scale-305",
   },
   {
     label: "ZEEKR",
     href: "/catalogo/zeekrlife",
     logo: "/catalog/brands/zeekNegro.png",
-    logoClass: "scale-100",
+    logoClass: "scale-120",
   },
   {
     label: "Lynk & Co",
     href: "/catalogo/lynk-co",
     logo: "/catalog/brands/lynkco.png",
-    logoClass: "scale-125",
+    logoClass: "scale-105",
   },
   {
     label: "Slingshot",
     href: "/catalogo/slingshot",
     logo: "/catalog/brands/slingshot.png",
-    logoClass: "scale-110",
+    logoClass: "scale-100",
   },
   {
     label: "Bennington",
     href: "/catalogo/bennington",
     logo: "/catalog/brands/bennington.png",
-    logoClass: "scale-110",
+    logoClass: "scale-100",
   },
 ];
 
@@ -245,13 +245,16 @@ export function Header() {
                       aria-label={`Ver catálogo de ${brand.label}`}
                       className="group/brand flex min-h-[108px] items-center justify-center bg-[#e1e4e3] px-6 py-5 transition hover:bg-white"
                     >
-                      <Image
-                        src={brand.logo}
-                        alt={`Logo de ${brand.label}`}
-                        width={180}
-                        height={70}
-                        className="max-h-[64px] w-auto max-w-[180px] object-contain transition-transform duration-200 group-hover/brand:scale-105"
-                      />
+                      <div className="relative flex h-[58px] w-[170px] items-center justify-center overflow-hidden transition-transform duration-200 group-hover/brand:scale-[1.03]">
+                        <Image
+                          src={brand.logo}
+                          alt={`Logo de ${brand.label}`}
+                          width={170}
+                          height={58}
+                          unoptimized
+                          className={`h-full w-full object-contain ${brand.logoClass}`}
+                        />
+                      </div>
                     </Link>
                   ))}
                 </div>
@@ -386,13 +389,16 @@ export function Header() {
                   aria-label={`Ver catálogo de ${brand.label}`}
                   className="flex min-h-[92px] items-center justify-center border border-white/10 bg-[#e1e4e3] px-4 py-4 transition hover:bg-white"
                 >
-                  <Image
-                    src={brand.logo}
-                    alt={`Logo de ${brand.label}`}
-                    width={150}
-                    height={60}
-                    className="max-h-[56px] w-auto max-w-[150px] object-contain"
-                  />
+                  <div className="relative flex h-[52px] w-[140px] items-center justify-center overflow-hidden">
+                    <Image
+                      src={brand.logo}
+                      alt={`Logo de ${brand.label}`}
+                      width={140}
+                      height={52}
+                      unoptimized
+                      className={`h-full w-full object-contain ${brand.logoClass}`}
+                    />
+                  </div>
                 </Link>
               ))}
             </div>
