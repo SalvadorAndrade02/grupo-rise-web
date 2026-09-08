@@ -4,6 +4,19 @@ import { Footer } from "@/components/layout/Footer";
 import { NewsStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import {
+    Target,
+    Eye,
+    Handshake,
+    Scale,
+    TrendingUp,
+    Award,
+    Trophy,
+    ShieldCheck,
+    BriefcaseBusiness,
+    Headphones,
+    HeartHandshake,
+} from "lucide-react";
 
 export const metadata: Metadata = {
     title: "Grupo RISE",
@@ -16,23 +29,57 @@ const institutionalBlocks = [
         number: "01",
         label: "Misión",
         title: "Nuestro propósito",
+        icon: Target,
         description:
-            "Información institucional pendiente de confirmación por parte de Grupo RISE.",
+            "Satisfacer a nuestros clientes con productos de alta gama Off Road y On Road, que lleven sus emociones y experiencias al límite en cada rodada.",
     },
     {
         number: "02",
         label: "Visión",
         title: "Nuestra dirección",
+        icon: Eye,
         description:
-            "Información institucional pendiente de confirmación por parte de Grupo RISE.",
+            "Ser el mejor concesionario de vehículos todo terreno, roadsters y acuáticos en el país, fortalecidos por equipos de trabajo ampliamente capacitados en la gama de productos y con una cultura de satisfacción al cliente, generando así valor en todos los niveles de la organización.",
     },
 ];
 
 const values = [
-    "Valor por definir",
-    "Valor por definir",
-    "Valor por definir",
-    "Valor por definir",
+    {
+        name: "COMPROMISO",
+        icon: Handshake,
+    },
+    {
+        name: "ÉTICA Y HONESTIDAD",
+        icon: Scale,
+    },
+    {
+        name: "MEJORA CONTINUA",
+        icon: TrendingUp,
+    },
+    {
+        name: "EXCELENCIA",
+        icon: Award,
+    },
+    {
+        name: "COMPETITIVIDAD",
+        icon: Trophy,
+    },
+    {
+        name: "RESPONSABILIDAD",
+        icon: ShieldCheck,
+    },
+    {
+        name: "PROFESIONALISMO",
+        icon: BriefcaseBusiness,
+    },
+    {
+        name: "ATENCIÓN AL CLIENTE",
+        icon: Headphones,
+    },
+    {
+        name: "RESPETO",
+        icon: HeartHandshake,
+    },
 ];
 
 function formatNewsDate(value?: Date | null) {
@@ -139,10 +186,15 @@ export default async function GrupoRisePage() {
                             </div>
 
                             <div className="border-l-2 border-[var(--public-accent)] pl-6 md:pl-10">
-                                <p className="max-w-3xl text-lg leading-8 text-[var(--public-muted)] md:text-xl md:leading-9">
-                                    Este espacio presentará la historia, desarrollo, alcance e
-                                    identidad de Grupo RISE una vez que la empresa proporcione
-                                    la información institucional oficial.
+                                <p className="max-w-3xl text-lg font-medium leading-8 text-[var(--public-ink)] md:text-xl md:leading-9">
+                                    En Grupo RISE buscamos crear experiencias alrededor de
+                                    productos de alta gama Off Road, On Road y acuáticos.
+                                </p>
+
+                                <p className="mt-5 max-w-3xl text-sm leading-7 text-[var(--public-muted)] md:text-base">
+                                    Nuestro enfoque está respaldado por equipos ampliamente
+                                    capacitados y una cultura orientada a la satisfacción del
+                                    cliente, generando valor en todos los niveles de la organización.
                                 </p>
                             </div>
                         </div>
@@ -152,90 +204,134 @@ export default async function GrupoRisePage() {
                 {/* Misión y visión */}
                 <section className="border-b border-[var(--home-border)] bg-[#eef0ee]">
                     <div className="public-container py-16 md:py-24">
-                        <div className="flex flex-col justify-between gap-6 border-b border-[var(--home-border)] pb-8 md:flex-row md:items-end">
+                        <div className="grid gap-8 border-b border-[var(--home-border)] pb-9 lg:grid-cols-[1fr_0.55fr] lg:items-end">
                             <div>
                                 <p className="public-eyebrow">
                                     Identidad institucional
                                 </p>
 
-                                <h2 className="mt-5 max-w-3xl text-4xl font-black tracking-[-0.045em] text-[var(--public-ink)] md:text-5xl">
-                                    Misión, visión y principios del grupo.
+                                <h2 className="mt-5 max-w-3xl text-4xl font-black tracking-[-0.045em] text-[var(--public-ink)] md:text-5xl lg:text-6xl">
+                                    Misión y visión que definen nuestro camino.
                                 </h2>
                             </div>
 
-                            <p className="max-w-md text-sm leading-6 text-[var(--public-muted)]">
-                                El contenido definitivo se incorporará cuando Grupo RISE
-                                proporcione la información institucional correspondiente.
+                            <p className="max-w-md text-sm leading-7 text-[var(--public-muted)] lg:justify-self-end">
+                                Nuestra forma de trabajar parte de una visión clara,
+                                una atención cercana al cliente y principios que orientan
+                                cada experiencia.
                             </p>
                         </div>
 
-                        <div className="mt-10 grid border border-[var(--home-border)] bg-[var(--home-card)] lg:grid-cols-2">
-                            {institutionalBlocks.map((block, index) => (
-                                <article
-                                    key={block.label}
-                                    className={`min-h-[320px] p-7 md:p-10 ${index === 0
-                                        ? "border-b border-[var(--home-border)] lg:border-b-0 lg:border-r"
-                                        : ""
-                                        }`}
-                                >
-                                    <div className="flex items-start justify-between gap-5">
-                                        <span className="text-xs font-black uppercase tracking-[0.2em] text-[var(--public-accent)]">
-                                            {block.label}
-                                        </span>
+                        <div className="mt-10 grid gap-5 lg:grid-cols-2">
+                            {institutionalBlocks.map((block) => {
+                                const Icon = block.icon;
 
-                                        <span className="text-sm font-black tracking-[0.12em] text-[var(--public-muted-light)]">
+                                return (
+                                    <article
+                                        key={block.label}
+                                        className="group relative min-h-[370px] overflow-hidden border border-[var(--home-border)] bg-white p-7 transition duration-300 hover:-translate-y-1 hover:border-[var(--home-border-strong)] hover:shadow-[0_20px_50px_rgba(15,23,42,0.08)] md:p-10"
+                                    >
+                                        <div className="absolute inset-x-0 top-0 h-1 bg-[var(--public-accent)]" />
+
+                                        <span className="pointer-events-none absolute right-7 top-5 text-[82px] font-black leading-none tracking-[-0.08em] text-[#192a3a]/[0.05] md:right-9 md:text-[110px]">
                                             {block.number}
                                         </span>
-                                    </div>
 
-                                    <div className="mt-20 max-w-xl">
-                                        <h3 className="text-3xl font-black tracking-[-0.035em] text-[var(--public-ink)]">
-                                            {block.title}
-                                        </h3>
+                                        <div className="relative flex h-full flex-col">
+                                            <div className="flex items-center justify-between gap-5">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="flex h-10 w-10 items-center justify-center border border-[#192a3a]/10 bg-[#192a3a]/[0.035] text-[#192a3a]/80 transition-all duration-300 group-hover:border-[#192a3a]/20 group-hover:bg-[#192a3a]/[0.06] group-hover:text-[#192a3a] group-hover:scale-[1.03]">
+                                                        <Icon
+                                                            size={18}
+                                                            strokeWidth={1.7}
+                                                        />
+                                                    </span>
 
-                                        <p className="mt-5 text-base leading-7 text-[var(--public-muted)]">
-                                            {block.description}
-                                        </p>
-                                    </div>
-                                </article>
-                            ))}
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--public-accent)]">
+                                                        {block.label}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-auto max-w-xl pt-24">
+                                                <h3 className="text-3xl font-black tracking-[-0.04em] text-[var(--public-ink)] md:text-4xl">
+                                                    {block.title}
+                                                </h3>
+
+                                                <p className="mt-6 text-base leading-8 text-[var(--public-muted)]">
+                                                    {block.description}
+                                                </p>
+
+                                                <div className="mt-8 border-t border-[var(--home-border)] pt-5">
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--public-muted-light)]">
+                                                        Grupo RISE
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </article>
+                                );
+                            })}
                         </div>
                     </div>
                 </section>
 
                 {/* Valores */}
-                <section className="border-b border-[var(--home-border)] bg-[var(--home-card)]">
-                    <div className="public-container py-16 md:py-24">
-                        <div>
-                            <p className="public-eyebrow">
-                                Nuestros valores
-                            </p>
+                <section className="relative overflow-hidden bg-[#151a1f] text-white">
+                    {/* Decoración de fondo */}
+                    <div className="pointer-events-none absolute right-[-120px] top-[-120px] h-[380px] w-[380px] rounded-full bg-white/[0.025] blur-3xl" />
 
-                            <h2 className="mt-5 max-w-3xl text-4xl font-black tracking-[-0.045em] text-[var(--public-ink)] md:text-5xl">
-                                Principios que representan a Grupo RISE.
-                            </h2>
+                    <div className="public-container relative py-16 md:py-24">
+                        <div className="grid gap-8 border-b border-white/10 pb-9 lg:grid-cols-[1fr_0.55fr] lg:items-end">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/45">
+                                    Nuestros valores
+                                </p>
 
-                            <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--public-muted)]">
-                                Los valores institucionales se mostrarán cuando sean
-                                confirmados oficialmente por la empresa.
+                                <h2 className="mt-5 max-w-3xl text-4xl font-black tracking-[-0.045em] text-white md:text-5xl lg:text-6xl">
+                                    Principios que representan a Grupo RISE.
+                                </h2>
+                            </div>
+
+                            <p className="max-w-md text-sm leading-7 text-white/50 lg:justify-self-end">
+                                Principios que guían nuestra forma de trabajar,
+                                atender a nuestros clientes y generar valor en todos
+                                los niveles de la organización.
                             </p>
                         </div>
 
-                        <div className="mt-10 grid border border-[var(--home-border)] sm:grid-cols-2 lg:grid-cols-4">
-                            {values.map((value, index) => (
-                                <article
-                                    key={`${value}-${index}`}
-                                    className="min-h-[190px] border-b border-[var(--home-border)] p-6 sm:border-r lg:border-b-0"
-                                >
-                                    <span className="text-xs font-black tracking-[0.16em] text-[var(--public-accent)]">
-                                        {String(index + 1).padStart(2, "0")}
-                                    </span>
+                        <div className="mt-10 grid border-l border-t border-white/10 sm:grid-cols-2 lg:grid-cols-3">
+                            {values.map((value, index) => {
+                                const Icon = value.icon;
 
-                                    <p className="mt-16 text-lg font-black tracking-[-0.02em] text-[var(--public-ink)]">
-                                        {value}
-                                    </p>
-                                </article>
-                            ))}
+                                return (
+                                    <article
+                                        key={value.name}
+                                        className="group relative min-h-[190px] overflow-hidden border-b border-r border-white/10 p-6 transition duration-300 hover:bg-white/[0.025] md:min-h-[210px] md:p-8"
+                                    >
+                                        <div className="flex items-start justify-between gap-4">
+                                            <span className="text-[11px] font-black tracking-[0.18em] text-white/35">
+                                                {String(index + 1).padStart(2, "0")}
+                                            </span>
+
+                                            <span className="flex h-9 w-9 items-center justify-center border border-white/10 bg-white/[0.02] text-white/40 transition-all duration-300 group-hover:border-white/15 group-hover:bg-white/[0.035] group-hover:text-white/70 group-hover:scale-[1.03]">
+                                                <Icon
+                                                    size={17}
+                                                    strokeWidth={1.6}
+                                                />
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-14 md:mt-16">
+                                            <p className="max-w-[280px] text-xl font-black uppercase leading-tight tracking-[-0.025em] text-white md:text-2xl">
+                                                {value.name}
+                                            </p>
+
+                                            <div className="mt-5 h-px w-8 bg-white/15 transition-all duration-300 group-hover:w-12 group-hover:bg-white/30" />
+                                        </div>
+                                    </article>
+                                );
+                            })}
                         </div>
                     </div>
                 </section>
