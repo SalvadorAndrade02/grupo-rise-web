@@ -154,7 +154,7 @@ function getBrandLogo(brandName: string) {
     Triumph: "/catalog/brands/triumph.jpg",
     "Triumph Motorcycles": "/catalog/brands/triumph.jpg",
 
-    "Royal Enfield": "/catalog/brands/royal-enfield.jpg",
+    "Royal Enfield": "/catalog/brands/royal-enfield.png",
 
     Indian: "/catalog/brands/indian.jpg",
     "Indian Motorcycle": "/catalog/brands/indian.jpg",

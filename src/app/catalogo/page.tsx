@@ -66,7 +66,7 @@ const brandDefinitions: BrandDefinition[] = [
     name: "Royal Enfield",
     slug: "royal-enfield",
     aliases: ["Royal Enfield"],
-    logo: "/catalog/brands/royal-enfield.jpg",
+    logo: "/catalog/brands/royal-enfield.png",
     group: "MOTOCICLETAS",
   },
   {

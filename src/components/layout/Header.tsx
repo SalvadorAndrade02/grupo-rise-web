@@ -23,7 +23,7 @@ const catalogBrands = [
     label: "Polaris",
     href: "/catalogo/polaris",
     logo: "/catalog/brands/polaris.png",
-    logoClass: "scale-350",
+    logoClass: "scale-110",
   },
   {
     label: "Sea-Doo",
@@ -35,7 +35,7 @@ const catalogBrands = [
     label: "Indian Motorcycle",
     href: "/catalogo/indian-motorcycle",
     logo: "/catalog/brands/indian.png",
-    logoClass: "scale-300",
+    logoClass: "scale-110",
   },
   {
     label: "Triumph",
@@ -46,8 +46,8 @@ const catalogBrands = [
   {
     label: "Royal Enfield",
     href: "/catalogo/royal-enfield",
-    logo: "/catalog/brands/royal-enfield.jpg",
-    logoClass: "scale-305",
+    logo: "/catalog/brands/royal-enfield.png",
+    logoClass: "scale-150",
   },
   {
     label: "ZEEKR",
