@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { NewsStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import Image from "next/image";
 import Link from "next/link";
 import {
     Target,
@@ -185,17 +186,17 @@ export default async function GrupoRisePage() {
                                 </h2>
                             </div>
 
-                            <div className="border-l-2 border-[var(--public-accent)] pl-6 md:pl-10">
-                                <p className="max-w-3xl text-lg font-medium leading-8 text-[var(--public-ink)] md:text-xl md:leading-9">
-                                    En Grupo RISE buscamos crear experiencias alrededor de
-                                    productos de alta gama Off Road, On Road y acuáticos.
-                                </p>
-
-                                <p className="mt-5 max-w-3xl text-sm leading-7 text-[var(--public-muted)] md:text-base">
-                                    Nuestro enfoque está respaldado por equipos ampliamente
-                                    capacitados y una cultura orientada a la satisfacción del
-                                    cliente, generando valor en todos los niveles de la organización.
-                                </p>
+                            <div className="flex items-center justify-center lg:justify-end">
+                                <div className="relative w-full max-w-[560px]">
+                                    <Image
+                                        src="/images/institutional/grupo-rise-15-anos.png"
+                                        alt="Grupo RISE - Más de 18,000 clientes y 15 años nos respaldan"
+                                        width={1080}
+                                        height={1080}
+                                        priority
+                                        className="h-auto w-full object-contain"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
