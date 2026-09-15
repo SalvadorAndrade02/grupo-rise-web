@@ -32,7 +32,7 @@ export function VehicleCategoryShowcase() {
         "Tecnología y comodidad para cada trayecto.",
       href: "/catalogo?categoria=AUTO",
       imageUrl:
-        "/images/categories/aut.webp",
+        "/images/categories/aut.png",
       icon: CarFront,
     },
     {
