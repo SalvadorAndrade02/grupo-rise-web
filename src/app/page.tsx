@@ -300,13 +300,11 @@ export default async function HomePage() {
       <Header />
 
       <div className="public-home">
-        <InstitutionalHero
+        {/* <InstitutionalHero
           heroImage={autoImage || motorcycleImage || offRoadImage}
           brandCount={formattedBrandCards.length}
           branchCount={branches.length}
-        />
-
-        <GroupRiseSection />
+        /> */}
 
         <div className="bg-[var(--home-background)]">
           <VehicleCategoryShowcase />
@@ -316,7 +314,9 @@ export default async function HomePage() {
           <HomeBrandCatalogs brands={formattedBrandCards} />
         </div>
 
-        <section
+        <GroupRiseSection />
+
+        {/* <section
           id="noticias"
           className="public-section border-y border-[var(--home-border)] bg-[var(--home-background)]"
         >
@@ -384,7 +384,7 @@ export default async function HomePage() {
               ))}
             </div>
           </div>
-        </section>
+        </section> */}
 
         <section
           id="eventos"

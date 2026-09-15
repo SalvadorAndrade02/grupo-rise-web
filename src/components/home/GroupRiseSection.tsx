@@ -28,30 +28,7 @@ export function GroupRiseSection() {
             id="grupo-rise"
             className="scroll-mt-24 border-b border-[var(--home-border)] bg-[#eef0ee]"
         >
-            {/* Presentación del grupo */}
-            <div className="relative overflow-hidden border-b border-[var(--home-border)]">
-                <div className="pointer-events-none absolute right-0 top-0 h-full w-1/3 bg-[linear-gradient(135deg,transparent,rgba(38,58,75,0.07))]" />
-
-                <div className="public-container public-section relative">
-                    <div className="grid items-center gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
-                        <div>
-                            <p className="public-eyebrow">Acerca del grupo</p>
-
-                            <h2 className="public-title mt-5 max-w-xl text-4xl md:text-6xl">
-                                Una visión compartida por distintas marcas.
-                            </h2>
-                        </div>
-
-                        <div className="border-l-2 border-[var(--public-accent)] pl-6 md:pl-10">
-                            <p className="max-w-3xl text-lg leading-8 text-[var(--public-muted)] md:text-xl md:leading-9">
-                                Este espacio presentará la historia, identidad y enfoque
-                                institucional de Grupo RISE una vez que la información sea
-                                confirmada por la empresa.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
 
             {/* Noticias */}
             <div className="bg-[var(--home-surface-alt)]">
