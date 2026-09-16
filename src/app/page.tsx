@@ -6,12 +6,17 @@ import { GroupRiseSection } from "@/components/home/GroupRiseSection";
 import { BranchesCarousel } from "@/components/home/BranchesCarousel";
 import { prisma } from "@/lib/prisma";
 import {
+  NewsStatus,
   VehicleCategory,
   VehicleMediaType,
   VehicleStatus,
 } from "@prisma/client";
-
+import Link from "next/link";
 import { VehicleCategoryShowcase } from "@/components/home/VehicleCategoryShowcase";
+import {
+  BrandVehicleCarousel,
+  type BrandVehicleCarouselSlide,
+} from "@/components/home/BrandVehicleCarousel";
 
 export const revalidate = 300;
 
@@ -32,14 +37,16 @@ const catalogBrandNames = [
 ];
 
 const brandSlugOrder = [
+  "zeekrlife",
+  "lynk-co",
+  "slingshot",
   "can-am",
   "polaris",
-  "sea-doo",
   "triumph-motorcycles",
   "royal-enfield",
   "indian-motorcycle",
-  "zeekrlife",
-  "lynk-co",
+  "sea-doo",
+  "bennington",
 ];
 
 function normalize(value: string) {
@@ -102,13 +109,29 @@ function getBrandSortOrder(brandName: string) {
   return index === -1 ? 999 : index;
 }
 
+function formatNewsDate(value?: Date | null) {
+  if (!value) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(value);
+}
+
 export default async function HomePage() {
+  const currentDate = new Date();
+
   const [
     branches,
     catalogBrands,
     autoVehicle,
     motorcycleVehicle,
     offRoadVehicle,
+    publishedNews,
+    carouselCandidates,
   ] = await Promise.all([
     prisma.branch.findMany({
       where: {
@@ -248,7 +271,144 @@ export default async function HomePage() {
         },
       },
     }),
+
+    prisma.newsArticle.findMany({
+      where: {
+        status: NewsStatus.PUBLISHED,
+
+        OR: [
+          {
+            publishedAt: null,
+          },
+          {
+            publishedAt: {
+              lte: currentDate,
+            },
+          },
+        ],
+      },
+
+      orderBy: [
+        {
+          featured: "desc",
+        },
+        {
+          publishedAt: "desc",
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
+
+      take: 3,
+    }),
+
+    prisma.catalogModel.findMany({
+      where: {
+        active: true,
+
+        brand: {
+          active: true,
+        },
+
+        OR: [
+          {
+            mainImage: {
+              not: null,
+            },
+          },
+          {
+            images: {
+              some: {
+                type: VehicleMediaType.IMAGE,
+              },
+            },
+          },
+        ],
+      },
+
+      include: {
+        brand: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+
+        images: {
+          where: {
+            type: VehicleMediaType.IMAGE,
+          },
+          orderBy: {
+            order: "asc",
+          },
+          take: 1,
+          select: {
+            url: true,
+          },
+        },
+      },
+
+      orderBy: [
+        {
+          brandId: "asc",
+        },
+        {
+          sortOrder: "asc",
+        },
+        {
+          year: "desc",
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
+    }),
   ]);
+
+  const carouselByBrand = new Map<
+    number,
+    BrandVehicleCarouselSlide
+  >();
+
+  carouselCandidates.forEach((model) => {
+    if (
+      carouselByBrand.has(model.brandId)
+    ) {
+      return;
+    }
+
+    const image =
+      model.mainImage ||
+      model.images[0]?.url;
+
+    if (!image) {
+      return;
+    }
+
+    carouselByBrand.set(
+      model.brandId,
+      {
+        id: model.id,
+        brand: model.brand.name,
+        model: model.name,
+        year: model.year,
+        image,
+        href: `/catalogo/${getBrandSlug(
+          model.brand.name
+        )}`,
+      }
+    );
+  });
+
+  const carouselSlides =
+    Array.from(
+      carouselByBrand.values()
+    ).sort(
+      (a, b) =>
+        getBrandSortOrder(a.brand) -
+        getBrandSortOrder(b.brand)
+    );
 
   const autoImage =
     autoVehicle?.mainImage ||
@@ -310,83 +470,115 @@ export default async function HomePage() {
           <VehicleCategoryShowcase />
         </div>
 
+        <BrandVehicleCarousel
+          slides={carouselSlides}
+        />
+
         <div className="bg-[var(--home-surface)]">
           <HomeBrandCatalogs brands={formattedBrandCards} />
         </div>
 
-        <GroupRiseSection />
+        {/* <GroupRiseSection /> */}
 
-        {/* <section
-          id="noticias"
-          className="public-section border-y border-[var(--home-border)] bg-[var(--home-background)]"
-        >
-          <div className="public-container">
-            <div className="flex flex-col justify-between gap-6 border-b border-[var(--home-border)] pb-8 md:flex-row md:items-end">
-              <div>
-                <p className="public-eyebrow">
-                  Noticias y novedades
-                </p>
+        {publishedNews.length > 0 && (
+          <section
+            id="noticias"
+            className="public-section border-y border-[var(--home-border)] bg-[var(--home-background)]"
+          >
+            <div className="public-container">
+              <div className="flex flex-col justify-between gap-6 border-b border-[var(--home-border)] pb-8 md:flex-row md:items-end">
+                <div>
+                  <p className="public-eyebrow">
+                    Actualidad RISE
+                  </p>
 
-                <h2 className="public-title mt-5 text-4xl md:text-6xl">
-                  Lo nuevo en Grupo RISE.
-                </h2>
+                  <h2 className="public-title mt-5 text-4xl md:text-6xl">
+                    Noticias y novedades.
+                  </h2>
+                </div>
+
+                <Link
+                  href="/grupo-rise#actualidad-rise"
+                  className="text-xs font-black uppercase tracking-[0.16em] text-[var(--public-ink)] transition hover:text-[var(--public-accent)]"
+                >
+                  Ver todas las noticias →
+                </Link>
               </div>
 
-              <p className="max-w-md text-sm leading-6 text-[var(--public-muted)]">
-                Espacio destinado a lanzamientos, noticias y novedades de las
-                marcas que forman parte del grupo.
-              </p>
-            </div>
+              <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {publishedNews.map((article) => (
+                  <Link
+                    key={article.id}
+                    href={`/grupo-rise/noticias/${article.slug}`}
+                    className="group flex min-h-[420px] flex-col overflow-hidden border border-[var(--home-border)] bg-[var(--home-card)] transition duration-300 hover:-translate-y-1 hover:border-[var(--home-border-strong)] hover:shadow-[var(--home-shadow)]"
+                  >
+                    {/* Imagen */}
+                    <div className="relative h-[210px] overflow-hidden bg-[var(--home-surface-alt)]">
+                      {article.coverImageUrl ? (
+                        <img
+                          src={article.coverImageUrl}
+                          alt={
+                            article.coverImageAlt ||
+                            article.title
+                          }
+                          className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                          <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--public-muted-light)]">
+                            Grupo RISE
+                          </span>
+                        </div>
+                      )}
 
-            <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {[1, 2, 3].map((item) => (
-                <article
-                  key={item}
-                  className="group relative min-h-[370px] overflow-hidden rounded-none border border-[var(--home-border)] bg-[var(--home-card)] shadow-[0_12px_32px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1.5 hover:border-[var(--home-border-strong)] hover:bg-[var(--home-card-hover)] hover:shadow-[var(--home-shadow)]"
-                >
-                  <div className="absolute inset-x-0 top-0 h-1 bg-[var(--public-accent)]" />
+                      {article.featured && (
+                        <span className="absolute left-4 top-4 bg-[var(--public-header)] px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-white">
+                          Destacada
+                        </span>
+                      )}
+                    </div>
 
-                  <div className="flex h-full flex-col justify-between p-7">
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-accent)]">
-                          Próximamente
+                    {/* Contenido */}
+                    <div className="flex flex-1 flex-col p-6">
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-[10px] font-black uppercase tracking-[0.17em] text-[var(--public-accent)]">
+                          Actualidad RISE
                         </span>
 
-                        <span className="text-xs font-semibold text-[var(--public-muted-light)]">
-                          0{item}
-                        </span>
+                        {article.publishedAt && (
+                          <span className="text-[10px] font-semibold text-[var(--public-muted-light)]">
+                            {formatNewsDate(
+                              article.publishedAt
+                            )}
+                          </span>
+                        )}
                       </div>
 
-                      <div className="relative mt-12 flex h-28 items-center justify-center overflow-hidden rounded-none border border-dashed border-[var(--home-border-strong)] bg-[var(--home-surface-alt)]">
-                        <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--public-muted-light)]">
-                          Imagen de noticia
-                        </span>
-                      </div>
-
-                      <h3 className="mt-7 text-2xl font-bold tracking-[-0.03em] text-[var(--public-ink)]">
-                        Contenido por definir
+                      <h3 className="mt-5 text-2xl font-black leading-tight tracking-[-0.035em] text-[var(--public-ink)]">
+                        {article.title}
                       </h3>
 
-                      <p className="mt-3 text-sm leading-6 text-[var(--public-muted)]">
-                        Este espacio se utilizará para publicar información
-                        oficial, novedades y lanzamientos del grupo.
+                      <p className="mt-4 line-clamp-3 text-sm leading-6 text-[var(--public-muted)]">
+                        {article.excerpt}
                       </p>
-                    </div>
 
-                    <div className="mt-8 border-t border-[var(--home-border)] pt-5">
-                      <span className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--public-muted-light)]">
-                        Grupo RISE
-                      </span>
+                      <div className="mt-auto pt-7">
+                        <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--public-ink)]">
+                          Leer noticia
+                          <span className="transition-transform duration-300 group-hover:translate-x-1">
+                            →
+                          </span>
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        </section> */}
+          </section>
+        )}
 
-        <section
+        {/* <section
           id="eventos"
           className="public-section border-b border-[var(--home-border)] bg-[var(--home-surface-alt)]"
         >
@@ -478,7 +670,7 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-
+ */}
         <div className="bg-[var(--home-background)]">
           <BranchesCarousel branches={branches} />
         </div>

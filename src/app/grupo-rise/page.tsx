@@ -517,6 +517,100 @@ export default async function GrupoRisePage() {
                         )}
                     </div>
                 </section>
+
+                {/* Eventos y experiencias */}
+                <section
+                    id="eventos"
+                    className="border-b border-[var(--home-border)] bg-[var(--home-surface-alt)]"
+                >
+                    <div className="public-container py-16 md:py-24">
+                        <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
+                            <div>
+                                <p className="public-eyebrow">
+                                    Eventos y experiencias
+                                </p>
+
+                                <h2 className="public-title mt-5 text-4xl md:text-6xl">
+                                    Experiencias que se viven.
+                                </h2>
+
+                                <p className="mt-6 max-w-md text-base leading-7 text-[var(--public-muted)]">
+                                    Espacio preparado para rodadas, exhibiciones, pruebas de
+                                    manejo, lanzamientos y actividades especiales.
+                                </p>
+                            </div>
+
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <article className="relative min-h-[430px] overflow-hidden rounded-none bg-[var(--public-header)] p-8 text-white shadow-[0_22px_55px_rgba(18,24,28,0.18)] md:col-span-2 md:p-10">
+                                    <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-none bg-white/[0.05] blur-3xl" />
+
+                                    <div className="pointer-events-none absolute -bottom-20 -left-16 h-64 w-64 rounded-none bg-[var(--public-accent)]/40 blur-3xl" />
+
+                                    <div className="relative flex h-full flex-col justify-between">
+                                        <div className="flex items-center justify-between border-b border-white/10 pb-5">
+                                            <span className="text-xs font-black uppercase tracking-[0.2em] text-white/50">
+                                                Evento destacado
+                                            </span>
+
+                                            <span className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs font-bold text-white/65">
+                                                Próximamente
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-20 max-w-2xl">
+                                            <p className="text-3xl font-semibold leading-tight tracking-[-0.04em] md:text-5xl">
+                                                Próxima experiencia Grupo RISE.
+                                            </p>
+
+                                            <p className="mt-5 max-w-xl text-base leading-7 text-white/55">
+                                                La información oficial del próximo evento se mostrará en
+                                                este espacio.
+                                            </p>
+                                        </div>
+
+                                        <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-5 text-xs font-bold uppercase tracking-[0.15em] text-white/40 sm:flex-row sm:items-center sm:justify-between">
+                                            <span>
+                                                Fecha por confirmar
+                                            </span>
+
+                                            <span>
+                                                Ubicación por confirmar
+                                            </span>
+                                        </div>
+                                    </div>
+                                </article>
+
+                                <article className="min-h-[220px] rounded-none border border-[var(--home-border)] bg-[var(--home-card)] p-7 shadow-[0_10px_28px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1 hover:bg-[var(--home-card-hover)] hover:shadow-[var(--home-shadow)]">
+                                    <span className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-accent)]">
+                                        Rodadas
+                                    </span>
+
+                                    <h3 className="mt-10 text-2xl font-bold tracking-[-0.03em] text-[var(--public-ink)]">
+                                        Próximamente
+                                    </h3>
+
+                                    <p className="mt-3 text-sm leading-6 text-[var(--public-muted)]">
+                                        Espacio reservado para próximas experiencias en motocicleta.
+                                    </p>
+                                </article>
+
+                                <article className="min-h-[220px] rounded-none border border-[var(--home-border)] bg-[var(--home-card)] p-7 shadow-[0_10px_28px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1 hover:bg-[var(--home-card-hover)] hover:shadow-[var(--home-shadow)]">
+                                    <span className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-accent)]">
+                                        Lanzamientos
+                                    </span>
+
+                                    <h3 className="mt-10 text-2xl font-bold tracking-[-0.03em] text-[var(--public-ink)]">
+                                        Próximamente
+                                    </h3>
+
+                                    <p className="mt-3 text-sm leading-6 text-[var(--public-muted)]">
+                                        Espacio destinado a presentaciones y novedades de las marcas.
+                                    </p>
+                                </article>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </main>
 
             <Footer />
