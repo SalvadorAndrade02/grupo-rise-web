@@ -75,7 +75,7 @@ const homeCarouselSlides: BrandVehicleCarouselSlide[] = [
     year: 2026,
     image: "/images/home/brand-carousel/can-am.jpg",
     href: "/catalogo/can-am",
-    imagePosition: "60% 35%",
+    imagePosition: "50% 50%",
   },
   {
     id: 4,
