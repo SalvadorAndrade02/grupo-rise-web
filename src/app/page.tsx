@@ -49,6 +49,81 @@ const brandSlugOrder = [
   "bennington",
 ];
 
+const homeCarouselSlides: BrandVehicleCarouselSlide[] = [
+  {
+    id: 1,
+    brand: "Indian Motorcycle",
+    model: "Chief Vintage",
+    year: 2026,
+    image: "/images/home/brand-carousel/indian-motorcycle.jpg",
+    href: "/catalogo/indian-motorcycle",
+    imagePosition: "50% 52%",
+  },
+  {
+    id: 2,
+    brand: "Polaris",
+    model: "RZR Pro XP",
+    year: 2027,
+    image: "/images/home/brand-carousel/polaris.jpg",
+    href: "/catalogo/polaris",
+    imagePosition: "56% 70%",
+  },
+  {
+    id: 3,
+    brand: "Can-Am",
+    model: "Maverick X3",
+    year: 2026,
+    image: "/images/home/brand-carousel/can-am.jpg",
+    href: "/catalogo/can-am",
+    imagePosition: "60% 35%",
+  },
+  {
+    id: 4,
+    brand: "Sea-Doo",
+    model: "GTX Limited",
+    year: 2027,
+    image: "/images/home/brand-carousel/sea-doo.jpg",
+    href: "/catalogo/sea-doo",
+    imagePosition: "50% 28%",
+  },
+  {
+    id: 5,
+    brand: "Royal Enfield",
+    model: "Bear 650",
+    year: null,
+    image: "/images/home/brand-carousel/royal-enfield.jpg",
+    href: "/catalogo/royal-enfield",
+    imagePosition: "50% 55%",
+  },
+  {
+    id: 6,
+    brand: "Triumph",
+    model: "Tracker 400",
+    year: 2026,
+    image: "/images/home/brand-carousel/triumph.jpg",
+    href: "/catalogo/triumph-motorcycles",
+    imagePosition: "50% 55%",
+  },
+  {
+    id: 7,
+    brand: "Lynk & Co",
+    model: "08",
+    year: null,
+    image: "/images/home/brand-carousel/lynk-co.jpg",
+    href: "/catalogo/lynk-co",
+    imagePosition: "50% 63%",
+  },
+  {
+    id: 8,
+    brand: "ZEEKR",
+    model: "7X",
+    year: null,
+    image: "/images/home/brand-carousel/zeekr.jpg",
+    href: "/catalogo/zeekrlife",
+    imagePosition: "50% 52%",
+  },
+];
+
 function normalize(value: string) {
   return value
     .toLowerCase()
@@ -131,7 +206,6 @@ export default async function HomePage() {
     motorcycleVehicle,
     offRoadVehicle,
     publishedNews,
-    carouselCandidates,
   ] = await Promise.all([
     prisma.branch.findMany({
       where: {
@@ -302,113 +376,7 @@ export default async function HomePage() {
 
       take: 3,
     }),
-
-    prisma.catalogModel.findMany({
-      where: {
-        active: true,
-
-        brand: {
-          active: true,
-        },
-
-        OR: [
-          {
-            mainImage: {
-              not: null,
-            },
-          },
-          {
-            images: {
-              some: {
-                type: VehicleMediaType.IMAGE,
-              },
-            },
-          },
-        ],
-      },
-
-      include: {
-        brand: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-
-        images: {
-          where: {
-            type: VehicleMediaType.IMAGE,
-          },
-          orderBy: {
-            order: "asc",
-          },
-          take: 1,
-          select: {
-            url: true,
-          },
-        },
-      },
-
-      orderBy: [
-        {
-          brandId: "asc",
-        },
-        {
-          sortOrder: "asc",
-        },
-        {
-          year: "desc",
-        },
-        {
-          createdAt: "desc",
-        },
-      ],
-    }),
   ]);
-
-  const carouselByBrand = new Map<
-    number,
-    BrandVehicleCarouselSlide
-  >();
-
-  carouselCandidates.forEach((model) => {
-    if (
-      carouselByBrand.has(model.brandId)
-    ) {
-      return;
-    }
-
-    const image =
-      model.mainImage ||
-      model.images[0]?.url;
-
-    if (!image) {
-      return;
-    }
-
-    carouselByBrand.set(
-      model.brandId,
-      {
-        id: model.id,
-        brand: model.brand.name,
-        model: model.name,
-        year: model.year,
-        image,
-        href: `/catalogo/${getBrandSlug(
-          model.brand.name
-        )}`,
-      }
-    );
-  });
-
-  const carouselSlides =
-    Array.from(
-      carouselByBrand.values()
-    ).sort(
-      (a, b) =>
-        getBrandSortOrder(a.brand) -
-        getBrandSortOrder(b.brand)
-    );
 
   const autoImage =
     autoVehicle?.mainImage ||
@@ -471,7 +439,7 @@ export default async function HomePage() {
         </div>
 
         <BrandVehicleCarousel
-          slides={carouselSlides}
+          slides={homeCarouselSlides}
         />
 
         <div className="bg-[var(--home-surface)]">
