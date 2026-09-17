@@ -119,27 +119,12 @@ export function BrandVehicleCarousel({
                                 className="relative min-w-full"
                                 aria-hidden={currentIndex !== index}
                             >
-                                <div className="relative flex h-[440px] flex-col overflow-hidden rounded-[28px] bg-[#f4f5f3] px-6 py-6 md:h-[570px] md:px-10 md:py-8 lg:h-[600px]">
-
-                                    {/* Marca y modelo */}
-                                    <div className="relative z-20 text-center">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#192a3a]/55">
-                                            {slide.brand}
-                                        </p>
-
-                                        <h3 className="mt-2 text-3xl font-black leading-none tracking-[-0.045em] text-[#0a0f14] md:text-4xl lg:text-5xl">
-                                            {slide.model}
-                                        </h3>
-
-                                        {slide.year && (
-                                            <p className="mt-2 text-sm font-medium text-[#192a3a]/55">
-                                                Modelo {slide.year}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Imagen */}
-                                    <div className="relative z-10 mx-auto mt-5 h-[270px] w-full overflow-hidden rounded-[22px] sm:h-[300px] md:h-[350px] lg:h-[390px] xl:h-[410px]">
+                                <Link
+                                    href={slide.href}
+                                    aria-label={`Ver catálogo de ${slide.brand}`}
+                                    className="block"
+                                >
+                                    <div className="relative overflow-hidden rounded-[28px]">
                                         <img
                                             src={slide.image}
                                             alt={`${slide.brand} ${slide.model}`}
@@ -147,20 +132,10 @@ export function BrandVehicleCarousel({
                                                 objectPosition:
                                                     slide.imagePosition ?? "50% 50%",
                                             }}
-                                            className="h-full w-full object-cover transition-transform duration-700"
+                                            className="h-[280px] w-full object-cover transition-transform duration-700 sm:h-[320px] md:h-[400px] lg:h-[470px] xl:h-[500px]"
                                         />
                                     </div>
-
-                                    {/* Botón */}
-                                    <div className="relative z-20 flex flex-1 items-end justify-center pt-5">
-                                        <Link
-                                            href={slide.href}
-                                            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#192a3a] px-6 py-3 text-sm font-black !text-white transition hover:bg-[#0f1d29]"
-                                        >
-                                            Descúbrelo
-                                        </Link>
-                                    </div>
-                                </div>
+                                </Link>
                             </article>
                         ))}
                     </div>
