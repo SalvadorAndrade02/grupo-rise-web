@@ -626,6 +626,7 @@ function BranchCard({
         branchName={branch.name}
         heightClassName="h-[230px]"
         showTitle={false}
+        showLogo={false}
       />
 
       <div className="p-6">

@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { NewsStatus } from "@prisma/client";
+import {
+    ExperienceStatus,
+    ExperienceType,
+    NewsStatus,
+} from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
@@ -95,12 +99,41 @@ function formatNewsDate(value?: Date | null) {
     }).format(value);
 }
 
+const experienceTypeLabels: Record<
+    ExperienceType,
+    string
+> = {
+    EVENTO: "Evento",
+    RODADA: "Rodada",
+    LANZAMIENTO: "Lanzamiento",
+};
+
+function formatExperienceDate(
+    value?: Date | null
+) {
+    if (!value) {
+        return "Fecha por confirmar";
+    }
+
+    return new Intl.DateTimeFormat(
+        "es-MX",
+        {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        }
+    ).format(value);
+}
+
 export default async function GrupoRisePage() {
 
     const currentDate = new Date();
 
-    const publishedNews =
-        await prisma.newsArticle.findMany({
+    const [
+        publishedNews,
+        publishedExperiences,
+    ] = await Promise.all([
+        prisma.newsArticle.findMany({
             where: {
                 status: NewsStatus.PUBLISHED,
 
@@ -129,7 +162,32 @@ export default async function GrupoRisePage() {
             ],
 
             take: 3,
-        });
+        }),
+
+        prisma.riseExperience.findMany({
+            where: {
+                status:
+                    ExperienceStatus.PUBLISHED,
+            },
+
+            orderBy: [
+                {
+                    featured: "desc",
+                },
+                {
+                    sortOrder: "asc",
+                },
+                {
+                    eventDate: "asc",
+                },
+                {
+                    createdAt: "desc",
+                },
+            ],
+
+            take: 3,
+        }),
+    ]);
 
     const featuredArticle =
         publishedNews.find(
@@ -144,6 +202,23 @@ export default async function GrupoRisePage() {
                 (article) =>
                     article.id !==
                     featuredArticle?.id
+            )
+            .slice(0, 2);
+
+    const featuredExperience =
+        publishedExperiences.find(
+            (experience) =>
+                experience.featured
+        ) ??
+        publishedExperiences[0] ??
+        null;
+
+    const secondaryExperiences =
+        publishedExperiences
+            .filter(
+                (experience) =>
+                    experience.id !==
+                    featuredExperience?.id
             )
             .slice(0, 2);
 
@@ -525,6 +600,7 @@ export default async function GrupoRisePage() {
                 >
                     <div className="public-container py-16 md:py-24">
                         <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
+                            {/* Encabezado */}
                             <div>
                                 <p className="public-eyebrow">
                                     Eventos y experiencias
@@ -535,78 +611,148 @@ export default async function GrupoRisePage() {
                                 </h2>
 
                                 <p className="mt-6 max-w-md text-base leading-7 text-[var(--public-muted)]">
-                                    Espacio preparado para rodadas, exhibiciones, pruebas de
-                                    manejo, lanzamientos y actividades especiales.
+                                    Rodadas, exhibiciones,
+                                    lanzamientos y actividades
+                                    especiales que forman parte
+                                    de la experiencia Grupo RISE.
                                 </p>
                             </div>
 
-                            <div className="grid gap-6 md:grid-cols-2">
-                                <article className="relative min-h-[430px] overflow-hidden rounded-none bg-[var(--public-header)] p-8 text-white shadow-[0_22px_55px_rgba(18,24,28,0.18)] md:col-span-2 md:p-10">
-                                    <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-none bg-white/[0.05] blur-3xl" />
+                            <div>
+                                {!featuredExperience ? (
+                                    <div className="border border-[var(--home-border)] bg-[var(--home-card)] px-6 py-16 text-center shadow-[0_10px_28px_rgba(18,24,28,0.04)] md:px-10 md:py-20">
+                                        <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-accent)]">
+                                            Eventos y experiencias
+                                        </p>
 
-                                    <div className="pointer-events-none absolute -bottom-20 -left-16 h-64 w-64 rounded-none bg-[var(--public-accent)]/40 blur-3xl" />
+                                        <h3 className="mt-4 text-2xl font-black tracking-[-0.03em] text-[var(--public-ink)] md:text-3xl">
+                                            Por el momento no hay experiencias disponibles.
+                                        </h3>
 
-                                    <div className="relative flex h-full flex-col justify-between">
-                                        <div className="flex items-center justify-between border-b border-white/10 pb-5">
-                                            <span className="text-xs font-black uppercase tracking-[0.2em] text-white/50">
-                                                Evento destacado
-                                            </span>
-
-                                            <span className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs font-bold text-white/65">
-                                                Próximamente
-                                            </span>
-                                        </div>
-
-                                        <div className="mt-20 max-w-2xl">
-                                            <p className="text-3xl font-semibold leading-tight tracking-[-0.04em] md:text-5xl">
-                                                Próxima experiencia Grupo RISE.
-                                            </p>
-
-                                            <p className="mt-5 max-w-xl text-base leading-7 text-white/55">
-                                                La información oficial del próximo evento se mostrará en
-                                                este espacio.
-                                            </p>
-                                        </div>
-
-                                        <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-5 text-xs font-bold uppercase tracking-[0.15em] text-white/40 sm:flex-row sm:items-center sm:justify-between">
-                                            <span>
-                                                Fecha por confirmar
-                                            </span>
-
-                                            <span>
-                                                Ubicación por confirmar
-                                            </span>
-                                        </div>
+                                        <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[var(--public-muted)]">
+                                            Próximamente encontrarás aquí rodadas,
+                                            lanzamientos, exhibiciones y actividades
+                                            especiales de Grupo RISE.
+                                        </p>
                                     </div>
-                                </article>
+                                ) : (
+                                    <div className="grid gap-6 md:grid-cols-2">
+                                        {/* Experiencia principal */}
+                                        <article className="group relative min-h-[430px] overflow-hidden bg-[var(--public-header)] text-white shadow-[0_22px_55px_rgba(18,24,28,0.18)] md:col-span-2">
+                                            {featuredExperience.imageUrl && (
+                                                <img
+                                                    src={featuredExperience.imageUrl}
+                                                    alt={
+                                                        featuredExperience.imageAlt ||
+                                                        featuredExperience.title
+                                                    }
+                                                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.025]"
+                                                />
+                                            )}
 
-                                <article className="min-h-[220px] rounded-none border border-[var(--home-border)] bg-[var(--home-card)] p-7 shadow-[0_10px_28px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1 hover:bg-[var(--home-card-hover)] hover:shadow-[var(--home-shadow)]">
-                                    <span className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-accent)]">
-                                        Rodadas
-                                    </span>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/65 to-black/20" />
 
-                                    <h3 className="mt-10 text-2xl font-bold tracking-[-0.03em] text-[var(--public-ink)]">
-                                        Próximamente
-                                    </h3>
+                                            <div className="absolute inset-x-0 top-0 h-1 bg-[var(--public-accent)]" />
 
-                                    <p className="mt-3 text-sm leading-6 text-[var(--public-muted)]">
-                                        Espacio reservado para próximas experiencias en motocicleta.
-                                    </p>
-                                </article>
+                                            <div className="relative flex min-h-[430px] flex-col justify-between p-8 md:p-10">
+                                                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/15 pb-5">
+                                                    <span className="text-xs font-black uppercase tracking-[0.2em] text-white/65">
+                                                        {featuredExperience.featured
+                                                            ? "Experiencia destacada"
+                                                            : experienceTypeLabels[
+                                                            featuredExperience.type
+                                                            ]}
+                                                    </span>
 
-                                <article className="min-h-[220px] rounded-none border border-[var(--home-border)] bg-[var(--home-card)] p-7 shadow-[0_10px_28px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1 hover:bg-[var(--home-card-hover)] hover:shadow-[var(--home-shadow)]">
-                                    <span className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-accent)]">
-                                        Lanzamientos
-                                    </span>
+                                                    <span className="border border-white/20 bg-black/20 px-4 py-2 text-xs font-bold text-white/75 backdrop-blur-sm">
+                                                        {
+                                                            experienceTypeLabels[
+                                                            featuredExperience.type
+                                                            ]
+                                                        }
+                                                    </span>
+                                                </div>
 
-                                    <h3 className="mt-10 text-2xl font-bold tracking-[-0.03em] text-[var(--public-ink)]">
-                                        Próximamente
-                                    </h3>
+                                                <div className="mt-20 max-w-2xl">
+                                                    <h3 className="text-3xl font-semibold leading-tight tracking-[-0.04em] md:text-5xl">
+                                                        {featuredExperience.title}
+                                                    </h3>
 
-                                    <p className="mt-3 text-sm leading-6 text-[var(--public-muted)]">
-                                        Espacio destinado a presentaciones y novedades de las marcas.
-                                    </p>
-                                </article>
+                                                    <p className="mt-5 max-w-xl text-base leading-7 text-white/70">
+                                                        {featuredExperience.description}
+                                                    </p>
+                                                </div>
+
+                                                <div className="mt-12 flex flex-col gap-3 border-t border-white/15 pt-5 text-xs font-bold uppercase tracking-[0.12em] text-white/60 sm:flex-row sm:items-center sm:justify-between">
+                                                    <span>
+                                                        {formatExperienceDate(
+                                                            featuredExperience.eventDate
+                                                        )}
+                                                    </span>
+
+                                                    <span>
+                                                        {featuredExperience.location ||
+                                                            "Ubicación por confirmar"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </article>
+
+                                        {/* Experiencias secundarias */}
+                                        {secondaryExperiences.map((experience) => (
+                                            <article
+                                                key={experience.id}
+                                                className="group relative min-h-[260px] overflow-hidden border border-[var(--home-border)] bg-[var(--home-card)] shadow-[0_10px_28px_rgba(18,24,28,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[var(--home-shadow)]"
+                                            >
+                                                {experience.imageUrl && (
+                                                    <img
+                                                        src={experience.imageUrl}
+                                                        alt={
+                                                            experience.imageAlt ||
+                                                            experience.title
+                                                        }
+                                                        className="absolute inset-0 h-full w-full object-cover opacity-[0.14] transition duration-500 group-hover:scale-[1.025] group-hover:opacity-[0.2]"
+                                                    />
+                                                )}
+
+                                                <div className="absolute inset-0 bg-gradient-to-r from-[var(--home-card)] via-[var(--home-card)]/95 to-[var(--home-card)]/70" />
+
+                                                <div className="relative flex min-h-[260px] flex-col justify-between p-7">
+                                                    <div>
+                                                        <span className="text-xs font-black uppercase tracking-[0.18em] text-[var(--public-accent)]">
+                                                            {
+                                                                experienceTypeLabels[
+                                                                experience.type
+                                                                ]
+                                                            }
+                                                        </span>
+
+                                                        <h3 className="mt-8 text-2xl font-bold tracking-[-0.03em] text-[var(--public-ink)]">
+                                                            {experience.title}
+                                                        </h3>
+
+                                                        <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--public-muted)]">
+                                                            {experience.description}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="mt-8 flex flex-col gap-2 border-t border-[var(--home-border)] pt-4 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--public-muted-light)]">
+                                                        <span>
+                                                            {formatExperienceDate(
+                                                                experience.eventDate
+                                                            )}
+                                                        </span>
+
+                                                        <span>
+                                                            {experience.location ||
+                                                                "Ubicación por confirmar"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -295,7 +295,7 @@ function BranchCard({
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
 
-                {branch.logoUrl && (
+                {/* {branch.logoUrl && (
                     <div className="absolute left-4 top-4 flex h-14 w-20 items-center justify-center rounded-none border border-white/70 bg-white p-2 shadow-lg">
                         <Image
                             src={branch.logoUrl}
@@ -305,7 +305,7 @@ function BranchCard({
                             className="max-h-full max-w-full object-contain"
                         />
                     </div>
-                )}
+                )} */}
 
                 <div className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-none bg-white text-[#0a0f14] shadow-lg transition duration-200 group-hover:bg-[#1A2A3A] group-hover:text-white group-active:bg-[#1A2A3A] group-active:text-white">
                     <ArrowRight

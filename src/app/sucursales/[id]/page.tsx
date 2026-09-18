@@ -374,7 +374,7 @@ export default async function BranchDetailPage({
                                     </p>
                                 </div>
 
-                                {branch.logoUrl && (
+                                {/* {branch.logoUrl && (
                                     <div className="flex h-[130px] w-full max-w-[190px] items-center justify-center border border-white/20 bg-[#eef0ee] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.2)]">
                                         <img
                                             src={branch.logoUrl}
@@ -382,7 +382,7 @@ export default async function BranchDetailPage({
                                             className="max-h-full max-w-full object-contain"
                                         />
                                     </div>
-                                )}
+                                )} */}
                             </div>
                         </div>
                     </div>

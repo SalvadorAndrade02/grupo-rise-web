@@ -65,6 +65,18 @@ enum Currency {
   USD
 }
 
+enum ExperienceType {
+  EVENTO
+  RODADA
+  LANZAMIENTO
+}
+
+enum ExperienceStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model Brand {
   id       Int             @id @default(autoincrement())
   name     String
@@ -381,4 +393,30 @@ model NewsArticle {
 
   @@index([status, publishedAt])
   @@index([featured, publishedAt])
+}
+
+model RiseExperience {
+  id Int @id @default(autoincrement())
+
+  type ExperienceType
+
+  title       String
+  description String @default("")
+
+  eventDate DateTime?
+  location  String?
+
+  imageUrl String?
+  imageAlt String?
+
+  status   ExperienceStatus @default(DRAFT)
+  featured Boolean          @default(false)
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, featured, sortOrder])
+  @@index([type, status])
 }
