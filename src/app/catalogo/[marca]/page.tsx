@@ -852,6 +852,10 @@ function VehicleCard({
               vehicle.currency
             )}
           </p>
+
+          <p className="mt-1.5 text-[10px] font-medium text-[var(--public-muted)]">
+            *Precio sujeto a cambio
+          </p>
         </div>
       </div>
     </Link>
