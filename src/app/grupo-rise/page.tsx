@@ -445,12 +445,6 @@ export default async function GrupoRisePage() {
                                 <h3 className="mt-4 text-2xl font-black tracking-[-0.03em] text-[var(--public-ink)]">
                                     Por el momento no hay noticias publicadas.
                                 </h3>
-
-                                <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--public-muted)]">
-                                    Las nuevas publicaciones aparecerán
-                                    en esta sección cuando sean publicadas
-                                    desde el panel administrativo.
-                                </p>
                             </div>
                         ) : (
                             <div className="mt-10 grid border border-[var(--home-border)] lg:grid-cols-[1.35fr_0.65fr]">
